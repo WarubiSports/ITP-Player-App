@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="fcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC143C"/>
+      <stop offset="100%" style="stop-color:#8B0000"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#fcGrad)" stroke="#fff" stroke-width="2"/>
+  <path d="M30 35 L50 25 L70 35 L70 65 L50 75 L30 65 Z" fill="none" stroke="#fff" stroke-width="3"/>
+  <text x="50" y="45" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="12" fill="#fff" font-weight="bold">1.FC</text>
+  <text x="50" y="60" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="10" fill="#fff" font-weight="bold">KÖLN</text>
+  <text x="50" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="5" fill="#fff">ITP</text>
+</svg>

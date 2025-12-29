@@ -1,0 +1,224 @@
+/* Calendar Page Styles */
+.calendar-page {
+    animation: fadeIn var(--transition-base);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-5);
+}
+
+.view-toggle {
+    display: flex;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-1);
+}
+
+.toggle-btn {
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-base);
+}
+
+.toggle-btn:hover {
+    color: var(--color-text-primary);
+}
+
+.toggle-btn.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Event Stats */
+.event-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.event-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-4);
+    text-align: center;
+}
+
+.event-stat-icon {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-2);
+}
+
+.event-stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.event-stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-1);
+}
+
+/* Events List */
+.events-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.event-day-group {
+    margin-bottom: var(--space-4);
+}
+
+.event-day-label {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+    padding-left: var(--space-2);
+    border-left: 3px solid var(--color-primary);
+}
+
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.event-card {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    position: relative;
+    overflow: hidden;
+}
+
+.event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.event-card.type-training::before {
+    background: var(--color-success);
+}
+
+.event-card.type-meeting::before {
+    background: var(--color-info);
+}
+
+.event-card.type-assessment::before {
+    background: var(--color-warning);
+}
+
+.event-card.type-match::before {
+    background: var(--color-error);
+}
+
+.event-card.type-social::before {
+    background: var(--color-primary);
+}
+
+.event-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding-right: var(--space-4);
+    border-right: 1px solid var(--glass-border);
+}
+
+.time-start {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.time-divider {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin: 2px 0;
+}
+
+.time-end {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.event-content {
+    flex: 1;
+}
+
+.event-type-badge {
+    margin-bottom: var(--space-2);
+}
+
+.event-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
+}
+
+.event-location {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.event-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .event-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-header {
+        flex-direction: column;
+        gap: var(--space-3);
+        align-items: stretch;
+    }
+
+    .event-card {
+        flex-direction: column;
+    }
+
+    .event-time {
+        flex-direction: row;
+        gap: var(--space-2);
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        padding-right: 0;
+        padding-bottom: var(--space-2);
+        margin-bottom: var(--space-2);
+        justify-content: flex-start;
+    }
+
+    .event-actions {
+        flex-direction: row;
+        margin-top: var(--space-3);
+    }
+}
