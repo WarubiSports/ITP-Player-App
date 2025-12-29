@@ -8,7 +8,6 @@ const navItems = [
     { path: '/housing', icon: '🏠', label: 'Housing' },
     { path: '/chores', icon: '✅', label: 'Chores' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },
-    { path: '/messages', icon: '💬', label: 'Messages' },
 ]
 
 const adminItems = [

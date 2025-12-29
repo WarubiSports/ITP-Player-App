@@ -5,8 +5,7 @@ const pageTitles = {
     '/players': { title: 'Players', subtitle: 'Manage talent program participants' },
     '/housing': { title: 'Housing', subtitle: 'Widdersdorf houses overview' },
     '/chores': { title: 'Chores', subtitle: 'Task management and assignments' },
-    '/calendar': { title: 'Calendar', subtitle: 'Events and schedule' },
-    '/messages': { title: 'Messages', subtitle: 'Internal communications' },
+    '/calendar': { title: 'Calendar', subtitle: 'Training sessions and events' },
     '/admin': { title: 'Administration', subtitle: 'User and system management' },
 }
 

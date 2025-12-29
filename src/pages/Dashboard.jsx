@@ -158,9 +158,9 @@ export default function Dashboard() {
                             <span className="action-icon">📅</span>
                             <span className="action-label">Schedule Event</span>
                         </button>
-                        <button className="action-btn" onClick={() => navigate('/messages')}>
-                            <span className="action-icon">✉️</span>
-                            <span className="action-label">Send Message</span>
+                        <button className="action-btn" onClick={() => navigate('/housing')}>
+                            <span className="action-icon">🏠</span>
+                            <span className="action-label">View Housing</span>
                         </button>
                     </div>
                 </div>

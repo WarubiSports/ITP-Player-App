@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import './Calendar.css'
@@ -7,13 +7,78 @@ export default function Calendar() {
     const { isStaff } = useAuth()
     const [events, setEvents] = useState([])
     const [currentDate, setCurrentDate] = useState(new Date())
+    const [selectedDate, setSelectedDate] = useState(new Date())
     const [showModal, setShowModal] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
-    const [viewMode, setViewMode] = useState('list') // 'list' or 'calendar'
 
     useEffect(() => {
         setEvents(demoData.events)
     }, [])
+
+    // Calendar utilities
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December']
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    const getDaysInMonth = (date) => {
+        const year = date.getFullYear()
+        const month = date.getMonth()
+        return new Date(year, month + 1, 0).getDate()
+    }
+
+    const getFirstDayOfMonth = (date) => {
+        const year = date.getFullYear()
+        const month = date.getMonth()
+        return new Date(year, month, 1).getDay()
+    }
+
+    const generateCalendarDays = () => {
+        const daysInMonth = getDaysInMonth(currentDate)
+        const firstDay = getFirstDayOfMonth(currentDate)
+        const days = []
+
+        // Previous month days
+        const prevMonthDays = getDaysInMonth(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
+        for (let i = firstDay - 1; i >= 0; i--) {
+            days.push({
+                day: prevMonthDays - i,
+                isCurrentMonth: false,
+                isPrevMonth: true,
+                date: new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, prevMonthDays - i)
+            })
+        }
+
+        // Current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({
+                day: i,
+                isCurrentMonth: true,
+                isPrevMonth: false,
+                date: new Date(currentDate.getFullYear(), currentDate.getMonth(), i)
+            })
+        }
+
+        // Next month days
+        const remainingDays = 42 - days.length // 6 rows * 7 days
+        for (let i = 1; i <= remainingDays; i++) {
+            days.push({
+                day: i,
+                isCurrentMonth: false,
+                isPrevMonth: false,
+                date: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, i)
+            })
+        }
+
+        return days
+    }
+
+    const calendarDays = generateCalendarDays()
+
+    // Event utilities
+    const getEventsForDate = (date) => {
+        const dateStr = date.toISOString().split('T')[0]
+        return events.filter(e => e.date === dateStr)
+    }
 
     const getEventTypeIcon = (type) => {
         const icons = {
@@ -28,15 +93,40 @@ export default function Calendar() {
 
     const getEventTypeColor = (type) => {
         const colors = {
-            training: 'success',
-            meeting: 'info',
-            assessment: 'warning',
-            match: 'error',
-            social: 'primary'
+            training: '#22C55E',
+            meeting: '#3B82F6',
+            assessment: '#F59E0B',
+            match: '#EF4444',
+            social: '#DC143C'
         }
-        return colors[type] || 'info'
+        return colors[type] || '#3B82F6'
     }
 
+    const isToday = (date) => {
+        const today = new Date()
+        return date.toDateString() === today.toDateString()
+    }
+
+    const isSelected = (date) => {
+        return date.toDateString() === selectedDate.toDateString()
+    }
+
+    // Navigation
+    const prevMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
+    }
+
+    const nextMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
+    }
+
+    const goToToday = () => {
+        const today = new Date()
+        setCurrentDate(today)
+        setSelectedDate(today)
+    }
+
+    // Modal handlers
     const openModal = (event = null) => {
         setSelectedEvent(event)
         setShowModal(true)
@@ -74,136 +164,150 @@ export default function Calendar() {
         }
     }
 
-    // Sort events by date
-    const sortedEvents = [...events].sort((a, b) =>
-        new Date(a.date + 'T' + a.start_time) - new Date(b.date + 'T' + b.start_time)
+    // Selected date events
+    const selectedDateEvents = getEventsForDate(selectedDate).sort((a, b) =>
+        a.start_time.localeCompare(b.start_time)
     )
 
-    // Group events by date
-    const groupedEvents = sortedEvents.reduce((acc, event) => {
-        const dateKey = event.date
-        if (!acc[dateKey]) acc[dateKey] = []
-        acc[dateKey].push(event)
-        return acc
-    }, {})
-
-    const formatDate = (dateStr) => {
-        const date = new Date(dateStr)
-        const today = new Date()
-        const tomorrow = new Date(today)
-        tomorrow.setDate(tomorrow.getDate() + 1)
-
-        if (dateStr === today.toISOString().split('T')[0]) return 'Today'
-        if (dateStr === tomorrow.toISOString().split('T')[0]) return 'Tomorrow'
-        return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    const formatSelectedDate = () => {
+        const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+        return selectedDate.toLocaleDateString('en-US', options)
     }
 
     return (
-        <div className="calendar-page">
+        <div className="calendar-page-ios">
             {/* Header */}
-            <div className="calendar-header">
-                <div className="view-toggle">
-                    <button
-                        className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                        onClick={() => setViewMode('list')}
-                    >
-                        📋 List
+            <div className="ios-calendar-header">
+                <div className="month-navigation">
+                    <button className="nav-btn" onClick={prevMonth}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M12 16l-6-6 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                     </button>
-                    <button
-                        className={`toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-                        onClick={() => setViewMode('calendar')}
-                    >
-                        📅 Calendar
+                    <h2 className="month-year">
+                        {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                    </h2>
+                    <button className="nav-btn" onClick={nextMonth}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M8 16l6-6-6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                     </button>
                 </div>
-                {isStaff && (
-                    <button className="btn btn-primary" onClick={() => openModal()}>
-                        + Add Event
-                    </button>
-                )}
-            </div>
-
-            {/* Event Stats */}
-            <div className="event-stats">
-                <div className="glass-card-static event-stat">
-                    <span className="event-stat-icon">📅</span>
-                    <span className="event-stat-value">{events.length}</span>
-                    <span className="event-stat-label">Total Events</span>
-                </div>
-                <div className="glass-card-static event-stat">
-                    <span className="event-stat-icon">⚽</span>
-                    <span className="event-stat-value">{events.filter(e => e.type === 'training').length}</span>
-                    <span className="event-stat-label">Training</span>
-                </div>
-                <div className="glass-card-static event-stat">
-                    <span className="event-stat-icon">👥</span>
-                    <span className="event-stat-value">{events.filter(e => e.type === 'meeting').length}</span>
-                    <span className="event-stat-label">Meetings</span>
-                </div>
-                <div className="glass-card-static event-stat">
-                    <span className="event-stat-icon">📊</span>
-                    <span className="event-stat-value">{events.filter(e => e.type === 'assessment').length}</span>
-                    <span className="event-stat-label">Assessments</span>
+                <div className="header-actions">
+                    <button className="btn-today" onClick={goToToday}>Today</button>
+                    {isStaff && (
+                        <button className="btn-add-event" onClick={() => openModal()}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            Add Event
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Events List */}
-            <div className="events-container">
-                {Object.entries(groupedEvents).map(([date, dateEvents]) => (
-                    <div key={date} className="event-day-group">
-                        <h3 className="event-day-label">{formatDate(date)}</h3>
-                        <div className="events-list">
-                            {dateEvents.map(event => (
-                                <div key={event.id} className={`glass-card event-card type-${event.type}`}>
-                                    <div className="event-time">
-                                        <span className="time-start">{event.start_time}</span>
-                                        <span className="time-divider">-</span>
-                                        <span className="time-end">{event.end_time}</span>
-                                    </div>
-                                    <div className="event-content">
-                                        <div className="event-type-badge">
-                                            <span className={`badge badge-${getEventTypeColor(event.type)}`}>
-                                                {getEventTypeIcon(event.type)} {event.type}
-                                            </span>
+            {/* Calendar Grid */}
+            <div className="ios-calendar-container">
+                <div className="calendar-grid-wrapper">
+                    {/* Day names */}
+                    <div className="calendar-weekdays">
+                        {dayNames.map(day => (
+                            <div key={day} className="weekday-label">{day}</div>
+                        ))}
+                    </div>
+
+                    {/* Calendar days */}
+                    <div className="calendar-days">
+                        {calendarDays.map((day, index) => {
+                            const dayEvents = getEventsForDate(day.date)
+                            const hasEvents = dayEvents.length > 0
+
+                            return (
+                                <button
+                                    key={index}
+                                    className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${isToday(day.date) ? 'today' : ''} ${isSelected(day.date) ? 'selected' : ''}`}
+                                    onClick={() => setSelectedDate(day.date)}
+                                >
+                                    <span className="day-number">{day.day}</span>
+                                    {hasEvents && (
+                                        <div className="event-indicators">
+                                            {dayEvents.slice(0, 3).map((event, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="event-dot"
+                                                    style={{ backgroundColor: getEventTypeColor(event.type) }}
+                                                />
+                                            ))}
+                                            {dayEvents.length > 3 && (
+                                                <span className="event-more">+{dayEvents.length - 3}</span>
+                                            )}
                                         </div>
-                                        <h4 className="event-title">{event.title}</h4>
-                                        <p className="event-location">📍 {event.location}</p>
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Selected Date Events */}
+                <div className="selected-date-section">
+                    <h3 className="selected-date-title">{formatSelectedDate()}</h3>
+
+                    {selectedDateEvents.length > 0 ? (
+                        <div className="day-events-list">
+                            {selectedDateEvents.map(event => (
+                                <div key={event.id} className="ios-event-card" style={{ borderLeftColor: getEventTypeColor(event.type) }}>
+                                    <div className="event-time-block">
+                                        <span className="event-time">{event.start_time}</span>
+                                        <span className="event-duration">
+                                            {event.end_time}
+                                        </span>
+                                    </div>
+                                    <div className="event-details">
+                                        <div className="event-header-row">
+                                            <span className="event-icon">{getEventTypeIcon(event.type)}</span>
+                                            <h4 className="event-name">{event.title}</h4>
+                                        </div>
+                                        <p className="event-location">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                                <path d="M6 1C4.067 1 2.5 2.567 2.5 4.5c0 2.433 3.5 6.5 3.5 6.5s3.5-4.067 3.5-6.5C9.5 2.567 7.933 1 6 1zm0 4.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z" fill="currentColor"/>
+                                            </svg>
+                                            {event.location}
+                                        </p>
                                     </div>
                                     {isStaff && (
-                                        <div className="event-actions">
-                                            <button className="btn btn-ghost btn-sm" onClick={() => openModal(event)}>
-                                                Edit
+                                        <div className="event-card-actions">
+                                            <button className="icon-btn" onClick={() => openModal(event)} title="Edit">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                    <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                                                </svg>
                                             </button>
-                                            <button
-                                                className="btn btn-ghost btn-sm"
-                                                style={{ color: 'var(--color-error)' }}
-                                                onClick={() => handleDeleteEvent(event.id)}
-                                            >
-                                                Delete
+                                            <button className="icon-btn danger" onClick={() => handleDeleteEvent(event.id)} title="Delete">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                    <path d="M3 4h10M5 4V3h6v1M6 7v5M10 7v5M4 4v9h8V4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                                                </svg>
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ))}
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {events.length === 0 && (
-                <div className="empty-state">
-                    <div className="empty-state-icon">📅</div>
-                    <h3 className="empty-state-title">No events scheduled</h3>
-                    <p className="empty-state-description">
-                        Create your first event to get started
-                    </p>
+                    ) : (
+                        <div className="no-events-message">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" strokeWidth="2"/>
+                                <path d="M8 18h32M16 8v8M32 8v8" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                            <p>No events scheduled</p>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Add/Edit Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
+                    <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3 className="modal-title">
                                 {selectedEvent ? 'Edit Event' : 'Add New Event'}
@@ -218,27 +322,28 @@ export default function Calendar() {
                                         name="title"
                                         className="input"
                                         defaultValue={selectedEvent?.title}
+                                        placeholder="Training Session"
                                         required
                                     />
                                 </div>
                                 <div className="input-group">
                                     <label className="input-label">Event Type</label>
                                     <select name="type" className="input" defaultValue={selectedEvent?.type || 'training'}>
-                                        <option value="training">Training</option>
-                                        <option value="meeting">Meeting</option>
-                                        <option value="assessment">Assessment</option>
-                                        <option value="match">Match</option>
-                                        <option value="social">Social Event</option>
+                                        <option value="training">⚽ Training</option>
+                                        <option value="meeting">👥 Meeting</option>
+                                        <option value="assessment">📊 Assessment</option>
+                                        <option value="match">🏟️ Match</option>
+                                        <option value="social">🎉 Social Event</option>
                                     </select>
                                 </div>
-                                <div className="form-grid">
+                                <div className="form-row">
                                     <div className="input-group">
                                         <label className="input-label">Date</label>
                                         <input
                                             name="date"
                                             type="date"
                                             className="input"
-                                            defaultValue={selectedEvent?.date}
+                                            defaultValue={selectedEvent?.date || selectedDate.toISOString().split('T')[0]}
                                             required
                                         />
                                     </div>
@@ -248,8 +353,11 @@ export default function Calendar() {
                                             name="location"
                                             className="input"
                                             defaultValue={selectedEvent?.location}
+                                            placeholder="Training Ground A"
                                         />
                                     </div>
+                                </div>
+                                <div className="form-row">
                                     <div className="input-group">
                                         <label className="input-label">Start Time</label>
                                         <input

@@ -15,7 +15,6 @@ const Players = lazy(() => import('./pages/Players'))
 const Housing = lazy(() => import('./pages/Housing'))
 const Chores = lazy(() => import('./pages/Chores'))
 const Calendar = lazy(() => import('./pages/Calendar'))
-const Messages = lazy(() => import('./pages/Messages'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 // Loading component
@@ -64,7 +63,6 @@ export default function App() {
                 <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
                 <Route path="chores" element={<Suspense fallback={<PageLoader />}><Chores /></Suspense>} />
                 <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
-                <Route path="messages" element={<Suspense fallback={<PageLoader />}><Messages /></Suspense>} />
                 <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
             </Route>
 
