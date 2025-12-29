@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { getDemoData } from '../lib/supabase'
 import ReadinessGauge from '../components/dashboard/ReadinessGauge'
 import NextObjective from '../components/dashboard/NextObjective'
 import LiveLeaderboard from '../components/dashboard/LiveLeaderboard'
@@ -7,8 +9,16 @@ import DailyCheckIn from '../components/performance/DailyCheckIn'
 import './Dashboard.css'
 
 export default function Dashboard() {
+    const { profile } = useAuth();
     const [showMarket, setShowMarket] = useState(false);
     const [showCheckIn, setShowCheckIn] = useState(false);
+    const [playerData, setPlayerData] = useState(null);
+
+    useEffect(() => {
+        const data = getDemoData();
+        const player = data.players.find(p => p.id === profile.id);
+        setPlayerData(player);
+    }, [profile.id, showMarket, showCheckIn]); // Refresh when modals close
 
     return (
         <div className="dashboard-page">
@@ -38,9 +48,9 @@ export default function Dashboard() {
                 <div className="glass-panel dashboard-widget" onClick={() => setShowMarket(true)}>
                     <h3 className="widget-title">Wallet</h3>
                     <div className="widget-value widget-value-accent">
-                        2,450 <span style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>GC</span>
+                        {playerData?.points?.toLocaleString() || 0} <span style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>GC</span>
                     </div>
-                    <div className="widget-change widget-change-positive">+150 this week</div>
+                    <div className="widget-change widget-change-positive">Earn more through tasks</div>
                     <div className="widget-link">Open Store →</div>
                 </div>
 

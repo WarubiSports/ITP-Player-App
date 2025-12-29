@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
+import { getDemoData, updateDemoData } from '../../lib/supabase';
 
 export default function DailyCheckIn({ onClose }) {
+    const { profile } = useAuth();
+    const { success, achievement } = useNotification();
     const [step, setStep] = useState(1);
     const [ratings, setRatings] = useState({ sleep: 5, soreness: 3, mood: 4 });
 
@@ -9,7 +14,51 @@ export default function DailyCheckIn({ onClose }) {
     };
 
     const handleSubmit = () => {
-        // Calculate score logic here in real app
+        // Save wellness data
+        const data = getDemoData();
+        const today = new Date().toISOString().split('T')[0];
+
+        // Check if already logged today
+        const existingLog = data.wellnessLogs?.find(
+            log => log.player_id === profile.id && log.date === today
+        );
+
+        if (existingLog) {
+            success('Wellness check-in updated!');
+        } else {
+            const newLog = {
+                id: `w${Date.now()}`,
+                player_id: profile.id,
+                date: today,
+                sleep_hours: ratings.sleep * 1.6, // Convert 1-5 to ~1.6-8 hours
+                sleep_quality: ratings.sleep,
+                energy_level: ratings.mood * 2, // Convert 1-5 to 2-10
+                muscle_soreness: ratings.soreness * 2, // Convert 1-5 to 2-10
+                stress_level: Math.max(1, 6 - ratings.mood), // Inverse of mood
+                mood: ratings.mood >= 4 ? 'good' : ratings.mood >= 2 ? 'okay' : 'tired',
+                notes: 'Morning check-in',
+                created_at: new Date().toISOString()
+            };
+
+            data.wellnessLogs = [...(data.wellnessLogs || []), newLog];
+            updateDemoData(data);
+
+            success('Daily check-in completed!');
+
+            // Check for streak achievements
+            const recentLogs = data.wellnessLogs
+                .filter(log => log.player_id === profile.id)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (recentLogs.length === 7) {
+                achievement('Week Warrior', 'Completed 7 daily check-ins!', '🔥');
+            } else if (recentLogs.length === 30) {
+                achievement('Monthly Master', '30-day check-in streak!', '💪');
+            } else if (recentLogs.length % 10 === 0) {
+                achievement('Consistency Champion', `${recentLogs.length} check-ins completed!`, '⭐');
+            }
+        }
+
         onClose();
     };
 

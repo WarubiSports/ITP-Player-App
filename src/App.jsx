@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
+import NotificationContainer from './components/ui/NotificationContainer'
 
 // Eager load auth pages (needed immediately)
 import Login from './pages/auth/Login'
@@ -52,28 +53,31 @@ export default function App() {
     }
 
     return (
-        <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-            <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+        <>
+            <NotificationContainer />
+            <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+                <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Protected Routes */}
-            <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-                <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
-                <Route path="wellness" element={<Suspense fallback={<PageLoader />}><Wellness /></Suspense>} />
-                <Route path="pathway" element={<Suspense fallback={<PageLoader />}><Pathway /></Suspense>} />
-                <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
-                <Route path="chores" element={<Suspense fallback={<PageLoader />}><Chores /></Suspense>} />
-                <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
-                <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
-                <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
-            </Route>
+                {/* Protected Routes */}
+                <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+                    <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
+                    <Route path="wellness" element={<Suspense fallback={<PageLoader />}><Wellness /></Suspense>} />
+                    <Route path="pathway" element={<Suspense fallback={<PageLoader />}><Pathway /></Suspense>} />
+                    <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
+                    <Route path="chores" element={<Suspense fallback={<PageLoader />}><Chores /></Suspense>} />
+                    <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+                    <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
+                    <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
+                </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+        </>
     )
 }
