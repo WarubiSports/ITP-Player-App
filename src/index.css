@@ -632,6 +632,81 @@ img, svg {
 
 @media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+
+  /* Modal Mobile Adjustments */
+  .modal-overlay {
+    padding: var(--space-2);
+  }
+
+  .modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-lg {
+    max-width: 100%;
+  }
+
+  .modal-header {
+    padding: var(--space-4);
+  }
+
+  .modal-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .modal-body {
+    padding: var(--space-4);
+    max-height: calc(95vh - 120px);
+  }
+
+  .modal-footer {
+    padding: var(--space-3) var(--space-4);
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* Button Mobile Adjustments */
+  .btn {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .btn-sm {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sidebar-width: 280px;
+  }
+
+  /* Further mobile refinements */
+  .modal {
+    border-radius: var(--radius-md);
+  }
+
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-header {
+    padding: var(--space-3);
+  }
+
+  .modal-body {
+    padding: var(--space-3);
+  }
+
+  .modal-title {
+    font-size: var(--font-size-base);
+  }
 }
 
 /* Flex Utilities */
