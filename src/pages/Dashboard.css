@@ -1,339 +1,231 @@
-/* Dashboard Styles */
-.dashboard {
-    animation: fadeIn var(--transition-base);
+.dashboard-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-/* Welcome Section */
-.welcome-section {
-    margin-bottom: var(--space-6);
-}
-
-.welcome-title {
-    font-size: var(--font-size-3xl);
-    font-weight: 800;
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-1);
-}
-
-.welcome-subtitle {
-    color: var(--color-text-tertiary);
-    font-size: var(--font-size-base);
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-}
-
-.stats-grid .stat-card {
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.stats-grid .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-}
-
-/* Dashboard Grid */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-5);
-}
-
-/* Section Styles */
-.section-header {
+/* Header */
+.dashboard-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-5);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--glass-border);
+    align-items: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
 }
 
-.section-title {
-    font-size: var(--font-size-lg);
-    font-weight: 700;
-    color: var(--color-text-primary);
+.dashboard-title-section h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.section-badge {
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    padding: var(--space-1) var(--space-3);
-    background: var(--color-primary);
-    color: white;
-    border-radius: var(--radius-full);
+.dashboard-title-section p {
+    margin: 0.5rem 0 0 0;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
 }
 
-/* Activity Section */
-.activity-section {
-    padding: var(--space-5);
-}
-
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.activity-item {
-    display: flex;
-    gap: var(--space-4);
-}
-
-.activity-time {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text-muted);
-    width: 50px;
-    flex-shrink: 0;
-}
-
-.activity-content {
-    display: flex;
-    gap: var(--space-3);
-    flex: 1;
-}
-
-.activity-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-top: 6px;
-    flex-shrink: 0;
-    background: var(--color-primary);
-}
-
-.activity-dot[data-type="training"] {
-    background: var(--color-success);
-}
-
-.activity-dot[data-type="registration"] {
-    background: var(--color-info);
-}
-
-.activity-dot[data-type="chores"] {
-    background: var(--color-warning);
-}
-
-.activity-dot[data-type="calendar"] {
-    background: var(--color-primary);
-}
-
-.activity-details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-}
-
-.activity-title {
-    font-weight: 600;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
-}
-
-.activity-desc {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-}
-
-/* Competition Section */
-.competition-section {
-    padding: var(--space-5);
-}
-
-.house-ranking {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
-
-.house-rank-item {
+.dashboard-status {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-base);
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
 }
 
-.house-rank-item:hover {
-    background: var(--glass-hover);
-    border-color: rgba(255, 255, 255, 0.12);
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-success);
+    animation: pulse 2s ease-in-out infinite;
 }
 
-.house-rank-item.rank-1 {
-    border-color: rgba(255, 215, 0, 0.3);
-    background: rgba(255, 215, 0, 0.05);
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
 }
 
-.house-rank-trophy {
-    font-size: var(--font-size-2xl);
-}
-
-.house-rank-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.house-rank-name {
+.status-text {
     font-weight: 700;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
+    color: var(--color-success);
+    letter-spacing: 1px;
 }
 
-.house-rank-players {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
+/* Top Grid */
+.dashboard-top-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
 }
 
-.house-rank-points {
-    text-align: right;
-}
-
-.points-value {
-    font-size: var(--font-size-xl);
-    font-weight: 800;
-    color: var(--color-primary);
-}
-
-.points-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-muted);
-    margin-left: 2px;
-}
-
-.competition-footer {
-    margin-top: var(--space-4);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--glass-border);
-}
-
-.competition-note {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-}
-
-/* Quick Actions */
-.quick-actions {
-    padding: var(--space-5);
-}
-
-.actions-grid {
+.dashboard-gauges {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
+    gap: 1.5rem;
 }
 
-.action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-4);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text-primary);
-    transition: all var(--transition-base);
+/* Actions Grid */
+.dashboard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.action-btn:hover {
-    background: var(--glass-hover);
-    border-color: var(--color-primary);
-    transform: translateY(-2px);
+.dashboard-widget {
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
 
-.action-icon {
-    font-size: var(--font-size-2xl);
+.dashboard-widget:hover {
+    transform: translateY(-4px);
 }
 
-.action-label {
-    font-size: var(--font-size-xs);
+.widget-title {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
     font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Performers Section */
-.performers-section {
-    padding: var(--space-5);
-}
-
-.performers-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
-
-.performer-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) 0;
-}
-
-.performer-rank {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--glass-bg);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
+.widget-value {
+    font-size: 2.5rem;
     font-weight: 700;
-    color: var(--color-text-tertiary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
 }
 
-.performer-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.widget-value-accent {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.performer-name {
-    font-weight: 600;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
+.widget-change {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
 }
 
-.performer-position {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
+.widget-change-positive {
+    color: var(--color-success);
 }
 
-.performer-points {
-    font-weight: 700;
+.widget-change-warning {
+    color: var(--color-warning);
+}
+
+.widget-link {
+    font-size: 0.875rem;
     color: var(--color-primary);
-    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.widget-link:hover {
+    text-decoration: underline;
+}
+
+.widget-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.widget-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .stats-grid {
+@media (max-width: 1024px) {
+    .dashboard-top-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-actions-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .dashboard-grid {
+    .dashboard-gauges {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
-    .stats-grid {
+    .dashboard-page {
+        padding: 1rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .dashboard-title-section h1 {
+        font-size: 1.75rem;
+    }
+
+    .dashboard-title-section p {
+        font-size: 0.875rem;
+    }
+
+    .dashboard-status {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+    }
+
+    .dashboard-top-grid {
+        gap: 1.5rem;
+    }
+
+    .dashboard-actions-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .dashboard-widget {
+        padding: 1rem;
+    }
+
+    .widget-value {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-title-section h1 {
+        font-size: 1.5rem;
+    }
+
+    .widget-value {
+        font-size: 1.75rem;
+    }
+
+    .dashboard-gauges {
+        gap: 1rem;
     }
 }

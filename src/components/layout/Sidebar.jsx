@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useState, useEffect } from 'react'
 
@@ -20,6 +20,7 @@ const adminItems = [
 export default function Sidebar() {
     const { profile, signOut, isAdmin, isDemoMode } = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
 
     const handleSignOut = async () => {
@@ -41,7 +42,7 @@ export default function Sidebar() {
     // Close sidebar on route change (mobile)
     useEffect(() => {
         closeSidebar()
-    }, [navigate])
+    }, [location.pathname])
 
     return (
         <>

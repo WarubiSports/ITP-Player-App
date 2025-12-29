@@ -272,13 +272,13 @@
 }
 
 .sidebar-overlay {
-    display: none;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
     z-index: 90;
     animation: fadeIn var(--transition-fast);
+    cursor: pointer;
 }
 
 /* Responsive */
@@ -287,14 +287,11 @@
         display: flex;
     }
 
-    .sidebar-overlay {
-        display: block;
-    }
-
     .sidebar {
         transform: translateX(-100%);
-        transition: transform var(--transition-base);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--shadow-lg);
+        width: 280px;
     }
 
     .sidebar.open {
@@ -303,10 +300,15 @@
 
     .app-main {
         margin-left: 0;
+        padding-top: 64px; /* Space for mobile menu button */
     }
 
     .app-content {
         padding: var(--space-4);
+    }
+
+    .app-header {
+        margin-top: -64px; /* Compensate for app-main padding */
     }
 
     .header-title {
@@ -315,6 +317,22 @@
 
     .header-date {
         display: none;
+    }
+
+    /* Ensure nav items have good touch targets */
+    .nav-item {
+        padding: var(--space-4) var(--space-3);
+        min-height: 44px;
+    }
+
+    .nav-icon {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 260px;
     }
 }
 
@@ -329,5 +347,19 @@
 
     .header-title {
         font-size: var(--font-size-lg);
+    }
+
+    .sidebar {
+        width: 85vw;
+        max-width: 300px;
+    }
+
+    .sidebar-logo img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .sidebar-brand-title {
+        font-size: var(--font-size-base);
     }
 }
