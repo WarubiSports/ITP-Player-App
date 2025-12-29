@@ -12,9 +12,12 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 // Lazy load dashboard pages (code splitting)
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Players = lazy(() => import('./pages/Players'))
+const Wellness = lazy(() => import('./pages/Wellness'))
+const Pathway = lazy(() => import('./pages/Pathway'))
 const Housing = lazy(() => import('./pages/Housing'))
 const Chores = lazy(() => import('./pages/Chores'))
 const Calendar = lazy(() => import('./pages/Calendar'))
+const ParentPortal = lazy(() => import('./pages/ParentPortal'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 // Loading component
@@ -60,9 +63,12 @@ export default function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
                 <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
+                <Route path="wellness" element={<Suspense fallback={<PageLoader />}><Wellness /></Suspense>} />
+                <Route path="pathway" element={<Suspense fallback={<PageLoader />}><Pathway /></Suspense>} />
                 <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
                 <Route path="chores" element={<Suspense fallback={<PageLoader />}><Chores /></Suspense>} />
                 <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+                <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
                 <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
             </Route>
 

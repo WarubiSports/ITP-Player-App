@@ -5,9 +5,12 @@ import { useState, useEffect } from 'react'
 const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/players', icon: '⚽', label: 'Players' },
+    { path: '/wellness', icon: '💪', label: 'Wellness' },
+    { path: '/pathway', icon: '🎯', label: 'Pathway' },
     { path: '/housing', icon: '🏠', label: 'Housing' },
     { path: '/chores', icon: '✅', label: 'Chores' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },
+    { path: '/parent-portal', icon: '👨‍👩‍👧', label: 'Parent Portal' },
 ]
 
 const adminItems = [

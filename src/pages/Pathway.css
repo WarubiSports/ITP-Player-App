@@ -1,0 +1,427 @@
+.pathway-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header */
+.pathway-header {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.overview-icon {
+    font-size: 3rem;
+}
+
+.overview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.overview-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.overview-label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.overview-detail {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+}
+
+/* Sections */
+.pathway-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--color-bg-secondary);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.filter-tab {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-tab:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+}
+
+.filter-tab.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Colleges Grid */
+.colleges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.college-card {
+    padding: 1.5rem;
+    transition: transform 0.2s ease;
+}
+
+.college-card:hover {
+    transform: translateY(-4px);
+}
+
+.college-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.college-name {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.college-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.college-details {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.college-details p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.scholarship-offer {
+    color: var(--color-success);
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.college-contact {
+    padding: 0.75rem;
+    background: var(--color-bg-secondary);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.college-contact p {
+    margin: 0.25rem 0;
+}
+
+.last-contact {
+    color: var(--color-text-tertiary);
+    font-size: 0.75rem;
+}
+
+.college-notes {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--color-bg-tertiary);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--color-text-secondary);
+}
+
+/* Scout Activities Timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    width: 32px;
+    height: 32px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 4px var(--color-bg-primary);
+}
+
+.timeline-icon {
+    font-size: 1rem;
+}
+
+.timeline-content {
+    background: var(--color-bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-header h4 {
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.timeline-date {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+}
+
+.timeline-scout {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.timeline-notes {
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+/* Courses List */
+.courses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.course-item {
+    padding: 1rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+}
+
+.course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+    gap: 1rem;
+}
+
+.course-header h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.course-badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.grade-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--color-primary);
+    color: white;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.course-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    flex-wrap: wrap;
+}
+
+.transferable {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.course-notes {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--color-text-tertiary);
+}
+
+/* Performance Grid */
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.performance-card {
+    padding: 1.5rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.performance-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.performance-values {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.perf-value {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.perf-label {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+}
+
+.perf-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.perf-arrow {
+    font-size: 1.5rem;
+    color: var(--color-text-tertiary);
+}
+
+.perf-improvement {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.perf-improvement.positive {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.perf-improvement.negative {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-tertiary);
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pathway-page {
+        padding: 1rem;
+    }
+
+    .pathway-header {
+        grid-template-columns: 1fr;
+    }
+
+    .colleges-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .performance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+}

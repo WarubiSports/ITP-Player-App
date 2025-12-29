@@ -1,0 +1,451 @@
+.parent-portal-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.portal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.player-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.player-info h2 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.player-info p {
+    margin: 0.25rem 0 0 0;
+    color: var(--color-text-secondary);
+}
+
+.week-selector {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Report Period */
+.report-period {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.report-period h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.report-period p {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    padding: 1.5rem;
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.metric-icon {
+    font-size: 1.5rem;
+}
+
+.metric-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.metric-value {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.metric-value .value {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.metric-value .value.success {
+    color: var(--color-success);
+}
+
+.metric-value .value.warning {
+    color: var(--color-warning);
+}
+
+.metric-value .value.error {
+    color: var(--color-error);
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+}
+
+.metric-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-success {
+    background: var(--color-success);
+    color: white;
+}
+
+.status-badge.status-warning {
+    background: var(--color-warning);
+    color: white;
+}
+
+.status-badge.status-error {
+    background: var(--color-error);
+    color: white;
+}
+
+/* Report Sections */
+.report-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.report-section {
+    padding: 1.5rem;
+}
+
+.report-section .section-title {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Injury Section */
+.injury-section {
+    border-left: 4px solid var(--color-error);
+}
+
+.injury-report-item {
+    padding: 1rem 0;
+}
+
+.injury-report-item:not(:last-child) {
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+}
+
+.injury-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.injury-report-header h4 {
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.injury-report-details p {
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Courses Summary */
+.courses-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.course-summary-item {
+    padding: 1rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+}
+
+.course-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.course-name {
+    font-weight: 600;
+}
+
+.grade-display {
+    padding: 0.25rem 0.75rem;
+    background: var(--color-primary);
+    color: white;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.course-summary-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Scout Summary */
+.scout-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.scout-summary-item {
+    padding: 1rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+}
+
+.scout-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.scout-org {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.scout-date {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+}
+
+.scout-details {
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.scout-notes {
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Performance Summary */
+.performance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.performance-summary-item {
+    padding: 1rem;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.perf-test-name {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.perf-test-result {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.perf-test-percentile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.percentile-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.percentile-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.perf-test-percentile span {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+}
+
+/* Coach Notes */
+.coach-notes {
+    background: var(--color-bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    line-height: 1.8;
+}
+
+.coach-notes p {
+    margin: 0 0 1rem 0;
+}
+
+.coach-notes p:last-child {
+    margin-bottom: 0;
+}
+
+/* Footer */
+.report-footer {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.report-footer p {
+    margin: 0.5rem 0;
+}
+
+.report-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.report-footer a:hover {
+    text-decoration: underline;
+}
+
+.report-generated {
+    color: var(--color-text-tertiary);
+    font-size: 0.75rem;
+}
+
+/* Print Styles */
+@media print {
+    .portal-header,
+    .week-selector,
+    .report-footer {
+        display: none;
+    }
+
+    .parent-portal-page {
+        padding: 0;
+    }
+
+    .glass-card,
+    .glass-card-static {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .parent-portal-page {
+        padding: 1rem;
+    }
+
+    .portal-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .week-selector {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .week-selector .input,
+    .week-selector .btn {
+        width: 100%;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .performance-summary {
+        grid-template-columns: 1fr;
+    }
+}
