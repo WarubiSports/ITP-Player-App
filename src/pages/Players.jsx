@@ -1,29 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import './Players.css'
 
+// Debounce hook for search optimization
+function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value)
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value)
+        }, delay)
+
+        return () => clearTimeout(handler)
+    }, [value, delay])
+
+    return debouncedValue
+}
+
 export default function Players() {
     const { isStaff } = useAuth()
     const [players, setPlayers] = useState([])
-    const [filteredPlayers, setFilteredPlayers] = useState([])
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [positionFilter, setPositionFilter] = useState('all')
     const [showModal, setShowModal] = useState(false)
     const [selectedPlayer, setSelectedPlayer] = useState(null)
 
+    // Debounce search input
+    const debouncedSearch = useDebounce(search, 300)
+
     useEffect(() => {
         setPlayers(demoData.players)
-        setFilteredPlayers(demoData.players)
     }, [])
 
-    useEffect(() => {
+    // Memoized filtered players with debounced search
+    const filteredPlayers = useMemo(() => {
         let result = players
 
-        if (search) {
+        if (debouncedSearch) {
             result = result.filter(p =>
-                `${p.first_name} ${p.last_name}`.toLowerCase().includes(search.toLowerCase())
+                `${p.first_name} ${p.last_name}`.toLowerCase().includes(debouncedSearch.toLowerCase())
             )
         }
 
@@ -35,25 +52,26 @@ export default function Players() {
             result = result.filter(p => p.position === positionFilter)
         }
 
-        setFilteredPlayers(result)
-    }, [search, statusFilter, positionFilter, players])
+        return result
+    }, [debouncedSearch, statusFilter, positionFilter, players])
 
-    const getHouseName = (houseId) => {
+    // Memoized house lookup
+    const getHouseName = useCallback((houseId) => {
         const house = demoData.houses.find(h => h.id === houseId)
         return house?.name || 'Unassigned'
-    }
+    }, [])
 
-    const openPlayerModal = (player = null) => {
+    const openPlayerModal = useCallback((player = null) => {
         setSelectedPlayer(player)
         setShowModal(true)
-    }
+    }, [])
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         setShowModal(false)
         setSelectedPlayer(null)
-    }
+    }, [])
 
-    const handleSavePlayer = (e) => {
+    const handleSavePlayer = useCallback((e) => {
         e.preventDefault()
         const form = e.target
         const newPlayer = {
@@ -74,20 +92,21 @@ export default function Players() {
             setPlayers(prev => [...prev, newPlayer])
         }
         closeModal()
-    }
+    }, [selectedPlayer, closeModal])
 
-    const handleDeletePlayer = (playerId) => {
+    const handleDeletePlayer = useCallback((playerId) => {
         if (confirm('Are you sure you want to remove this player?')) {
             setPlayers(prev => prev.filter(p => p.id !== playerId))
         }
-    }
+    }, [])
 
-    const stats = {
+    // Memoized stats calculation
+    const stats = useMemo(() => ({
         total: players.length,
         active: players.filter(p => p.status === 'active').length,
         training: players.filter(p => p.status === 'training').length,
         rest: players.filter(p => p.status === 'rest').length,
-    }
+    }), [players])
 
     return (
         <div className="players-page">

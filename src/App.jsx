@@ -1,17 +1,36 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
+
+// Eager load auth pages (needed immediately)
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
-import Dashboard from './pages/Dashboard'
-import Players from './pages/Players'
-import Housing from './pages/Housing'
-import Chores from './pages/Chores'
-import Calendar from './pages/Calendar'
-import Messages from './pages/Messages'
-import Admin from './pages/Admin'
+
+// Lazy load dashboard pages (code splitting)
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Players = lazy(() => import('./pages/Players'))
+const Housing = lazy(() => import('./pages/Housing'))
+const Chores = lazy(() => import('./pages/Chores'))
+const Calendar = lazy(() => import('./pages/Calendar'))
+const Messages = lazy(() => import('./pages/Messages'))
+const Admin = lazy(() => import('./pages/Admin'))
+
+// Loading component
+function PageLoader() {
+    return (
+        <div style={{
+            height: '60vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <div className="spinner spinner-lg"></div>
+        </div>
+    )
+}
 
 export default function App() {
     const { user, loading } = useAuth()
@@ -40,13 +59,13 @@ export default function App() {
             {/* Protected Routes */}
             <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="players" element={<Players />} />
-                <Route path="housing" element={<Housing />} />
-                <Route path="chores" element={<Chores />} />
-                <Route path="calendar" element={<Calendar />} />
-                <Route path="messages" element={<Messages />} />
-                <Route path="admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+                <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+                <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
+                <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
+                <Route path="chores" element={<Suspense fallback={<PageLoader />}><Chores /></Suspense>} />
+                <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+                <Route path="messages" element={<Suspense fallback={<PageLoader />}><Messages /></Suspense>} />
+                <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
             </Route>
 
             {/* Fallback */}

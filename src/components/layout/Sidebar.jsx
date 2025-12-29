@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useState, useEffect } from 'react'
 
 const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -17,6 +18,7 @@ const adminItems = [
 export default function Sidebar() {
     const { profile, signOut, isAdmin, isDemoMode } = useAuth()
     const navigate = useNavigate()
+    const [isOpen, setIsOpen] = useState(false)
 
     const handleSignOut = async () => {
         await signOut()
@@ -32,8 +34,34 @@ export default function Sidebar() {
         ? `${profile.first_name} ${profile.last_name || ''}`
         : profile?.email?.split('@')[0] || 'User'
 
+    const closeSidebar = () => setIsOpen(false)
+
+    // Close sidebar on route change (mobile)
+    useEffect(() => {
+        closeSidebar()
+    }, [navigate])
+
     return (
-        <aside className="sidebar">
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={closeSidebar}
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* Mobile Menu Button */}
+            <button
+                className="mobile-menu-btn"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Toggle menu"
+            >
+                <span className="menu-icon">{isOpen ? '✕' : '☰'}</span>
+            </button>
+
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <img src="/fc-koln-logo.svg" alt="1.FC Köln" />
@@ -52,6 +80,7 @@ export default function Sidebar() {
                             key={item.path}
                             to={item.path}
                             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                            onClick={closeSidebar}
                         >
                             <span className="nav-icon">{item.icon}</span>
                             <span className="nav-label">{item.label}</span>
@@ -67,6 +96,7 @@ export default function Sidebar() {
                                 key={item.path}
                                 to={item.path}
                                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                onClick={closeSidebar}
                             >
                                 <span className="nav-icon">{item.icon}</span>
                                 <span className="nav-label">{item.label}</span>
@@ -94,5 +124,6 @@ export default function Sidebar() {
                 </div>
             </div>
         </aside>
+        </>
     )
 }
