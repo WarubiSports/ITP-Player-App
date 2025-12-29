@@ -15,12 +15,12 @@ export const demoData = {
         { id: 'staff-1', email: 'thomas.ellinger@warubi-sports.com', role: 'staff', first_name: 'Thomas', last_name: 'Ellinger' },
     ],
     players: [
-        { id: 'p1', first_name: 'Max', last_name: 'Finkgräfe', position: 'STRIKER', house_id: 'h1', status: 'active', age: 19, nationality: 'Germany', points: 450 },
-        { id: 'p2', first_name: 'Tim', last_name: 'Lemperle', position: 'WINGER', house_id: 'h3', status: 'active', age: 20, nationality: 'Germany', points: 380 },
-        { id: 'p3', first_name: 'Linton', last_name: 'Maina', position: 'WINGER', house_id: 'h2', status: 'training', age: 21, nationality: 'Germany', points: 420 },
-        { id: 'p4', first_name: 'Florian', last_name: 'Kainz', position: 'MIDFIELDER', house_id: 'h1', status: 'rest', age: 22, nationality: 'Austria', points: 510 },
-        { id: 'p5', first_name: 'Jan', last_name: 'Thielmann', position: 'WINGER', house_id: 'h2', status: 'active', age: 21, nationality: 'Germany', points: 395 },
-        { id: 'p6', first_name: 'Dejan', last_name: 'Ljubičić', position: 'MIDFIELDER', house_id: 'h3', status: 'active', age: 25, nationality: 'Austria', points: 440 },
+        { id: 'p1', first_name: 'Max', last_name: 'Finkgräfe', position: 'STRIKER', house_id: 'h1', status: 'active', date_of_birth: '2005-08-15', nationality: 'Germany', points: 450 },
+        { id: 'p2', first_name: 'Tim', last_name: 'Lemperle', position: 'WINGER', house_id: 'h3', status: 'active', date_of_birth: '2004-03-22', nationality: 'Germany', points: 380 },
+        { id: 'p3', first_name: 'Linton', last_name: 'Maina', position: 'WINGER', house_id: 'h2', status: 'training', date_of_birth: '2003-11-12', nationality: 'Kenya', points: 420 },
+        { id: 'p4', first_name: 'Florian', last_name: 'Kainz', position: 'MIDFIELDER', house_id: 'h1', status: 'rest', date_of_birth: '2002-06-24', nationality: 'Austria', points: 510 },
+        { id: 'p5', first_name: 'Jan', last_name: 'Thielmann', position: 'WINGER', house_id: 'h2', status: 'active', date_of_birth: '2003-09-07', nationality: 'Germany', points: 395 },
+        { id: 'p6', first_name: 'Dejan', last_name: 'Ljubičić', position: 'MIDFIELDER', house_id: 'h3', status: 'active', date_of_birth: '1999-01-30', nationality: 'Austria', points: 440 },
     ],
     houses: [
         { id: 'h1', name: 'Widdersdorf 1', total_points: 945 },

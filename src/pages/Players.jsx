@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { getCountryFlag, formatDateOfBirth } from '../utils/countryFlags'
 import './Players.css'
 
 // Debounce hook for search optimization
@@ -80,7 +81,7 @@ export default function Players() {
             last_name: form.lastName.value,
             position: form.position.value,
             nationality: form.nationality.value,
-            age: parseInt(form.age.value),
+            date_of_birth: form.dateOfBirth.value,
             house_id: form.house.value,
             status: form.status.value,
             points: selectedPlayer?.points || 0
@@ -192,8 +193,8 @@ export default function Players() {
                             <p className="player-position">{player.position}</p>
                             <div className="player-meta">
                                 <span>🏠 {getHouseName(player.house_id)}</span>
-                                <span>🎂 {player.age} yrs</span>
-                                <span>🌍 {player.nationality}</span>
+                                <span>📅 {formatDateOfBirth(player.date_of_birth)}</span>
+                                <span>{getCountryFlag(player.nationality)} {player.nationality}</span>
                             </div>
                             <div className="player-points">
                                 <span className="points-icon">⭐</span>
@@ -274,14 +275,12 @@ export default function Players() {
                                         </select>
                                     </div>
                                     <div className="input-group">
-                                        <label className="input-label">Age</label>
+                                        <label className="input-label">Date of Birth</label>
                                         <input
-                                            name="age"
-                                            type="number"
+                                            name="dateOfBirth"
+                                            type="date"
                                             className="input"
-                                            min="16"
-                                            max="35"
-                                            defaultValue={selectedPlayer?.age || 18}
+                                            defaultValue={selectedPlayer?.date_of_birth || '2005-01-01'}
                                             required
                                         />
                                     </div>

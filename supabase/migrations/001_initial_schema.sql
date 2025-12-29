@@ -80,7 +80,7 @@ CREATE TABLE public.players (
     last_name TEXT NOT NULL,
     position TEXT NOT NULL CHECK (position IN ('STRIKER', 'WINGER', 'MIDFIELDER', 'DEFENDER', 'GOALKEEPER')),
     nationality TEXT NOT NULL,
-    age INTEGER NOT NULL CHECK (age >= 16 AND age <= 35),
+    date_of_birth DATE NOT NULL,
     house_id UUID REFERENCES public.houses(id) ON DELETE SET NULL,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'training', 'rest', 'injured')),
     points INTEGER NOT NULL DEFAULT 0,
