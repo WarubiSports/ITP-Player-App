@@ -1,7 +1,16 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase, isDemoMode, demoData } from '../lib/supabase'
+import { supabase, checkIsDemoMode, demoData } from '../lib/supabase'
 
 const AuthContext = createContext({})
+
+// Demo user emails - these always use demo mode regardless of Supabase config
+const DEMO_EMAILS = [
+    'max.finkgrafe@player.com',
+    'tim.lemperle@player.com',
+    'max.bisinger@warubi-sports.com',
+    'thomas.ellinger@warubi-sports.com',
+    'demo.player@itp.com'
+]
 
 export const useAuth = () => useContext(AuthContext)
 
@@ -12,14 +21,18 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Check for existing session
-        if (isDemoMode) {
-            // Demo mode: check localStorage
-            const savedUser = localStorage.getItem('itp_demo_user')
-            if (savedUser) {
-                const parsedUser = JSON.parse(savedUser)
-                setUser(parsedUser)
-                setProfile(parsedUser)
-            }
+        // First check if there's a demo user in localStorage
+        const savedDemoUser = localStorage.getItem('itp_demo_user')
+        if (savedDemoUser) {
+            const parsedUser = JSON.parse(savedDemoUser)
+            setUser(parsedUser)
+            setProfile(parsedUser)
+            setLoading(false)
+            return
+        }
+
+        if (checkIsDemoMode()) {
+            // Pure demo mode with no saved user
             setLoading(false)
         } else {
             // Supabase mode
@@ -54,10 +67,13 @@ export function AuthProvider({ children }) {
     }
 
     const signIn = async (email, password) => {
-        if (isDemoMode) {
+        // Check if this is a demo email - always use demo mode for demo accounts
+        const isDemoEmail = DEMO_EMAILS.includes(email.toLowerCase())
+
+        if (checkIsDemoMode() || isDemoEmail) {
             // Demo mode: simple email/password check
-            const demoUser = demoData.users.find(u => u.email === email)
-            if (demoUser && password === 'ITP2024') {
+            const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
+            if (demoUser && (password === 'ITP2024' || password === 'Demo2024')) {
                 setUser(demoUser)
                 setProfile(demoUser)
                 localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
@@ -71,7 +87,7 @@ export function AuthProvider({ children }) {
     }
 
     const signUp = async (email, password, metadata = {}) => {
-        if (isDemoMode) {
+        if (checkIsDemoMode()) {
             // Demo mode: create new user in memory
             const newUser = {
                 id: `user-${Date.now()}`,
@@ -96,19 +112,24 @@ export function AuthProvider({ children }) {
     }
 
     const signOut = async () => {
-        if (isDemoMode) {
+        // Always clear demo user if present
+        const hadDemoUser = localStorage.getItem('itp_demo_user') !== null
+        localStorage.removeItem('itp_demo_user')
+
+        if (hadDemoUser || checkIsDemoMode()) {
             setUser(null)
             setProfile(null)
-            localStorage.removeItem('itp_demo_user')
             return { error: null }
         }
 
         const { error } = await supabase.auth.signOut()
+        setUser(null)
+        setProfile(null)
         return { error }
     }
 
     const resetPassword = async (email) => {
-        if (isDemoMode) {
+        if (checkIsDemoMode() || DEMO_EMAILS.includes(email.toLowerCase())) {
             return { error: null, message: 'Demo mode: Password reset email would be sent' }
         }
 
@@ -128,7 +149,7 @@ export function AuthProvider({ children }) {
         resetPassword,
         isAdmin: profile?.role === 'admin',
         isStaff: profile?.role === 'staff' || profile?.role === 'admin',
-        isDemoMode,
+        isDemoMode: checkIsDemoMode(),
     }
 
     return (

@@ -54,6 +54,8 @@ export const demoData = {
         // Player user accounts (so players can log in and test features)
         { id: 'p1', email: 'max.finkgrafe@player.com', role: 'player', first_name: 'Max', last_name: 'Finkgräfe' },
         { id: 'p2', email: 'tim.lemperle@player.com', role: 'player', first_name: 'Tim', last_name: 'Lemperle' },
+        // Generic demo player account
+        { id: 'p1', email: 'demo.player@itp.com', role: 'player', first_name: 'Demo', last_name: 'Player' },
     ],
     players: [
         { id: 'p1', user_id: 'p1', first_name: 'Max', last_name: 'Finkgräfe', position: 'STRIKER', house_id: 'h1', status: 'active', date_of_birth: '2005-08-15', nationality: 'Germany', points: 450 },
