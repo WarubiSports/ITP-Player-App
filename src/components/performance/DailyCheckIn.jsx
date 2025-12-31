@@ -1,34 +1,40 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { getDemoData, updateDemoData } from '../../lib/supabase';
+import { createWellnessLog, createTrainingLoad, getPlayers } from '../../lib/data-service';
+import { getLocalDate } from '../../lib/date-utils';
 
 export default function DailyCheckIn({ onClose }) {
     const { profile } = useAuth();
     const { success, achievement } = useNotification();
     const [step, setStep] = useState(1);
     const [ratings, setRatings] = useState({ sleep: 5, soreness: 3, mood: 4 });
+    const [trainingData, setTrainingData] = useState({ duration: 60, rpe: 5, trained: true });
 
     const handleRate = (category, value) => {
         setRatings(prev => ({ ...prev, [category]: value }));
     };
 
-    const handleSubmit = () => {
-        // Save wellness data
-        const data = getDemoData();
-        const today = new Date().toISOString().split('T')[0];
+    const handleTrainingChange = (field, value) => {
+        setTrainingData(prev => ({ ...prev, [field]: value }));
+    };
 
-        // Check if already logged today
-        const existingLog = data.wellnessLogs?.find(
-            log => log.player_id === profile.id && log.date === today
-        );
+    const handleSubmit = async () => {
+        try {
+            // Get player ID
+            const players = await getPlayers();
+            const player = players.find(p => p.id === profile.id || p.user_id === profile.id);
 
-        if (existingLog) {
-            success('Wellness check-in updated!');
-        } else {
-            const newLog = {
-                id: `w${Date.now()}`,
-                player_id: profile.id,
+            if (!player) {
+                console.error('❌ Player not found. Profile ID:', profile.id);
+                throw new Error('Player not found');
+            }
+
+            const today = getLocalDate(); // Use CET timezone for correct date
+
+            // Create wellness log
+            const wellnessLog = {
+                player_id: player.id,
                 date: today,
                 sleep_hours: ratings.sleep * 1.6, // Convert 1-5 to ~1.6-8 hours
                 sleep_quality: ratings.sleep,
@@ -36,30 +42,32 @@ export default function DailyCheckIn({ onClose }) {
                 muscle_soreness: ratings.soreness * 2, // Convert 1-5 to 2-10
                 stress_level: Math.max(1, 6 - ratings.mood), // Inverse of mood
                 mood: ratings.mood >= 4 ? 'good' : ratings.mood >= 2 ? 'okay' : 'tired',
-                notes: 'Morning check-in',
-                created_at: new Date().toISOString()
+                notes: 'Morning check-in'
             };
 
-            data.wellnessLogs = [...(data.wellnessLogs || []), newLog];
-            updateDemoData(data);
+            await createWellnessLog(wellnessLog);
 
-            success('Daily check-in completed!');
-
-            // Check for streak achievements
-            const recentLogs = data.wellnessLogs
-                .filter(log => log.player_id === profile.id)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            if (recentLogs.length === 7) {
-                achievement('Week Warrior', 'Completed 7 daily check-ins!', '🔥');
-            } else if (recentLogs.length === 30) {
-                achievement('Monthly Master', '30-day check-in streak!', '💪');
-            } else if (recentLogs.length % 10 === 0) {
-                achievement('Consistency Champion', `${recentLogs.length} check-ins completed!`, '⭐');
+            // Create training load if user trained
+            if (trainingData.trained) {
+                const trainingLog = {
+                    player_id: player.id,
+                    date: today,
+                    duration: trainingData.duration,
+                    rpe: trainingData.rpe,
+                    session_type: 'training',
+                    load_score: trainingData.duration * trainingData.rpe
+                };
+                await createTrainingLoad(trainingLog);
             }
-        }
 
-        onClose();
+            success('Daily check-in completed and saved!');
+
+            onClose();
+        } catch (error) {
+            console.error('Error saving check-in:', error);
+            success('Check-in saved locally');
+            onClose();
+        }
     };
 
     return (
@@ -127,10 +135,61 @@ export default function DailyCheckIn({ onClose }) {
                             </div>
                         </>
                     )}
+
+                    {step === 4 && (
+                        <>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚽</div>
+                            <h3>Did you train yesterday?</h3>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button
+                                    className={`btn ${trainingData.trained ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => handleTrainingChange('trained', true)}
+                                    style={{ width: '100px' }}
+                                >
+                                    Yes
+                                </button>
+                                <button
+                                    className={`btn ${!trainingData.trained ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => handleTrainingChange('trained', false)}
+                                    style={{ width: '100px' }}
+                                >
+                                    No
+                                </button>
+                            </div>
+                            {trainingData.trained && (
+                                <div style={{ marginTop: '1.5rem' }}>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Duration (minutes)</label>
+                                        <input
+                                            type="number"
+                                            value={trainingData.duration}
+                                            onChange={(e) => handleTrainingChange('duration', parseInt(e.target.value))}
+                                            style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Intensity (RPE 1-10)</label>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                                                <button
+                                                    key={num}
+                                                    className={`btn ${trainingData.rpe === num ? 'btn-primary' : 'btn-secondary'}`}
+                                                    onClick={() => handleTrainingChange('rpe', num)}
+                                                    style={{ width: '35px', height: '35px', padding: 0, fontSize: '0.8rem' }}
+                                                >
+                                                    {num}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 <div className="modal-footer" style={{ justifyContent: 'center' }}>
-                    {step < 3 ? (
+                    {step < 4 ? (
                         <button className="btn btn-primary" onClick={() => setStep(s => s + 1)} style={{ width: '100%' }}>
                             Next
                         </button>

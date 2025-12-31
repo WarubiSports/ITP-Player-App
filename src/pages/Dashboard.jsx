@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { getDemoData } from '../lib/supabase'
+import { getPlayers, getWellnessScore, getTrainingLoads } from '../lib/data-service'
 import ReadinessGauge from '../components/dashboard/ReadinessGauge'
 import NextObjective from '../components/dashboard/NextObjective'
 import LiveLeaderboard from '../components/dashboard/LiveLeaderboard'
+import SmartGuidance from '../components/dashboard/SmartGuidance'
 import Marketplace from '../components/gamification/Marketplace'
 import DailyCheckIn from '../components/performance/DailyCheckIn'
+import GoalsWidget from '../components/goals/GoalsWidget'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -13,12 +16,85 @@ export default function Dashboard() {
     const [showMarket, setShowMarket] = useState(false);
     const [showCheckIn, setShowCheckIn] = useState(false);
     const [playerData, setPlayerData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [readinessScore, setReadinessScore] = useState(50);
+    const [trainingLoad, setTrainingLoad] = useState('Medium');
+    const [sleepAverage, setSleepAverage] = useState(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
-        const data = getDemoData();
-        const player = data.players.find(p => p.id === profile.id);
-        setPlayerData(player);
-    }, [profile.id, showMarket, showCheckIn]); // Refresh when modals close
+        if (profile?.id) {
+            loadDashboardData();
+        }
+    }, [profile?.id, showMarket, showCheckIn]); // Refresh when modals close
+
+    // Trigger refresh of SmartGuidance when check-in closes
+    const prevShowCheckIn = React.useRef(showCheckIn);
+    useEffect(() => {
+        if (prevShowCheckIn.current && !showCheckIn) {
+            // Check-in modal just closed - refresh SmartGuidance
+            setTimeout(() => setRefreshKey(prev => prev + 1), 100);
+        }
+        prevShowCheckIn.current = showCheckIn;
+    }, [showCheckIn]);
+
+    const loadDashboardData = async () => {
+        if (!profile?.id) return;
+
+        try {
+            setLoading(true);
+            // Get player data
+            const players = await getPlayers();
+            const player = players.find(p => p.id === profile.id || p.user_id === profile.id);
+            setPlayerData(player || false); // false means not a player, null means loading
+
+            if (player && player.id) {
+                // Get wellness score (7-day average)
+                const wellnessData = await getWellnessScore(player.id);
+                if (wellnessData) {
+                    setReadinessScore(wellnessData.score);
+                    const avgSleep = wellnessData.average.sleep_quality;
+                    setSleepAverage((avgSleep * 2).toFixed(1)); // Convert 1-5 scale to hours estimate
+                }
+
+                // Get training load (7-day total)
+                const loads = await getTrainingLoads(player.id, 7);
+                if (loads && loads.length > 0) {
+                    const totalLoad = loads.reduce((sum, load) => sum + (load.load_score || 0), 0);
+                    if (totalLoad > 4000) setTrainingLoad('Very High');
+                    else if (totalLoad > 2500) setTrainingLoad('High');
+                    else if (totalLoad > 1500) setTrainingLoad('Medium');
+                    else setTrainingLoad('Low');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            // Fallback to demo data
+            const data = getDemoData();
+            const player = data.players.find(p => p.id === profile.id);
+            setPlayerData(player || false);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Don't render until we know user type (playerData must be false or object, never null)
+    if (playerData === null) {
+        return (
+            <div className="dashboard-page">
+                <header className="dashboard-header">
+                    <div className="dashboard-title-section">
+                        <h1>MISSION CONTROL</h1>
+                        <p>Loading...</p>
+                    </div>
+                </header>
+                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', marginTop: '2rem' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                    <p style={{ color: 'var(--color-text-secondary)' }}>Loading dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-page">
@@ -33,47 +109,83 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            {/* Top Row: Critical Status */}
-            <div className="dashboard-top-grid">
-                <div className="dashboard-gauges">
-                    <ReadinessGauge score={88} />
-                    <NextObjective />
-                </div>
-                <LiveLeaderboard />
-            </div>
+            {/* Smart Guidance - Personalized Next Steps (only for players) */}
+            {playerData && playerData.id && <SmartGuidance key={refreshKey} playerId={playerData.id} />}
 
-            {/* Middle Row: Quick Actions & Stats */}
-            <div className="dashboard-actions-grid">
-                {/* Wallet Widget */}
-                <div className="glass-panel dashboard-widget" onClick={() => setShowMarket(true)}>
-                    <h3 className="widget-title">Wallet</h3>
-                    <div className="widget-value widget-value-accent">
-                        {playerData?.points?.toLocaleString() || 0} <span style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>GC</span>
+            {/* Staff View Message (only for staff - playerData === false) */}
+            {playerData === false && (
+                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
+                    <h2 style={{ margin: '0 0 1rem 0' }}>👥 Staff Dashboard</h2>
+                    <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+                        Welcome, Max! As a staff member, you have access to administrative features.
+                    </p>
+                    <p style={{ color: 'var(--color-text-tertiary)', fontSize: '0.9rem' }}>
+                        Navigate to Players, Housing, or Admin sections using the sidebar to manage the program.
+                    </p>
+                </div>
+            )}
+
+            {/* Player Dashboard - Only shown for players (playerData is object with id) */}
+            {playerData && playerData.id && (
+                <>
+                    {/* Top Row: Critical Status */}
+                    <div className="dashboard-top-grid">
+                        <div className="dashboard-gauges">
+                            <ReadinessGauge score={readinessScore} />
+                            <NextObjective />
+                        </div>
+                        <LiveLeaderboard />
                     </div>
-                    <div className="widget-change widget-change-positive">Earn more through tasks</div>
-                    <div className="widget-link">Open Store →</div>
-                </div>
 
-                {/* Training Load */}
-                <div className="glass-panel dashboard-widget" onClick={() => setShowCheckIn(true)}>
-                    <h3 className="widget-title">Training Load</h3>
-                    <div className="widget-value">High</div>
-                    <div className="widget-progress-bar">
-                        <div className="widget-progress-fill" style={{ width: '80%' }}></div>
+                    {/* Middle Row: Quick Actions & Stats */}
+                    <div className="dashboard-actions-grid">
+                        {/* Wallet Widget */}
+                        <div className="glass-panel dashboard-widget" onClick={() => setShowMarket(true)}>
+                            <h3 className="widget-title">Wallet</h3>
+                            <div className="widget-value widget-value-accent">
+                                {playerData.points?.toLocaleString() || 0} <span style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>GC</span>
+                            </div>
+                            <div className="widget-change widget-change-positive">Earn more through tasks</div>
+                            <div className="widget-link">Open Store →</div>
+                        </div>
+
+                        {/* Training Load */}
+                        <div className="glass-panel dashboard-widget" onClick={() => setShowCheckIn(true)}>
+                            <h3 className="widget-title">Training Load (7d)</h3>
+                            <div className="widget-value">{trainingLoad}</div>
+                            <div className="widget-progress-bar">
+                                <div className="widget-progress-fill" style={{
+                                    width: trainingLoad === 'Very High' ? '95%' :
+                                           trainingLoad === 'High' ? '75%' :
+                                           trainingLoad === 'Medium' ? '50%' : '30%'
+                                }}></div>
+                            </div>
+                            <div className="widget-link">Log Daily Stats →</div>
+                        </div>
+
+                        {/* Sleep Tracker */}
+                        <div className="glass-panel dashboard-widget">
+                            <h3 className="widget-title">Sleep Quality (7d)</h3>
+                            <div className="widget-value">
+                                {sleepAverage ? `${sleepAverage}/5.0` : 'No data'}
+                            </div>
+                            <div className="widget-change widget-change-warning">
+                                {sleepAverage && parseFloat(sleepAverage) >= 4 ? 'Excellent Recovery' :
+                                 sleepAverage && parseFloat(sleepAverage) >= 3 ? 'Good Recovery' :
+                                 sleepAverage ? 'Below Target' : 'Log your wellness'}
+                            </div>
+                        </div>
                     </div>
-                    <div className="widget-link">Log Daily Stats →</div>
-                </div>
 
-                {/* Sleep Tracker */}
-                <div className="glass-panel dashboard-widget">
-                    <h3 className="widget-title">Sleep Avg</h3>
-                    <div className="widget-value">7h 45m</div>
-                    <div className="widget-change widget-change-warning">Below Target (8h)</div>
-                </div>
-            </div>
+                    {/* Goals Widget */}
+                    <div style={{ marginTop: 'var(--space-6)' }}>
+                        <GoalsWidget playerId={playerData.id} />
+                    </div>
 
-            {showMarket && <Marketplace onClose={() => setShowMarket(false)} />}
-            {showCheckIn && <DailyCheckIn onClose={() => setShowCheckIn(false)} />}
+                    {showMarket && <Marketplace onClose={() => setShowMarket(false)} />}
+                    {showCheckIn && <DailyCheckIn onClose={() => setShowCheckIn(false)} />}
+                </>
+            )}
         </div>
     )
 }

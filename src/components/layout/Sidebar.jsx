@@ -1,14 +1,14 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useState, useEffect } from 'react'
+import ThemeToggle from './ThemeToggle'
 
 const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/players', icon: '⚽', label: 'Players' },
     { path: '/wellness', icon: '💪', label: 'Wellness' },
-    { path: '/pathway', icon: '🎯', label: 'Pathway' },
-    { path: '/housing', icon: '🏠', label: 'Housing' },
-    { path: '/chores', icon: '✅', label: 'Chores' },
+    { path: '/progress', icon: '📈', label: 'Progress' },
+    { path: '/housing', icon: '🏠', label: 'House & Tasks' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },
     { path: '/parent-portal', icon: '👨‍👩‍👧', label: 'Parent Portal' },
 ]
@@ -67,7 +67,7 @@ export default function Sidebar() {
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <img src="/fc-koln-logo.svg" alt="1.FC Köln" />
+                    <img src="/fc-koln-logo.png" alt="1.FC Köln" />
                     <div className="sidebar-brand">
                         <span className="sidebar-brand-title">1.FC Köln</span>
                         <span className="sidebar-brand-sub">ITP Management</span>
@@ -110,6 +110,7 @@ export default function Sidebar() {
             </nav>
 
             <div className="sidebar-footer">
+                <ThemeToggle />
                 {isDemoMode && (
                     <div className="demo-badge-small">Demo Mode</div>
                 )}

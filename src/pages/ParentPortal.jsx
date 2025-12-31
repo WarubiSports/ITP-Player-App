@@ -1,102 +1,147 @@
 import { useState, useEffect } from 'react'
-import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import {
+    getPlayers,
+    getWellnessLogs,
+    getWellnessScore,
+    getTrainingLoads,
+    getInjuries,
+    getAcademicProgress,
+    getCollegeTargets,
+    getScoutActivities,
+    getPerformanceTests
+} from '../lib/data-service'
 import './ParentPortal.css'
 
 export default function ParentPortal() {
     const { profile } = useAuth()
+    const [players, setPlayers] = useState([])
     const [selectedPlayer, setSelectedPlayer] = useState(null)
     const [selectedWeek, setSelectedWeek] = useState('current')
+    const [loading, setLoading] = useState(true)
+    const [reportData, setReportData] = useState(null)
 
     useEffect(() => {
-        // For demo, select first player
-        if (demoData.players.length > 0) {
-            setSelectedPlayer(demoData.players[0])
-        }
+        loadPlayers()
     }, [])
+
+    useEffect(() => {
+        if (selectedPlayer) {
+            loadReportData()
+        }
+    }, [selectedPlayer, selectedWeek])
+
+    const loadPlayers = async () => {
+        try {
+            const allPlayers = await getPlayers()
+            setPlayers(allPlayers)
+            // Auto-select first player
+            if (allPlayers.length > 0) {
+                setSelectedPlayer(allPlayers[0])
+            }
+        } catch (error) {
+            console.error('Error loading players:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const loadReportData = async () => {
+        if (!selectedPlayer) return
+
+        try {
+            setLoading(true)
+            const playerId = selectedPlayer.id
+
+            // Load all data in parallel
+            const [wellness, wellnessScore, training, injuries, academic, colleges, scouts, performance] = await Promise.all([
+                getWellnessLogs(playerId, 7),
+                getWellnessScore(playerId),
+                getTrainingLoads(playerId, 7),
+                getInjuries(playerId),
+                getAcademicProgress(playerId),
+                getCollegeTargets(playerId),
+                getScoutActivities(playerId, 3),
+                getPerformanceTests(playerId, 3)
+            ])
+
+            setReportData({
+                wellness,
+                wellnessScore,
+                training,
+                injuries,
+                academic,
+                colleges,
+                scouts,
+                performance
+            })
+        } catch (error) {
+            console.error('Error loading report data:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     if (!selectedPlayer) {
         return <div className="loading">Loading...</div>
     }
 
-    // Generate weekly report data
+    // Generate weekly report data from loaded data
     const generateWeeklyReport = () => {
-        const playerId = selectedPlayer.id
+        if (!reportData) return null
 
-        // Wellness data (last 7 days)
-        const wellnessLogs = demoData.wellnessLogs
-            .filter(w => w.player_id === playerId)
-            .slice(0, 7)
+        const { wellness, wellnessScore, training, injuries, academic, colleges, scouts, performance } = reportData
 
-        const avgWellness = wellnessLogs.length > 0
-            ? Math.round(wellnessLogs.reduce((sum, log) => {
-                const score = ((log.sleep_quality / 5) * 25) +
-                             ((log.energy_level / 10) * 25) +
-                             (((10 - log.muscle_soreness) / 10) * 25) +
-                             (((10 - log.stress_level) / 10) * 25)
-                return sum + score
-            }, 0) / wellnessLogs.length)
+        // Calculate wellness metrics
+        const avgWellness = wellnessScore?.score || 0
+        const avgSleep = wellness.length > 0
+            ? (wellness.reduce((sum, w) => sum + w.sleep_hours, 0) / wellness.length).toFixed(1)
             : 0
 
-        // Training load (last 7 days)
-        const trainingLoads = demoData.trainingLoads
-            .filter(t => t.player_id === playerId)
-            .slice(0, 7)
+        // Calculate training metrics
+        const totalLoad = training.reduce((sum, load) => sum + (load.load_score || 0), 0)
+        const avgRPE = training.length > 0
+            ? (training.reduce((sum, t) => sum + t.rpe, 0) / training.length).toFixed(1)
+            : 0
 
-        const totalLoad = trainingLoads.reduce((sum, load) => sum + load.load_score, 0)
-        const sessionsCompleted = trainingLoads.length
+        // Get active injuries
+        const activeInjuries = injuries.filter(i => i.status !== 'cleared')
 
-        // Injuries
-        const activeInjuries = demoData.injuries.filter(
-            i => i.player_id === playerId && i.status !== 'recovered'
-        )
+        // Academic calculations
+        const recentCourses = academic.filter(a => a.status === 'in_progress')
+        const completedCourses = academic.filter(a => a.grade && a.status === 'completed')
+        const avgGPA = calculateGPA(completedCourses)
+        const totalCredits = academic.filter(a => a.status === 'completed').reduce((sum, a) => sum + (a.credits || 0), 0)
 
-        // Academic progress
-        const academicProgress = demoData.academicProgress.filter(a => a.player_id === playerId)
-        const recentCourses = academicProgress.filter(a => a.status === 'in_progress')
-        const avgGPA = calculateGPA(academicProgress.filter(a => a.grade && a.status === 'completed'))
-
-        // College recruitment
-        const collegeTargets = demoData.collegeTargets.filter(c => c.player_id === playerId)
-        const offers = collegeTargets.filter(c => c.status === 'offer_received')
-        const recentScoutActivities = demoData.scoutActivities
-            .filter(s => s.player_id === playerId)
-            .slice(0, 3)
-
-        // Performance tests
-        const performanceTests = demoData.performanceTests.filter(p => p.player_id === playerId)
-        const latestTests = performanceTests.slice(0, 3)
+        // Recruitment metrics
+        const offers = colleges.filter(c => c.status === 'offer_received')
 
         return {
             period: 'Week of Dec 29, 2024 - Jan 5, 2025',
             wellness: {
                 avgScore: avgWellness,
-                avgSleep: wellnessLogs.length > 0
-                    ? (wellnessLogs.reduce((sum, w) => sum + w.sleep_hours, 0) / wellnessLogs.length).toFixed(1)
-                    : 0,
-                logsCompleted: wellnessLogs.length,
+                avgSleep,
+                logsCompleted: wellness.length,
                 status: avgWellness >= 80 ? 'excellent' : avgWellness >= 60 ? 'good' : 'needs_attention'
             },
             training: {
                 totalLoad,
-                sessionsCompleted,
-                avgRPE: trainingLoads.length > 0
-                    ? (trainingLoads.reduce((sum, t) => sum + t.rpe, 0) / trainingLoads.length).toFixed(1)
-                    : 0,
+                sessionsCompleted: training.length,
+                avgRPE,
                 status: totalLoad > 4000 ? 'high' : totalLoad > 2500 ? 'moderate' : 'low'
             },
             injuries: activeInjuries,
             academic: {
                 gpa: avgGPA,
                 currentCourses: recentCourses,
-                totalCredits: academicProgress.filter(a => a.status === 'completed').reduce((sum, a) => sum + (a.credits || 0), 0)
+                totalCredits
             },
             recruitment: {
-                totalTargets: collegeTargets.length,
+                totalTargets: colleges.length,
                 offers: offers.length,
-                recentActivity: recentScoutActivities
+                recentActivity: scouts
             },
-            performance: latestTests
+            performance
         }
     }
 
@@ -119,7 +164,29 @@ export default function ParentPortal() {
         return (totalPoints / totalCredits).toFixed(2)
     }
 
+    if (loading) {
+        return (
+            <div className="parent-portal-page">
+                <div className="loading-state" style={{ padding: '4rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+                    <p>Loading player data...</p>
+                </div>
+            </div>
+        )
+    }
+
     const report = generateWeeklyReport()
+
+    if (!report) {
+        return (
+            <div className="parent-portal-page">
+                <div className="error-state" style={{ padding: '4rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
+                    <p>No data available for this period</p>
+                </div>
+            </div>
+        )
+    }
 
     const getStatusColor = (status) => {
         const colors = {
@@ -142,8 +209,24 @@ export default function ParentPortal() {
                         {selectedPlayer.first_name[0]}{selectedPlayer.last_name[0]}
                     </div>
                     <div>
-                        <h2>{selectedPlayer.first_name} {selectedPlayer.last_name}</h2>
-                        <p>{selectedPlayer.position} • House: {demoData.houses.find(h => h.id === selectedPlayer.house_id)?.name}</p>
+                        {players.length > 1 && (
+                            <select
+                                value={selectedPlayer.id}
+                                onChange={(e) => setSelectedPlayer(players.find(p => p.id === e.target.value))}
+                                className="input"
+                                style={{ marginBottom: '0.5rem', maxWidth: '300px' }}
+                            >
+                                {players.map(player => (
+                                    <option key={player.id} value={player.id}>
+                                        {player.first_name} {player.last_name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                        {players.length === 1 && (
+                            <h2>{selectedPlayer.first_name} {selectedPlayer.last_name}</h2>
+                        )}
+                        <p>{selectedPlayer.position} • {selectedPlayer.nationality}</p>
                     </div>
                 </div>
                 <div className="week-selector">

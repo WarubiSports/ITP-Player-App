@@ -1,19 +1,48 @@
 import { useState, useEffect, useMemo } from 'react'
-import { demoData } from '../lib/supabase'
+import { getEvents, getPlayers, createEvent, updateEvent, createEventAttendees, getPlayerEvents } from '../lib/data-service'
 import { useAuth } from '../contexts/AuthContext'
 import './Calendar.css'
 
 export default function Calendar() {
-    const { isStaff } = useAuth()
+    const { isStaff, profile } = useAuth()
     const [events, setEvents] = useState([])
+    const [players, setPlayers] = useState([])
+    const [currentPlayerId, setCurrentPlayerId] = useState(null)
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(new Date())
     const [showModal, setShowModal] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
+    const [showRecurring, setShowRecurring] = useState(false)
+    const [recurrencePattern, setRecurrencePattern] = useState('daily')
+    const [selectedPlayers, setSelectedPlayers] = useState([])
+    const [assignToEveryone, setAssignToEveryone] = useState(true)
 
     useEffect(() => {
-        setEvents(demoData.events)
-    }, [])
+        loadData()
+    }, [profile])
+
+    const loadData = async () => {
+        try {
+            // Load all players (for staff to select)
+            const allPlayers = await getPlayers()
+            setPlayers(allPlayers)
+
+            // Check if current user is a player
+            const player = allPlayers.find(p => p.user_id === profile?.id || p.id === profile?.id)
+            if (player) {
+                setCurrentPlayerId(player.id)
+                // Load player-specific events
+                const playerEvents = await getPlayerEvents(player.id)
+                setEvents(playerEvents)
+            } else {
+                // Load all events for staff
+                const allEvents = await getEvents()
+                setEvents(allEvents)
+            }
+        } catch (error) {
+            console.error('Error loading calendar data:', error)
+        }
+    }
 
     // Calendar utilities
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -135,27 +164,128 @@ export default function Calendar() {
     const closeModal = () => {
         setShowModal(false)
         setSelectedEvent(null)
+        setShowRecurring(false)
+        setRecurrencePattern('daily')
+        setSelectedPlayers([])
+        setAssignToEveryone(true)
     }
 
-    const handleSaveEvent = (e) => {
-        e.preventDefault()
-        const form = e.target
-        const newEvent = {
-            id: selectedEvent?.id || `e${Date.now()}`,
-            title: form.title.value,
-            type: form.type.value,
-            date: form.date.value,
-            start_time: form.startTime.value,
-            end_time: form.endTime.value,
-            location: form.location.value
+    const generateRecurringEvents = (baseEvent, recurrence) => {
+        const events = []
+        const startDate = new Date(baseEvent.date)
+        const { pattern, endDate, daysOfWeek } = recurrence
+
+        let currentDate = new Date(startDate)
+        const endDateTime = endDate ? new Date(endDate) : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000) // Default 1 year
+
+        let eventIndex = 0
+        const maxEvents = 100 // Safety limit
+
+        while (currentDate <= endDateTime && eventIndex < maxEvents) {
+            // For weekly recurrence, check if current day matches selected days
+            if (pattern === 'weekly' && daysOfWeek) {
+                const dayOfWeek = currentDate.getDay()
+                if (daysOfWeek.includes(dayOfWeek)) {
+                    events.push({
+                        ...baseEvent,
+                        id: `${baseEvent.id}_${eventIndex}`,
+                        date: currentDate.toISOString().split('T')[0]
+                    })
+                    eventIndex++
+                }
+                currentDate.setDate(currentDate.getDate() + 1)
+            } else if (pattern === 'daily') {
+                events.push({
+                    ...baseEvent,
+                    id: `${baseEvent.id}_${eventIndex}`,
+                    date: currentDate.toISOString().split('T')[0]
+                })
+                eventIndex++
+                currentDate.setDate(currentDate.getDate() + 1)
+            } else if (pattern === 'monthly') {
+                events.push({
+                    ...baseEvent,
+                    id: `${baseEvent.id}_${eventIndex}`,
+                    date: currentDate.toISOString().split('T')[0]
+                })
+                eventIndex++
+                currentDate.setMonth(currentDate.getMonth() + 1)
+            }
+
+            // Safety check
+            if (eventIndex === 0 && currentDate > endDateTime) break
         }
 
-        if (selectedEvent) {
-            setEvents(prev => prev.map(e => e.id === selectedEvent.id ? newEvent : e))
-        } else {
-            setEvents(prev => [...prev, newEvent])
+        return events
+    }
+
+    const handleSaveEvent = async (e) => {
+        e.preventDefault()
+        const form = e.target
+        const isRecurring = form.recurring?.checked
+
+        try {
+            const eventDate = new Date(form.date.value)
+            const startDateTime = new Date(`${form.date.value}T${form.startTime.value}:00`)
+            const endDateTime = new Date(`${form.date.value}T${form.endTime.value}:00`)
+
+            const baseEvent = {
+                title: form.title.value,
+                type: form.type.value,
+                start_time: startDateTime.toISOString(),
+                end_time: endDateTime.toISOString(),
+                location: form.location.value
+            }
+
+            if (selectedEvent) {
+                // Update existing event
+                const updated = await updateEvent(selectedEvent.id, baseEvent)
+                setEvents(prev => prev.map(e => e.id === selectedEvent.id ? updated : e))
+            } else if (isRecurring) {
+                // Handle recurring events
+                const daysOfWeek = form.recurrencePattern.value === 'weekly'
+                    ? Array.from(form.querySelectorAll('input[name="daysOfWeek"]:checked')).map(cb => parseInt(cb.value))
+                    : null
+
+                const recurrence = {
+                    pattern: form.recurrencePattern.value,
+                    endDate: form.recurrenceEndDate.value,
+                    daysOfWeek
+                }
+
+                const recurringEvents = generateRecurringEvents(baseEvent, recurrence)
+
+                // Create all recurring events
+                for (const event of recurringEvents) {
+                    const created = await createEvent({
+                        ...baseEvent,
+                        start_time: event.start_time,
+                        end_time: event.end_time
+                    })
+
+                    // Assign players if not everyone
+                    if (!assignToEveryone && selectedPlayers.length > 0) {
+                        await createEventAttendees(created.id, selectedPlayers)
+                    }
+                }
+
+                await loadData()
+            } else {
+                // Create single event
+                const created = await createEvent(baseEvent)
+
+                // Assign players if not everyone
+                if (!assignToEveryone && selectedPlayers.length > 0) {
+                    await createEventAttendees(created.id, selectedPlayers)
+                }
+
+                await loadData()
+            }
+            closeModal()
+        } catch (error) {
+            console.error('Error saving event:', error)
+            alert('Error saving event. Please try again.')
         }
-        closeModal()
     }
 
     const handleDeleteEvent = (eventId) => {
@@ -379,6 +509,165 @@ export default function Calendar() {
                                         />
                                     </div>
                                 </div>
+
+                                {/* Player Assignment */}
+                                {isStaff && !selectedEvent && (
+                                    <div style={{ marginTop: '1.5rem' }}>
+                                        <div className="input-group">
+                                            <label className="input-label">Assign To</label>
+                                            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="radio"
+                                                        name="assignmentType"
+                                                        checked={assignToEveryone}
+                                                        onChange={() => {
+                                                            setAssignToEveryone(true)
+                                                            setSelectedPlayers([])
+                                                        }}
+                                                        style={{ cursor: 'pointer' }}
+                                                    />
+                                                    <span>Everyone</span>
+                                                </label>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="radio"
+                                                        name="assignmentType"
+                                                        checked={!assignToEveryone}
+                                                        onChange={() => setAssignToEveryone(false)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    />
+                                                    <span>Specific Players</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {!assignToEveryone && (
+                                            <div className="input-group">
+                                                <label className="input-label">Select Players</label>
+                                                <div style={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                                    gap: '0.5rem',
+                                                    maxHeight: '200px',
+                                                    overflowY: 'auto',
+                                                    padding: '0.5rem',
+                                                    background: 'var(--color-bg-tertiary)',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    border: '1px solid var(--glass-border)'
+                                                }}>
+                                                    {players.map(player => (
+                                                        <label key={player.id} style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.5rem',
+                                                            padding: '0.5rem',
+                                                            background: selectedPlayers.includes(player.id) ? 'var(--glass-hover)' : 'transparent',
+                                                            borderRadius: 'var(--radius-sm)',
+                                                            cursor: 'pointer',
+                                                            transition: 'background var(--transition-fast)'
+                                                        }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedPlayers.includes(player.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedPlayers(prev => [...prev, player.id])
+                                                                    } else {
+                                                                        setSelectedPlayers(prev => prev.filter(id => id !== player.id))
+                                                                    }
+                                                                }}
+                                                                style={{ cursor: 'pointer' }}
+                                                            />
+                                                            <span style={{ fontSize: '0.875rem' }}>
+                                                                {player.first_name} {player.last_name}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                {selectedPlayers.length > 0 && (
+                                                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '0.5rem' }}>
+                                                        {selectedPlayers.length} player{selectedPlayers.length !== 1 ? 's' : ''} selected
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Recurring Event Options */}
+                                {!selectedEvent && (
+                                    <div className="input-group" style={{ marginTop: '1.5rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                name="recurring"
+                                                checked={showRecurring}
+                                                onChange={(e) => setShowRecurring(e.target.checked)}
+                                                style={{ width: 'auto', cursor: 'pointer' }}
+                                            />
+                                            <span className="input-label" style={{ marginBottom: 0 }}>Recurring Event</span>
+                                        </label>
+                                    </div>
+                                )}
+
+                                {showRecurring && !selectedEvent && (
+                                    <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+                                        <div className="input-group">
+                                            <label className="input-label">Repeat Pattern</label>
+                                            <select
+                                                name="recurrencePattern"
+                                                className="input"
+                                                value={recurrencePattern}
+                                                onChange={(e) => setRecurrencePattern(e.target.value)}
+                                            >
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                            </select>
+                                        </div>
+
+                                        {recurrencePattern === 'weekly' && (
+                                            <div className="input-group">
+                                                <label className="input-label">Repeat On</label>
+                                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                                                        <label key={day} style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.25rem',
+                                                            padding: '0.5rem',
+                                                            background: 'var(--glass-bg)',
+                                                            border: '1px solid var(--glass-border)',
+                                                            borderRadius: 'var(--radius-sm)',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.875rem'
+                                                        }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                name="daysOfWeek"
+                                                                value={index}
+                                                                style={{ width: 'auto', cursor: 'pointer' }}
+                                                            />
+                                                            {day}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="input-group">
+                                            <label className="input-label">End Date</label>
+                                            <input
+                                                name="recurrenceEndDate"
+                                                type="date"
+                                                className="input"
+                                                min={selectedDate.toISOString().split('T')[0]}
+                                                required={showRecurring}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={closeModal}>

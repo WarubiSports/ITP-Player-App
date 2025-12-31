@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
                 localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
                 return { error: null }
             }
-            return { error: { message: 'Invalid credentials. Try max.bisinger@warubi-sports.com / ITP2024' } }
+            return { error: { message: 'Invalid credentials. Try:\n• Player: max.finkgrafe@player.com / ITP2024\n• Staff: max.bisinger@warubi-sports.com / ITP2024' } }
         }
 
         const { error } = await supabase.auth.signInWithPassword({ email, password })

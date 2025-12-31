@@ -6,44 +6,44 @@
 /* CSS Variables - Brand Colors & Design Tokens */
 :root {
   /* Core Brand Colors */
-  --color-primary: #E30613; /* FC Köln Red */
-  --color-primary-dark: #8B0000;
-  --color-primary-light: #FF4D6D;
-  --color-primary-glow: rgba(227, 6, 19, 0.6);
-  
+  --color-primary: #C41E3A; /* Muted FC Köln Red */
+  --color-primary-dark: #8B1538;
+  --color-primary-light: #D94A5D;
+  --color-primary-glow: rgba(196, 30, 58, 0.2);
+
   /* Secondary & Accents */
   --color-secondary: #FFFFFF;
-  --color-accent: #00E5FF; /* Cyber Blue */
-  --color-accent-glow: rgba(0, 229, 255, 0.4);
-  
+  --color-accent: #6B7280; /* Neutral Gray */
+  --color-accent-glow: rgba(107, 114, 128, 0.15);
+
   /* Backgrounds */
   --color-bg-primary: #0A0A0F; /* Deep Space */
   --color-bg-secondary: #12121A;
   --color-bg-tertiary: #1A1A1D;
   --color-bg-elevated: #222225;
-  
+
   /* Glass Effect */
   --glass-bg: rgba(18, 18, 26, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-hover: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-hover: rgba(255, 255, 255, 0.12);
   --glass-blur: blur(12px);
-  
+
   /* Text Colors */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A0A0B0;
-  --color-text-tertiary: #71717A;
-  --color-text-muted: #52525B;
-  --color-text-accent: #00E5FF;
-  
+  --color-text-secondary: #9CA3AF;
+  --color-text-tertiary: #6B7280;
+  --color-text-muted: #4B5563;
+  --color-text-accent: #9CA3AF;
+
   /* Status Colors */
-  --color-success: #22C55E;
-  --color-success-bg: rgba(34, 197, 94, 0.15);
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.12);
   --color-warning: #F59E0B;
-  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
   --color-error: #EF4444;
-  --color-error-bg: rgba(239, 68, 68, 0.15);
+  --color-error-bg: rgba(239, 68, 68, 0.12);
   --color-info: #3B82F6;
-  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info-bg: rgba(59, 130, 246, 0.12);
   
   /* Spacing Scale */
   --space-1: 0.25rem;
@@ -92,6 +92,56 @@
   /* Layout */
   --sidebar-width: 280px;
   --header-height: 72px;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  /* Core Brand Colors */
+  --color-primary: #C41E3A;
+  --color-primary-dark: #8B1538;
+  --color-primary-light: #D94A5D;
+  --color-primary-glow: rgba(196, 30, 58, 0.15);
+
+  /* Secondary & Accents */
+  --color-secondary: #000000;
+  --color-accent: #6B7280;
+  --color-accent-glow: rgba(107, 114, 128, 0.1);
+
+  /* Backgrounds */
+  --color-bg-primary: #F9FAFB;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F3F4F6;
+  --color-bg-elevated: #FFFFFF;
+
+  /* Glass Effect */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.05);
+  --glass-blur: blur(12px);
+
+  /* Text Colors */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-text-accent: #6B7280;
+
+  /* Status Colors */
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-error: #EF4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-info: #3B82F6;
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px var(--color-primary-glow);
+  --neon-shadow: 0 0 10px var(--color-primary-glow);
 }
 
 /* Reset & Base Styles */
@@ -226,12 +276,12 @@ img, svg {
 .btn-primary {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
-  box-shadow: 0 4px 20px var(--color-primary-glow);
+  box-shadow: 0 2px 8px var(--color-primary-glow);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px var(--color-primary-glow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-primary-glow);
 }
 
 .btn-primary:active {

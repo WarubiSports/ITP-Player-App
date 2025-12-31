@@ -26,6 +26,27 @@ export default function Login() {
         }
     }
 
+    const handleDemoLogin = async (type) => {
+        setError('')
+        setLoading(true)
+
+        const credentials = type === 'player'
+            ? { email: 'max.finkgrafe@player.com', password: 'ITP2024' }
+            : { email: 'max.bisinger@warubi-sports.com', password: 'ITP2024' }
+
+        setEmail(credentials.email)
+        setPassword(credentials.password)
+
+        const { error } = await signIn(credentials.email, credentials.password)
+
+        if (error) {
+            setError(error.message)
+            setLoading(false)
+        } else {
+            navigate('/dashboard')
+        }
+    }
+
     return (
         <div className="auth-container">
             <div className="auth-background">
@@ -35,7 +56,7 @@ export default function Login() {
 
             <div className="auth-card">
                 <div className="auth-logo">
-                    <img src="/fc-koln-logo.svg" alt="1.FC Köln" className="auth-logo-img" />
+                    <img src="/fc-koln-logo.png" alt="1.FC Köln" className="auth-logo-img" />
                     <h1 className="auth-title">1.FC Köln</h1>
                     <p className="auth-subtitle">International Talent Program</p>
                 </div>
@@ -47,9 +68,108 @@ export default function Login() {
                     </div>
                 )}
 
+                {!isDemoMode && (
+                    <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            style={{ flex: 1, fontSize: '0.875rem', padding: '0.75rem' }}
+                            onClick={() => {
+                                setEmail('demo.player@itp.com')
+                                setPassword('Demo2024')
+                            }}
+                        >
+                            🎮 Demo Player
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            style={{ flex: 1, fontSize: '0.875rem', padding: '0.75rem' }}
+                            onClick={() => {
+                                setEmail('max.bisinger@warubi-sports.com')
+                                setPassword('ITP2024')
+                            }}
+                        >
+                            👥 Demo Staff
+                        </button>
+                    </div>
+                )}
+
                 {error && (
                     <div className="auth-error">
                         <span>⚠️</span> {error}
+                    </div>
+                )}
+
+                {isDemoMode && (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <p style={{
+                            margin: '0 0 1rem 0',
+                            fontWeight: '600',
+                            color: 'var(--color-text-secondary)',
+                            textAlign: 'center',
+                            fontSize: '0.9rem'
+                        }}>
+                            Quick Demo Login
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => handleDemoLogin('player')}
+                                disabled={loading}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    padding: '1rem',
+                                    color: 'white',
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '500'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!loading) {
+                                        e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+                                        e.target.style.borderColor = 'var(--color-accent)'
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.05)'
+                                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                                }}
+                            >
+                                🎮 Demo Player
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleDemoLogin('staff')}
+                                disabled={loading}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    padding: '1rem',
+                                    color: 'white',
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '500'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!loading) {
+                                        e.target.style.background = 'rgba(255, 255, 255, 0.1)'
+                                        e.target.style.borderColor = 'var(--color-accent)'
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.05)'
+                                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                                }}
+                            >
+                                👥 Demo Staff
+                            </button>
+                        </div>
                     </div>
                 )}
 

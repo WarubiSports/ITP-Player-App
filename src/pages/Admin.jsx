@@ -6,6 +6,8 @@ export default function Admin() {
     const [users, setUsers] = useState([])
     const [applications, setApplications] = useState([])
     const [activeTab, setActiveTab] = useState('users')
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [selectedUser, setSelectedUser] = useState(null)
 
     useEffect(() => {
         // Combine users and players for user management
@@ -39,6 +41,33 @@ export default function Admin() {
         setApplications(prev => prev.map(a =>
             a.id === appId ? { ...a, status: 'rejected' } : a
         ))
+    }
+
+    const openEditModal = (user) => {
+        setSelectedUser(user)
+        setShowEditModal(true)
+    }
+
+    const closeEditModal = () => {
+        setShowEditModal(false)
+        setSelectedUser(null)
+    }
+
+    const handleSaveUser = (e) => {
+        e.preventDefault()
+        const form = e.target
+
+        const updatedUser = {
+            ...selectedUser,
+            first_name: form.firstName.value,
+            last_name: form.lastName.value,
+            email: form.email.value,
+            role: form.role.value,
+            status: form.status.value
+        }
+
+        setUsers(prev => prev.map(u => u.id === selectedUser.id ? updatedUser : u))
+        closeEditModal()
     }
 
     const stats = {
@@ -134,7 +163,7 @@ export default function Admin() {
                                     {user.status || 'active'}
                                 </span>
                                 <div className="action-buttons">
-                                    <button className="btn btn-ghost btn-sm">Edit</button>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => openEditModal(user)}>Edit</button>
                                 </div>
                             </div>
                         ))}
@@ -242,6 +271,79 @@ export default function Admin() {
                             </div>
                         </div>
                         <button className="btn btn-primary mt-4">Save Settings</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit User Modal */}
+            {showEditModal && selectedUser && (
+                <div className="modal-overlay" onClick={closeEditModal}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Edit User</h3>
+                            <button className="modal-close" onClick={closeEditModal}>×</button>
+                        </div>
+                        <form onSubmit={handleSaveUser}>
+                            <div className="modal-body">
+                                <div className="form-row">
+                                    <div className="input-group">
+                                        <label className="input-label">First Name</label>
+                                        <input
+                                            name="firstName"
+                                            className="input"
+                                            defaultValue={selectedUser.first_name}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="input-label">Last Name</label>
+                                        <input
+                                            name="lastName"
+                                            className="input"
+                                            defaultValue={selectedUser.last_name}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label className="input-label">Email</label>
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        className="input"
+                                        defaultValue={selectedUser.email || `${selectedUser.first_name?.toLowerCase()}.${selectedUser.last_name?.toLowerCase()}@itp.com`}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-row">
+                                    <div className="input-group">
+                                        <label className="input-label">Role</label>
+                                        <select name="role" className="input" defaultValue={selectedUser.role}>
+                                            <option value="player">Player</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="input-label">Status</label>
+                                        <select name="status" className="input" defaultValue={selectedUser.status || 'active'}>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="injured">Injured</option>
+                                            <option value="training">Training</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={closeEditModal}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { getCountryFlag, formatDateOfBirth } from '../utils/countryFlags'
+import { createPerformanceTest } from '../lib/data-service'
 import './Players.css'
 
 // Debounce hook for search optimization
@@ -27,6 +28,8 @@ export default function Players() {
     const [positionFilter, setPositionFilter] = useState('all')
     const [showModal, setShowModal] = useState(false)
     const [selectedPlayer, setSelectedPlayer] = useState(null)
+    const [showPerfTestModal, setShowPerfTestModal] = useState(false)
+    const [perfTestPlayer, setPerfTestPlayer] = useState(null)
 
     // Debounce search input
     const debouncedSearch = useDebounce(search, 300)
@@ -100,6 +103,41 @@ export default function Players() {
             setPlayers(prev => prev.filter(p => p.id !== playerId))
         }
     }, [])
+
+    const openPerfTestModal = useCallback((player) => {
+        setPerfTestPlayer(player)
+        setShowPerfTestModal(true)
+    }, [])
+
+    const closePerfTestModal = useCallback(() => {
+        setShowPerfTestModal(false)
+        setPerfTestPlayer(null)
+    }, [])
+
+    const handleSavePerfTest = useCallback(async (e) => {
+        e.preventDefault()
+        const form = e.target
+
+        const testData = {
+            player_id: perfTestPlayer.id,
+            test_date: form.testDate.value,
+            sprint_30m: form.sprint30m.value ? parseFloat(form.sprint30m.value) : null,
+            sprint_20m: form.sprint20m.value ? parseFloat(form.sprint20m.value) : null,
+            vertical_jump: form.verticalJump.value ? parseFloat(form.verticalJump.value) : null,
+            agility_test: form.agilityTest.value ? parseFloat(form.agilityTest.value) : null,
+            endurance_test: form.enduranceTest.value ? parseFloat(form.enduranceTest.value) : null,
+            notes: form.notes.value || null
+        }
+
+        try {
+            await createPerformanceTest(testData)
+            alert('Performance test recorded successfully!')
+            closePerfTestModal()
+        } catch (error) {
+            console.error('Error saving performance test:', error)
+            alert('Failed to save performance test. Please try again.')
+        }
+    }, [perfTestPlayer, closePerfTestModal])
 
     // Memoized stats calculation
     const stats = useMemo(() => ({
@@ -204,6 +242,13 @@ export default function Players() {
                         </div>
                         {isStaff && (
                             <div className="player-card-actions">
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => openPerfTestModal(player)}
+                                    style={{ width: '100%', marginBottom: 'var(--space-2)' }}
+                                >
+                                    📊 Log Performance Test
+                                </button>
                                 <button
                                     className="btn btn-ghost btn-sm"
                                     onClick={() => openPlayerModal(player)}
@@ -318,6 +363,129 @@ export default function Players() {
                                 </button>
                                 <button type="submit" className="btn btn-primary">
                                     {selectedPlayer ? 'Save Changes' : 'Add Player'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Performance Test Modal */}
+            {showPerfTestModal && perfTestPlayer && (
+                <div className="modal-overlay" onClick={closePerfTestModal}>
+                    <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">
+                                📊 Log Performance Test - {perfTestPlayer.first_name} {perfTestPlayer.last_name}
+                            </h3>
+                            <button className="modal-close" onClick={closePerfTestModal}>×</button>
+                        </div>
+                        <form onSubmit={handleSavePerfTest}>
+                            <div className="modal-body">
+                                <div className="input-group">
+                                    <label className="input-label">Test Date *</label>
+                                    <input
+                                        name="testDate"
+                                        type="date"
+                                        className="input"
+                                        defaultValue={new Date().toISOString().split('T')[0]}
+                                        required
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: 'var(--space-4)' }}>
+                                    <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--color-text-secondary)' }}>
+                                        Speed & Agility Tests
+                                    </h4>
+                                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                                        <div className="input-group">
+                                            <label className="input-label">30m Sprint (seconds)</label>
+                                            <input
+                                                name="sprint30m"
+                                                type="number"
+                                                step="0.01"
+                                                className="input"
+                                                placeholder="e.g., 4.25"
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label className="input-label">20m Sprint (seconds)</label>
+                                            <input
+                                                name="sprint20m"
+                                                type="number"
+                                                step="0.01"
+                                                className="input"
+                                                placeholder="e.g., 3.15"
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label className="input-label">Vertical Jump (cm)</label>
+                                            <input
+                                                name="verticalJump"
+                                                type="number"
+                                                step="0.1"
+                                                className="input"
+                                                placeholder="e.g., 55.5"
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label className="input-label">Agility Test (seconds)</label>
+                                            <input
+                                                name="agilityTest"
+                                                type="number"
+                                                step="0.01"
+                                                className="input"
+                                                placeholder="e.g., 15.30"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'var(--space-4)' }}>
+                                    <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--color-text-secondary)' }}>
+                                        Endurance Test
+                                    </h4>
+                                    <div className="input-group">
+                                        <label className="input-label">Endurance (minutes)</label>
+                                        <input
+                                            name="enduranceTest"
+                                            type="number"
+                                            step="0.1"
+                                            className="input"
+                                            placeholder="e.g., 12.5 (Cooper test)"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'var(--space-4)' }}>
+                                    <div className="input-group">
+                                        <label className="input-label">Notes</label>
+                                        <textarea
+                                            name="notes"
+                                            className="input textarea"
+                                            rows="3"
+                                            placeholder="Additional observations, conditions, or comments..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    marginTop: 'var(--space-4)',
+                                    padding: 'var(--space-3)',
+                                    background: 'var(--color-info-bg)',
+                                    borderRadius: 'var(--radius-md)',
+                                    fontSize: 'var(--font-size-sm)',
+                                    color: 'var(--color-text-secondary)'
+                                }}>
+                                    💡 <strong>Tip:</strong> Fill in only the tests you performed. Empty fields will be skipped.
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={closePerfTestModal}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Save Performance Test
                                 </button>
                             </div>
                         </form>

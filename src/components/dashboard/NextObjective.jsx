@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDemoData } from '../../lib/supabase';
+import { getEvents } from '../../lib/data-service';
 
 const eventIcons = {
     training: '⚽',
@@ -13,22 +13,35 @@ export default function NextObjective() {
     const [timeRemaining, setTimeRemaining] = useState('');
 
     useEffect(() => {
-        // Get next upcoming event
-        const data = getDemoData();
-        const now = new Date();
-
-        const upcomingEvents = data.events
-            .map(event => {
-                const eventDate = new Date(event.date + 'T' + event.start_time);
-                return { ...event, datetime: eventDate };
-            })
-            .filter(event => event.datetime > now)
-            .sort((a, b) => a.datetime - b.datetime);
-
-        if (upcomingEvents.length > 0) {
-            setNextEvent(upcomingEvents[0]);
-        }
+        loadNextEvent();
     }, []);
+
+    const loadNextEvent = async () => {
+        try {
+            const events = await getEvents();
+            const now = new Date();
+
+            const upcomingEvents = events
+                .map(event => {
+                    // Handle both old format (date + start_time) and new format (start_time as full datetime)
+                    let eventDate;
+                    if (event.date && event.start_time) {
+                        eventDate = new Date(event.date + 'T' + event.start_time);
+                    } else if (event.start_time) {
+                        eventDate = new Date(event.start_time);
+                    }
+                    return { ...event, datetime: eventDate };
+                })
+                .filter(event => event.datetime && event.datetime > now)
+                .sort((a, b) => a.datetime - b.datetime);
+
+            if (upcomingEvents.length > 0) {
+                setNextEvent(upcomingEvents[0]);
+            }
+        } catch (error) {
+            console.error('Error loading next event:', error);
+        }
+    };
 
     useEffect(() => {
         if (!nextEvent) return;
@@ -87,7 +100,8 @@ export default function NextObjective() {
                 <div>
                     <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'white' }}>{nextEvent.title}</h2>
                     <div style={{ color: 'var(--color-accent)', fontWeight: '500' }}>
-                        {nextEvent.start_time} - {nextEvent.end_time}
+                        {nextEvent.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        {nextEvent.end_time && ` - ${new Date(nextEvent.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
                     </div>
                     {nextEvent.location && (
                         <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{nextEvent.location}</div>

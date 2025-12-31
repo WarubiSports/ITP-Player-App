@@ -405,7 +405,7 @@ export const eventQueries = {
 
     // Update attendee status
     async updateAttendeeStatus(id, status) {
-        const { data, error } = await supabase
+        const { data, error} = await supabase
             .from('event_attendees')
             .update({ status })
             .eq('id', id)
@@ -414,6 +414,60 @@ export const eventQueries = {
 
         if (error) throw error
         return data
+    },
+
+    // Create event attendees in bulk
+    async createEventAttendees(eventId, playerIds) {
+        const attendees = playerIds.map(playerId => ({
+            event_id: eventId,
+            player_id: playerId,
+            status: 'pending'
+        }))
+
+        const { data, error } = await supabase
+            .from('event_attendees')
+            .insert(attendees)
+            .select()
+
+        if (error) throw error
+        return data
+    },
+
+    // Get event attendees
+    async getEventAttendees(eventId) {
+        const { data, error } = await supabase
+            .from('event_attendees')
+            .select(`
+                *,
+                player:players(id, first_name, last_name, position)
+            `)
+            .eq('event_id', eventId)
+
+        if (error) throw error
+        return data
+    },
+
+    // Get events for a specific player
+    async getPlayerEvents(playerId) {
+        const { data, error } = await supabase
+            .from('events')
+            .select(`
+                *,
+                created_by_user:profiles(id, first_name, last_name),
+                attendees:event_attendees(
+                    *,
+                    player:players(id, first_name, last_name)
+                )
+            `)
+            .order('start_time', { ascending: true })
+
+        if (error) throw error
+
+        // Filter to include events where player is an attendee or event has no attendees (everyone)
+        return data.filter(event =>
+            event.attendees.length === 0 || // No specific attendees (everyone event)
+            event.attendees.some(a => a.player_id === playerId) // Player is specifically invited
+        )
     }
 }
 
@@ -577,6 +631,610 @@ export const subscriptions = {
 }
 
 // =============================================
+// WELLNESS & PERFORMANCE (PHASE 1)
+// =============================================
+
+export const wellnessQueries = {
+    // Get wellness logs for a player
+    async getWellnessLogs(playerId, limit = 30) {
+        const { data, error } = await supabase
+            .from('wellness_logs')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('date', { ascending: false })
+            .limit(limit)
+
+        if (error) throw error
+        return data
+    },
+
+    // Create wellness log
+    async createWellnessLog(log) {
+        const { data, error } = await supabase
+            .from('wellness_logs')
+            .insert([log])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update wellness log
+    async updateWellnessLog(id, updates) {
+        const { data, error } = await supabase
+            .from('wellness_logs')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Get 7-day wellness score
+    async getWellnessScore(playerId) {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+        const { data, error } = await supabase
+            .from('wellness_logs')
+            .select('*')
+            .eq('player_id', playerId)
+            .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+            .order('date', { ascending: false })
+
+        if (error) throw error
+
+        if (!data || data.length === 0) return null
+
+        const avg = data.reduce((acc, log) => ({
+            sleep_quality: acc.sleep_quality + log.sleep_quality,
+            energy_level: acc.energy_level + log.energy_level,
+            muscle_soreness: acc.muscle_soreness + log.muscle_soreness,
+            stress_level: acc.stress_level + log.stress_level
+        }), { sleep_quality: 0, energy_level: 0, muscle_soreness: 0, stress_level: 0 })
+
+        const count = data.length
+        const score = Math.round(
+            (avg.sleep_quality / count * 20) +
+            (avg.energy_level / count * 10) +
+            ((10 - avg.muscle_soreness / count) * 5) +
+            ((10 - avg.stress_level / count) * 5)
+        )
+
+        return {
+            score,
+            logs: data,
+            average: {
+                sleep_quality: avg.sleep_quality / count,
+                energy_level: avg.energy_level / count,
+                muscle_soreness: avg.muscle_soreness / count,
+                stress_level: avg.stress_level / count
+            }
+        }
+    }
+}
+
+export const trainingLoadQueries = {
+    // Get training loads for a player
+    async getTrainingLoads(playerId, limit = 30) {
+        const { data, error } = await supabase
+            .from('training_loads')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('date', { ascending: false })
+            .limit(limit)
+
+        if (error) throw error
+        return data
+    },
+
+    // Create training load
+    async createTrainingLoad(load) {
+        const { data, error } = await supabase
+            .from('training_loads')
+            .insert([load])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Get 7-day training load
+    async getSevenDayLoad(playerId) {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+        const { data, error } = await supabase
+            .from('training_loads')
+            .select('load_score')
+            .eq('player_id', playerId)
+            .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+
+        if (error) throw error
+
+        return data?.reduce((sum, load) => sum + load.load_score, 0) || 0
+    }
+}
+
+export const injuryQueries = {
+    // Get injuries for a player
+    async getInjuries(playerId, includeCleared = false) {
+        let query = supabase
+            .from('injuries')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('date_occurred', { ascending: false })
+
+        if (!includeCleared) {
+            query = query.neq('status', 'cleared')
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        return data
+    },
+
+    // Create injury
+    async createInjury(injury) {
+        const { data, error } = await supabase
+            .from('injuries')
+            .insert([injury])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update injury
+    async updateInjury(id, updates) {
+        const { data, error } = await supabase
+            .from('injuries')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    }
+}
+
+// =============================================
+// PATHWAY & RECRUITMENT (PHASE 1)
+// =============================================
+
+export const collegeQueries = {
+    // Get college targets for a player
+    async getCollegeTargets(playerId) {
+        const { data, error } = await supabase
+            .from('college_targets')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('interest_level', { ascending: true })
+            .order('status', { ascending: true })
+
+        if (error) throw error
+        return data
+    },
+
+    // Create college target
+    async createCollegeTarget(target) {
+        const { data, error } = await supabase
+            .from('college_targets')
+            .insert([target])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update college target
+    async updateCollegeTarget(id, updates) {
+        const { data, error } = await supabase
+            .from('college_targets')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Delete college target
+    async deleteCollegeTarget(id) {
+        const { error } = await supabase
+            .from('college_targets')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
+    }
+}
+
+export const scoutQueries = {
+    // Get scout activities for a player
+    async getScoutActivities(playerId) {
+        const { data, error } = await supabase
+            .from('scout_activities')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('date', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    // Create scout activity
+    async createScoutActivity(activity) {
+        const { data, error } = await supabase
+            .from('scout_activities')
+            .insert([activity])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update scout activity
+    async updateScoutActivity(id, updates) {
+        const { data, error } = await supabase
+            .from('scout_activities')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Delete scout activity
+    async deleteScoutActivity(id) {
+        const { error } = await supabase
+            .from('scout_activities')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
+    }
+}
+
+export const academicQueries = {
+    // Get academic progress for a player
+    async getAcademicProgress(playerId) {
+        const { data, error } = await supabase
+            .from('academic_progress')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('status', { ascending: true })
+            .order('semester', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    // Create academic progress entry
+    async createAcademicProgress(progress) {
+        const { data, error } = await supabase
+            .from('academic_progress')
+            .insert([progress])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update academic progress
+    async updateAcademicProgress(id, updates) {
+        const { data, error } = await supabase
+            .from('academic_progress')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Calculate GPA
+    async calculateGPA(playerId) {
+        const { data, error } = await supabase
+            .from('academic_progress')
+            .select('grade, credits')
+            .eq('player_id', playerId)
+            .eq('status', 'completed')
+            .in('category', ['high_school', 'college'])
+
+        if (error) throw error
+
+        const gradePoints = {
+            'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+            'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+            'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+            'D+': 1.3, 'D': 1.0, 'F': 0.0
+        }
+
+        let totalPoints = 0
+        let totalCredits = 0
+
+        data?.forEach(course => {
+            const points = gradePoints[course.grade]
+            if (points !== undefined && course.credits) {
+                totalPoints += points * course.credits
+                totalCredits += course.credits
+            }
+        })
+
+        return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : null
+    }
+}
+
+export const performanceTestQueries = {
+    // Get performance tests for a player
+    async getPerformanceTests(playerId, testType = null) {
+        let query = supabase
+            .from('performance_tests')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('test_date', { ascending: false })
+
+        if (testType) {
+            query = query.eq('test_type', testType)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        return data
+    },
+
+    // Create performance test
+    async createPerformanceTest(test) {
+        const { data, error } = await supabase
+            .from('performance_tests')
+            .insert([test])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Get latest tests (most recent for each test type)
+    async getLatestTests(playerId) {
+        const { data, error } = await supabase
+            .from('performance_tests')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('test_date', { ascending: false })
+
+        if (error) throw error
+
+        // Get the most recent test for each type
+        const latestTests = {}
+        data?.forEach(test => {
+            if (!latestTests[test.test_type]) {
+                latestTests[test.test_type] = test
+            }
+        })
+
+        return Object.values(latestTests)
+    }
+}
+
+// =============================================
+// GOALS, ACHIEVEMENTS & MENTAL WELLNESS
+// =============================================
+
+export const goalsQueries = {
+    // Get goals for a player
+    async getPlayerGoals(playerId, status = null) {
+        let query = supabase
+            .from('player_goals')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('created_at', { ascending: false })
+
+        if (status) {
+            query = query.eq('status', status)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        return data
+    },
+
+    // Create goal
+    async createGoal(goal) {
+        const { data, error } = await supabase
+            .from('player_goals')
+            .insert([goal])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update goal
+    async updateGoal(goalId, updates) {
+        const { data, error } = await supabase
+            .from('player_goals')
+            .update(updates)
+            .eq('id', goalId)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Delete goal
+    async deleteGoal(goalId) {
+        const { error } = await supabase
+            .from('player_goals')
+            .delete()
+            .eq('id', goalId)
+
+        if (error) throw error
+    }
+}
+
+export const achievementsQueries = {
+    // Get all achievements (catalog)
+    async getAllAchievements() {
+        const { data, error } = await supabase
+            .from('achievements')
+            .select('*')
+            .order('rarity', { ascending: false })
+            .order('points_value', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    // Get player's unlocked achievements
+    async getPlayerAchievements(playerId) {
+        const { data, error } = await supabase
+            .from('player_achievements')
+            .select(`
+                *,
+                achievement:achievements(*)
+            `)
+            .eq('player_id', playerId)
+            .order('unlocked_at', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    // Unlock achievement for player
+    async unlockAchievement(playerId, achievementId) {
+        const { data, error } = await supabase
+            .from('player_achievements')
+            .insert([{
+                player_id: playerId,
+                achievement_id: achievementId
+            }])
+            .select(`
+                *,
+                achievement:achievements(*)
+            `)
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Check if player has achievement
+    async hasAchievement(playerId, achievementCode) {
+        const { data, error } = await supabase
+            .from('player_achievements')
+            .select(`
+                *,
+                achievement:achievements(code)
+            `)
+            .eq('player_id', playerId)
+
+        if (error) throw error
+
+        return data?.some(pa => pa.achievement?.code === achievementCode) || false
+    }
+}
+
+export const mentalWellnessQueries = {
+    // Get mental wellness logs for a player
+    async getMentalWellness(playerId, limit = 30) {
+        const { data, error } = await supabase
+            .from('mental_wellness')
+            .select('*')
+            .eq('player_id', playerId)
+            .order('date', { ascending: false })
+            .limit(limit)
+
+        if (error) throw error
+        return data
+    },
+
+    // Create mental wellness log
+    async createMentalWellnessLog(log) {
+        const { data, error } = await supabase
+            .from('mental_wellness')
+            .insert([log])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Update mental wellness log
+    async updateMentalWellnessLog(id, updates) {
+        const { data, error } = await supabase
+            .from('mental_wellness')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Get average mental wellness scores for date range
+    async getMentalWellnessAverage(playerId, days = 7) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - days)
+
+        const { data, error } = await supabase
+            .from('mental_wellness')
+            .select('*')
+            .eq('player_id', playerId)
+            .gte('date', startDate.toISOString().split('T')[0])
+
+        if (error) throw error
+
+        if (!data || data.length === 0) return null
+
+        const avg = data.reduce((acc, log) => ({
+            confidence_level: acc.confidence_level + log.confidence_level,
+            focus_quality: acc.focus_quality + log.focus_quality,
+            anxiety_level: acc.anxiety_level + log.anxiety_level,
+            motivation_level: acc.motivation_level + log.motivation_level,
+            social_connection: acc.social_connection + log.social_connection
+        }), {
+            confidence_level: 0,
+            focus_quality: 0,
+            anxiety_level: 0,
+            motivation_level: 0,
+            social_connection: 0
+        })
+
+        const count = data.length
+        return {
+            confidence_level: (avg.confidence_level / count).toFixed(1),
+            focus_quality: (avg.focus_quality / count).toFixed(1),
+            anxiety_level: (avg.anxiety_level / count).toFixed(1),
+            motivation_level: (avg.motivation_level / count).toFixed(1),
+            social_connection: (avg.social_connection / count).toFixed(1),
+            logs: data
+        }
+    }
+}
+
+// =============================================
 // ANALYTICS / DASHBOARD
 // =============================================
 
@@ -614,5 +1272,93 @@ export const dashboardQueries = {
 
         if (error) throw error
         return data
+    },
+
+    // Get player readiness scores
+    async getPlayerReadiness() {
+        const { data, error } = await supabase
+            .from('player_readiness')
+            .select('*')
+            .order('readiness_score', { ascending: false })
+
+        if (error) throw error
+        return data
+    },
+
+    // Get personalized next steps for a player
+    async getNextSteps(playerId) {
+        const today = new Date().toISOString().split('T')[0]
+
+        const [wellness, chores, collegeTargets, academic] = await Promise.all([
+            wellnessQueries.getWellnessLogs(playerId, 1),
+            choreQueries.getAllChores(),
+            collegeQueries.getCollegeTargets(playerId),
+            academicQueries.getAcademicProgress(playerId)
+        ])
+
+        const nextSteps = []
+
+        // Check wellness log for today
+        const hasLoggedToday = wellness?.[0]?.date === today
+        if (!hasLoggedToday) {
+            nextSteps.push({
+                id: 'wellness-log',
+                priority: 'high',
+                title: 'Log Your Wellness',
+                description: 'Complete your daily wellness check-in',
+                action: '/wellness',
+                category: 'wellness'
+            })
+        }
+
+        // Check pending chores
+        const playerChores = chores?.filter(c =>
+            c.assigned_to === playerId && c.status === 'pending'
+        ).sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+
+        if (playerChores?.length > 0) {
+            const urgentChore = playerChores[0]
+            nextSteps.push({
+                id: `chore-${urgentChore.id}`,
+                priority: urgentChore.priority,
+                title: urgentChore.title,
+                description: `Due ${new Date(urgentChore.deadline).toLocaleDateString()}`,
+                action: '/chores',
+                category: 'tasks'
+            })
+        }
+
+        // Check college targets with no recent contact
+        const staleTargets = collegeTargets?.filter(t =>
+            t.status === 'in_contact' &&
+            t.interest_level === 'hot' &&
+            (!t.last_contact || new Date(today) - new Date(t.last_contact) > 14 * 24 * 60 * 60 * 1000)
+        )
+
+        if (staleTargets?.length > 0) {
+            nextSteps.push({
+                id: 'college-followup',
+                priority: 'medium',
+                title: 'Follow Up With Colleges',
+                description: `${staleTargets.length} hot target(s) need contact`,
+                action: '/pathway',
+                category: 'recruitment'
+            })
+        }
+
+        // Check in-progress academic courses
+        const inProgressCourses = academic?.filter(a => a.status === 'in_progress')
+        if (inProgressCourses?.length > 0) {
+            nextSteps.push({
+                id: 'academic-progress',
+                priority: 'low',
+                title: 'Update Academic Progress',
+                description: `${inProgressCourses.length} course(s) in progress`,
+                action: '/pathway',
+                category: 'academics'
+            })
+        }
+
+        return nextSteps.slice(0, 5) // Return top 5 priorities
     }
 }

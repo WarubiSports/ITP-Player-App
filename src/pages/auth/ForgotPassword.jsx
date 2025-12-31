@@ -34,7 +34,7 @@ export default function ForgotPassword() {
 
             <div className="auth-card">
                 <div className="auth-logo">
-                    <img src="/fc-koln-logo.svg" alt="1.FC Köln" className="auth-logo-img" />
+                    <img src="/fc-koln-logo.png" alt="1.FC Köln" className="auth-logo-img" />
                     <h1 className="auth-title">Reset Password</h1>
                     <p className="auth-subtitle">We'll send you recovery instructions</p>
                 </div>

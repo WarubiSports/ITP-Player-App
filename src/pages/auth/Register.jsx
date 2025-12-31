@@ -58,7 +58,7 @@ export default function Register() {
 
             <div className="auth-card">
                 <div className="auth-logo">
-                    <img src="/fc-koln-logo.svg" alt="1.FC Köln" className="auth-logo-img" />
+                    <img src="/fc-koln-logo.png" alt="1.FC Köln" className="auth-logo-img" />
                     <h1 className="auth-title">Join the Program</h1>
                     <p className="auth-subtitle">Create your ITP account</p>
                 </div>
