@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react'
-import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { getWellnessLogs, getTrainingLoads, getInjuries, createWellnessLog, createTrainingLoad } from '../lib/data-service'
+import { getLocalDate, formatDateForDisplay } from '../lib/date-utils'
 import './Wellness.css'
+
+// Parse date string as local date (not UTC)
+const parseLocalDate = (dateStr) => {
+    if (!dateStr) return new Date()
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(year, month - 1, day)
+}
 
 export default function Wellness() {
     const { profile } = useAuth()
@@ -10,21 +18,35 @@ export default function Wellness() {
     const [injuries, setInjuries] = useState([])
     const [showWellnessForm, setShowWellnessForm] = useState(false)
     const [showTrainingForm, setShowTrainingForm] = useState(false)
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+    const [selectedDate, setSelectedDate] = useState(getLocalDate())
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Get current player's data
-        const playerId = profile?.id || 'p1'
-        setWellnessLogs(demoData.wellnessLogs.filter(w => w.player_id === playerId))
-        setTrainingLoads(demoData.trainingLoads.filter(t => t.player_id === playerId))
-        setInjuries(demoData.injuries.filter(i => i.player_id === playerId))
+        loadData()
     }, [profile])
 
-    const handleWellnessSubmit = (e) => {
+    const loadData = async () => {
+        const playerId = profile?.id || 'p1'
+        try {
+            const [wellness, training, injury] = await Promise.all([
+                getWellnessLogs(playerId),
+                getTrainingLoads(playerId),
+                getInjuries(playerId, true)
+            ])
+            setWellnessLogs(wellness)
+            setTrainingLoads(training)
+            setInjuries(injury)
+        } catch (error) {
+            console.error('Error loading wellness data:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleWellnessSubmit = async (e) => {
         e.preventDefault()
         const form = e.target
         const newLog = {
-            id: `w${Date.now()}`,
             player_id: profile?.id || 'p1',
             date: selectedDate,
             sleep_hours: parseFloat(form.sleepHours.value),
@@ -33,31 +55,37 @@ export default function Wellness() {
             muscle_soreness: parseInt(form.muscleSoreness.value),
             stress_level: parseInt(form.stressLevel.value),
             mood: form.mood.value,
-            notes: form.notes.value,
-            created_at: new Date().toISOString()
+            notes: form.notes.value
         }
-        setWellnessLogs(prev => [newLog, ...prev])
-        setShowWellnessForm(false)
+        try {
+            const savedLog = await createWellnessLog(newLog)
+            setWellnessLogs(prev => [savedLog, ...prev])
+            setShowWellnessForm(false)
+        } catch (error) {
+            console.error('Error saving wellness log:', error)
+        }
     }
 
-    const handleTrainingSubmit = (e) => {
+    const handleTrainingSubmit = async (e) => {
         e.preventDefault()
         const form = e.target
         const duration = parseInt(form.duration.value)
         const rpe = parseInt(form.rpe.value)
         const newLoad = {
-            id: `tl${Date.now()}`,
             player_id: profile?.id || 'p1',
             date: selectedDate,
             session_type: form.sessionType.value,
             duration,
             rpe,
-            load_score: duration * rpe,
-            notes: form.notes.value,
-            created_at: new Date().toISOString()
+            notes: form.notes.value
         }
-        setTrainingLoads(prev => [newLoad, ...prev])
-        setShowTrainingForm(false)
+        try {
+            const savedLoad = await createTrainingLoad(newLoad)
+            setTrainingLoads(prev => [savedLoad, ...prev])
+            setShowTrainingForm(false)
+        } catch (error) {
+            console.error('Error saving training load:', error)
+        }
     }
 
     // Calculate wellness score (0-100)
@@ -158,8 +186,8 @@ export default function Wellness() {
                                 </span>
                             </div>
                             <div className="injury-details">
-                                <p><strong>Occurred:</strong> {new Date(injury.date_occurred).toLocaleDateString()}</p>
-                                <p><strong>Expected Return:</strong> {new Date(injury.expected_return).toLocaleDateString()}</p>
+                                <p><strong>Occurred:</strong> {parseLocalDate(injury.date_occurred).toLocaleDateString()}</p>
+                                <p><strong>Expected Return:</strong> {parseLocalDate(injury.expected_return).toLocaleDateString()}</p>
                                 <p><strong>Treatment:</strong> {injury.treatment_plan}</p>
                                 {injury.notes && <p className="injury-notes">{injury.notes}</p>}
                             </div>
@@ -177,8 +205,8 @@ export default function Wellness() {
                         {wellnessLogs.slice(0, 7).map(log => (
                             <div key={log.id} className="log-item">
                                 <div className="log-date">
-                                    <span className="date-day">{new Date(log.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    <span className="date-num">{new Date(log.date).getDate()}</span>
+                                    <span className="date-day">{parseLocalDate(log.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                    <span className="date-num">{parseLocalDate(log.date).getDate()}</span>
                                 </div>
                                 <div className="log-content">
                                     <div className="log-score">
@@ -207,8 +235,8 @@ export default function Wellness() {
                         {trainingLoads.slice(0, 7).map(load => (
                             <div key={load.id} className="log-item">
                                 <div className="log-date">
-                                    <span className="date-day">{new Date(load.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    <span className="date-num">{new Date(load.date).getDate()}</span>
+                                    <span className="date-day">{parseLocalDate(load.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                    <span className="date-num">{parseLocalDate(load.date).getDate()}</span>
                                 </div>
                                 <div className="log-content">
                                     <div className="training-header">
@@ -244,7 +272,7 @@ export default function Wellness() {
                                         className="input"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        max={new Date().toISOString().split('T')[0]}
+                                        max={getLocalDate()}
                                     />
                                 </div>
 
@@ -318,7 +346,7 @@ export default function Wellness() {
                                         className="input"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        max={new Date().toISOString().split('T')[0]}
+                                        max={getLocalDate()}
                                     />
                                 </div>
 
