@@ -3,7 +3,7 @@
 // Works seamlessly in demo and production mode
 // =============================================
 
-import { isDemoMode, demoData } from './supabase'
+import { checkIsDemoMode, demoData } from './supabase'
 import * as queries from './supabase-queries'
 import { getLocalDate } from './date-utils'
 
@@ -26,21 +26,21 @@ const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2
 // =============================================
 
 export const getPlayers = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('players')
     }
     return await queries.playerQueries.getAllPlayers()
 }
 
 export const getPlayerById = async (id) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('players').find(p => p.id === id)
     }
     return await queries.playerQueries.getPlayerById(id)
 }
 
 export const createPlayer = async (player) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const players = getDemoDataFromStorage('players')
         const newPlayer = { ...player, id: generateId(), created_at: new Date().toISOString() }
         players.push(newPlayer)
@@ -51,7 +51,7 @@ export const createPlayer = async (player) => {
 }
 
 export const updatePlayer = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const players = getDemoDataFromStorage('players')
         const index = players.findIndex(p => p.id === id)
         if (index !== -1) {
@@ -69,14 +69,14 @@ export const updatePlayer = async (id, updates) => {
 // =============================================
 
 export const getHouses = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('houses')
     }
     return await queries.houseQueries.getAllHouses()
 }
 
 export const getHouseLeaderboard = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const houses = getDemoDataFromStorage('houses')
         return houses.sort((a, b) => b.total_points - a.total_points)
     }
@@ -88,14 +88,14 @@ export const getHouseLeaderboard = async () => {
 // =============================================
 
 export const getChores = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('chores')
     }
     return await queries.choreQueries.getAllChores()
 }
 
 export const createChore = async (chore) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const chores = getDemoDataFromStorage('chores')
         const newChore = { ...chore, id: generateId(), created_at: new Date().toISOString(), status: 'pending' }
         chores.push(newChore)
@@ -106,7 +106,7 @@ export const createChore = async (chore) => {
 }
 
 export const updateChore = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const chores = getDemoDataFromStorage('chores')
         const index = chores.findIndex(c => c.id === id)
         if (index !== -1) {
@@ -146,7 +146,7 @@ export const completeChore = async (choreId) => {
 }
 
 export const deleteChore = async (id) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const chores = getDemoDataFromStorage('chores')
         const filtered = chores.filter(c => c.id !== id)
         saveDemoDataToStorage('chores', filtered)
@@ -160,14 +160,14 @@ export const deleteChore = async (id) => {
 // =============================================
 
 export const getEvents = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('events')
     }
     return await queries.eventQueries.getAllEvents()
 }
 
 export const createEvent = async (event) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const events = getDemoDataFromStorage('events')
         const newEvent = { ...event, id: generateId(), created_at: new Date().toISOString() }
         events.push(newEvent)
@@ -178,7 +178,7 @@ export const createEvent = async (event) => {
 }
 
 export const updateEvent = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const events = getDemoDataFromStorage('events')
         const index = events.findIndex(e => e.id === id)
         if (index !== -1) {
@@ -192,7 +192,7 @@ export const updateEvent = async (id, updates) => {
 }
 
 export const deleteEvent = async (id) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const events = getDemoDataFromStorage('events')
         const filtered = events.filter(e => e.id !== id)
         saveDemoDataToStorage('events', filtered)
@@ -207,7 +207,7 @@ export const deleteEvent = async (id) => {
 
 // Event Attendees
 export const createEventAttendees = async (eventId, playerIds) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const attendees = getDemoDataFromStorage('eventAttendees')
         const newAttendees = playerIds.map(playerId => ({
             id: generateId(),
@@ -224,14 +224,14 @@ export const createEventAttendees = async (eventId, playerIds) => {
 }
 
 export const getEventAttendees = async (eventId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('eventAttendees').filter(a => a.event_id === eventId)
     }
     return await queries.eventQueries.getEventAttendees(eventId)
 }
 
 export const getPlayerEvents = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const events = getDemoDataFromStorage('events')
         const attendees = getDemoDataFromStorage('eventAttendees')
 
@@ -257,7 +257,7 @@ export const getPlayerEvents = async (playerId) => {
 // =============================================
 
 export const getPlayerGoals = async (playerId, status = null) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const goals = getDemoDataFromStorage('playerGoals')
         let filtered = goals.filter(g => g.player_id === playerId)
         if (status) {
@@ -269,7 +269,7 @@ export const getPlayerGoals = async (playerId, status = null) => {
 }
 
 export const createGoal = async (goal) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const goals = getDemoDataFromStorage('playerGoals')
         const newGoal = {
             ...goal,
@@ -287,7 +287,7 @@ export const createGoal = async (goal) => {
 }
 
 export const updateGoal = async (goalId, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const goals = getDemoDataFromStorage('playerGoals')
         const index = goals.findIndex(g => g.id === goalId)
         if (index !== -1) {
@@ -305,14 +305,14 @@ export const updateGoal = async (goalId, updates) => {
 }
 
 export const getAchievements = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('achievements')
     }
     return await queries.achievementsQueries.getAllAchievements()
 }
 
 export const getPlayerAchievements = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('playerAchievements')
             .filter(pa => pa.player_id === playerId)
     }
@@ -320,7 +320,7 @@ export const getPlayerAchievements = async (playerId) => {
 }
 
 export const unlockAchievement = async (playerId, achievementId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const playerAchievements = getDemoDataFromStorage('playerAchievements')
         // Check if already unlocked
         if (playerAchievements.some(pa => pa.player_id === playerId && pa.achievement_id === achievementId)) {
@@ -340,7 +340,7 @@ export const unlockAchievement = async (playerId, achievementId) => {
 }
 
 export const getMentalWellness = async (playerId, limit = 30) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('mentalWellness')
             .filter(m => m.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -350,7 +350,7 @@ export const getMentalWellness = async (playerId, limit = 30) => {
 }
 
 export const createMentalWellnessLog = async (log) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const logs = getDemoDataFromStorage('mentalWellness')
         const newLog = {
             ...log,
@@ -370,7 +370,7 @@ export const createMentalWellnessLog = async (log) => {
 // =============================================
 
 export const getWellnessLogs = async (playerId, limit = 30) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('wellnessLogs')
             .filter(w => w.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -380,7 +380,7 @@ export const getWellnessLogs = async (playerId, limit = 30) => {
 }
 
 export const createWellnessLog = async (log) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const logs = getDemoDataFromStorage('wellnessLogs')
         const newLog = { ...log, id: generateId(), created_at: new Date().toISOString() }
         logs.push(newLog)
@@ -391,7 +391,7 @@ export const createWellnessLog = async (log) => {
 }
 
 export const getWellnessScore = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const sevenDaysAgo = new Date()
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -435,7 +435,7 @@ export const getWellnessScore = async (playerId) => {
 // =============================================
 
 export const getTrainingLoads = async (playerId, limit = 30) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('trainingLoads')
             .filter(t => t.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -445,7 +445,7 @@ export const getTrainingLoads = async (playerId, limit = 30) => {
 }
 
 export const createTrainingLoad = async (load) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const loads = getDemoDataFromStorage('trainingLoads')
         const newLoad = {
             ...load,
@@ -465,7 +465,7 @@ export const createTrainingLoad = async (load) => {
 // =============================================
 
 export const getInjuries = async (playerId, includeCleared = false) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         let injuries = getDemoDataFromStorage('injuries').filter(i => i.player_id === playerId)
         if (!includeCleared) {
             injuries = injuries.filter(i => i.status !== 'cleared')
@@ -476,7 +476,7 @@ export const getInjuries = async (playerId, includeCleared = false) => {
 }
 
 export const createInjury = async (injury) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const injuries = getDemoDataFromStorage('injuries')
         const newInjury = { ...injury, id: generateId(), created_at: new Date().toISOString() }
         injuries.push(newInjury)
@@ -487,7 +487,7 @@ export const createInjury = async (injury) => {
 }
 
 export const updateInjury = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const injuries = getDemoDataFromStorage('injuries')
         const index = injuries.findIndex(i => i.id === id)
         if (index !== -1) {
@@ -505,7 +505,7 @@ export const updateInjury = async (id, updates) => {
 // =============================================
 
 export const getCollegeTargets = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('collegeTargets')
             .filter(ct => ct.player_id === playerId)
             .sort((a, b) => {
@@ -517,7 +517,7 @@ export const getCollegeTargets = async (playerId) => {
 }
 
 export const createCollegeTarget = async (target) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const newTarget = { ...target, id: generateId(), created_at: new Date().toISOString() }
         targets.push(newTarget)
@@ -528,7 +528,7 @@ export const createCollegeTarget = async (target) => {
 }
 
 export const updateCollegeTarget = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const index = targets.findIndex(t => t.id === id)
         if (index !== -1) {
@@ -542,7 +542,7 @@ export const updateCollegeTarget = async (id, updates) => {
 }
 
 export const deleteCollegeTarget = async (id) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const filtered = targets.filter(t => t.id !== id)
         saveDemoDataToStorage('collegeTargets', filtered)
@@ -556,7 +556,7 @@ export const deleteCollegeTarget = async (id) => {
 // =============================================
 
 export const getScoutActivities = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('scoutActivities')
             .filter(sa => sa.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -565,7 +565,7 @@ export const getScoutActivities = async (playerId) => {
 }
 
 export const createScoutActivity = async (activity) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const newActivity = { ...activity, id: generateId(), created_at: new Date().toISOString() }
         activities.push(newActivity)
@@ -576,7 +576,7 @@ export const createScoutActivity = async (activity) => {
 }
 
 export const updateScoutActivity = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const index = activities.findIndex(a => a.id === id)
         if (index !== -1) {
@@ -590,7 +590,7 @@ export const updateScoutActivity = async (id, updates) => {
 }
 
 export const deleteScoutActivity = async (id) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const filtered = activities.filter(a => a.id !== id)
         saveDemoDataToStorage('scoutActivities', filtered)
@@ -604,7 +604,7 @@ export const deleteScoutActivity = async (id) => {
 // =============================================
 
 export const getAcademicProgress = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         return getDemoDataFromStorage('academicProgress')
             .filter(ap => ap.player_id === playerId)
             .sort((a, b) => {
@@ -616,7 +616,7 @@ export const getAcademicProgress = async (playerId) => {
 }
 
 export const createAcademicProgress = async (progress) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const progressList = getDemoDataFromStorage('academicProgress')
         const newProgress = { ...progress, id: generateId(), created_at: new Date().toISOString() }
         progressList.push(newProgress)
@@ -627,7 +627,7 @@ export const createAcademicProgress = async (progress) => {
 }
 
 export const updateAcademicProgress = async (id, updates) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const progressList = getDemoDataFromStorage('academicProgress')
         const index = progressList.findIndex(p => p.id === id)
         if (index !== -1) {
@@ -641,7 +641,7 @@ export const updateAcademicProgress = async (id, updates) => {
 }
 
 export const calculateGPA = async (playerId) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const progressList = getDemoDataFromStorage('academicProgress')
             .filter(p => p.player_id === playerId && p.status === 'completed' && ['high_school', 'college'].includes(p.category))
 
@@ -673,7 +673,7 @@ export const calculateGPA = async (playerId) => {
 // =============================================
 
 export const getPerformanceTests = async (playerId, testType = null) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         let tests = getDemoDataFromStorage('performanceTests').filter(pt => pt.player_id === playerId)
         if (testType) {
             tests = tests.filter(t => t.test_type === testType)
@@ -684,7 +684,7 @@ export const getPerformanceTests = async (playerId, testType = null) => {
 }
 
 export const createPerformanceTest = async (test) => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const tests = getDemoDataFromStorage('performanceTests')
         const newTest = { ...test, id: generateId(), created_at: new Date().toISOString() }
         tests.push(newTest)
@@ -778,7 +778,7 @@ export const getNextSteps = async (playerId) => {
 }
 
 export const getDashboardStats = async () => {
-    if (isDemoMode) {
+    if (checkIsDemoMode()) {
         const players = getDemoDataFromStorage('players')
         const chores = getDemoDataFromStorage('chores')
         const events = getDemoDataFromStorage('events')

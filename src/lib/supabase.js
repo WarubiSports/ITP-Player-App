@@ -5,8 +5,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-k
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Demo mode flag - when true, uses local storage instead of Supabase
-export const isDemoMode = !import.meta.env.VITE_SUPABASE_URL
+// Demo mode check - evaluated at runtime each time it's accessed
+// True when: no Supabase URL configured OR user logged in via demo login
+export const checkIsDemoMode = () => {
+    return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
+}
+
+// For backwards compatibility - but prefer checkIsDemoMode() for runtime checks
+export const isDemoMode = checkIsDemoMode()
 
 // Demo data version - increment this when you change demo data structure
 const DEMO_DATA_VERSION = 3
@@ -154,6 +160,6 @@ export const demoData = {
 }
 
 // Call initialization when module loads (MUST be after demoData is defined)
-if (isDemoMode) {
+if (checkIsDemoMode()) {
     initializeDemoData()
 }
