@@ -47,6 +47,16 @@ export const profileQueries = {
 
         if (error) throw error
         return data
+    },
+
+    // Delete profile (cascades to delete associated player record)
+    async deleteProfile(id) {
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', id)
+
+        if (error) throw error
     }
 }
 

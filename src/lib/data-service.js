@@ -64,6 +64,41 @@ export const updatePlayer = async (id, updates) => {
     return await queries.playerQueries.updatePlayer(id, updates)
 }
 
+export const deletePlayer = async (id) => {
+    if (checkIsDemoMode()) {
+        const players = getDemoDataFromStorage('players')
+        const filtered = players.filter(p => p.id !== id)
+        saveDemoDataToStorage('players', filtered)
+
+        // Also clean up related data
+        const wellnessLogs = getDemoDataFromStorage('wellnessLogs')
+        saveDemoDataToStorage('wellnessLogs', wellnessLogs.filter(w => w.player_id !== id))
+
+        const goals = getDemoDataFromStorage('playerGoals')
+        saveDemoDataToStorage('playerGoals', goals.filter(g => g.player_id !== id))
+
+        const achievements = getDemoDataFromStorage('playerAchievements')
+        saveDemoDataToStorage('playerAchievements', achievements.filter(a => a.player_id !== id))
+
+        const groceryOrders = getDemoDataFromStorage('groceryOrders')
+        saveDemoDataToStorage('groceryOrders', groceryOrders.filter(o => o.player_id !== id))
+
+        return
+    }
+    return await queries.playerQueries.deletePlayer(id)
+}
+
+// Delete a user (profile/staff) - for non-player users
+export const deleteUser = async (id) => {
+    if (checkIsDemoMode()) {
+        const users = getDemoDataFromStorage('users')
+        const filtered = users.filter(u => u.id !== id)
+        saveDemoDataToStorage('users', filtered)
+        return
+    }
+    return await queries.profileQueries.deleteProfile(id)
+}
+
 // =============================================
 // HOUSES
 // =============================================

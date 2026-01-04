@@ -4,7 +4,9 @@ import {
     getAdminGroceryOrders,
     updateGroceryOrder,
     getHouses,
-    getDeliveryDates
+    getDeliveryDates,
+    deletePlayer,
+    deleteUser
 } from '../lib/data-service'
 import './Admin.css'
 
@@ -21,6 +23,9 @@ export default function Admin() {
     const [activeTab, setActiveTab] = useState('users')
     const [showEditModal, setShowEditModal] = useState(false)
     const [selectedUser, setSelectedUser] = useState(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [userToDelete, setUserToDelete] = useState(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     // Grocery orders state
     const [groceryOrders, setGroceryOrders] = useState([])
@@ -263,6 +268,37 @@ export default function Admin() {
         setSelectedUser(null)
     }
 
+    const openDeleteModal = (user) => {
+        setUserToDelete(user)
+        setShowDeleteModal(true)
+    }
+
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false)
+        setUserToDelete(null)
+    }
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return
+
+        setDeleteLoading(true)
+        try {
+            if (userToDelete.type === 'player') {
+                await deletePlayer(userToDelete.id)
+            } else {
+                await deleteUser(userToDelete.id)
+            }
+            // Remove from local state
+            setUsers(prev => prev.filter(u => u.id !== userToDelete.id))
+            closeDeleteModal()
+        } catch (error) {
+            console.error('Failed to delete user:', error)
+            alert('Failed to delete user. Please try again.')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
     const handleSaveUser = (e) => {
         e.preventDefault()
         const form = e.target
@@ -381,6 +417,7 @@ export default function Admin() {
                                 </span>
                                 <div className="action-buttons">
                                     <button className="btn btn-ghost btn-sm" onClick={() => openEditModal(user)}>Edit</button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => openDeleteModal(user)}>Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -811,6 +848,45 @@ export default function Admin() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete User Confirmation Modal */}
+            {showDeleteModal && userToDelete && (
+                <div className="modal-overlay" onClick={closeDeleteModal}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Delete User</h3>
+                            <button className="modal-close" onClick={closeDeleteModal}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="delete-warning">
+                                <span className="delete-warning-icon">⚠️</span>
+                                <p>Are you sure you want to delete <strong>{userToDelete.first_name} {userToDelete.last_name}</strong>?</p>
+                                <p className="delete-warning-text">
+                                    This action cannot be undone. All associated data including wellness logs, goals, achievements, and grocery orders will be permanently deleted.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={closeDeleteModal}
+                                disabled={deleteLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={handleDeleteUser}
+                                disabled={deleteLoading}
+                            >
+                                {deleteLoading ? 'Deleting...' : 'Delete User'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
