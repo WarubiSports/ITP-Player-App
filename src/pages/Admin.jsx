@@ -278,9 +278,20 @@ export default function Admin() {
         setUserToDelete(null)
     }
 
-    const handleDeleteUser = async () => {
-        if (!userToDelete) return
+    const handleDeleteUser = async (e) => {
+        console.log('handleDeleteUser called', { e, userToDelete })
 
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+
+        if (!userToDelete) {
+            console.error('No user selected for deletion')
+            return
+        }
+
+        console.log('Deleting user:', userToDelete)
         setDeleteLoading(true)
         try {
             if (userToDelete.type === 'player') {
