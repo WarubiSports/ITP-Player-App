@@ -345,3 +345,478 @@
         gap: var(--space-2);
     }
 }
+
+/* Grocery Orders Admin */
+.admin-grocery-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.grocery-admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.grocery-date-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.grocery-date-selector label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.grocery-date-selector select {
+    min-width: 280px;
+}
+
+.grocery-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    gap: var(--space-3);
+    color: var(--color-text-tertiary);
+}
+
+.house-orders-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.house-order-card {
+    overflow: hidden;
+}
+
+.house-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4);
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.house-order-header:hover {
+    background: var(--glass-hover);
+}
+
+.house-order-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.house-name {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.house-order-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+}
+
+.house-order-stats .stat-divider {
+    color: var(--color-border);
+}
+
+.house-order-stats .stat.pending {
+    color: var(--color-warning);
+    font-weight: 600;
+}
+
+.house-order-toggle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    padding: var(--space-2);
+}
+
+.house-order-details {
+    border-top: 1px solid var(--glass-border);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    background: var(--glass-bg);
+}
+
+/* Aggregated Shopping List */
+.aggregated-list h4,
+.individual-orders h4 {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3) 0;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.aggregated-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-2);
+}
+
+.aggregated-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+.aggregated-item .item-qty {
+    font-weight: 700;
+    color: var(--color-primary);
+    min-width: 32px;
+}
+
+.aggregated-item .item-name {
+    flex: 1;
+    color: var(--color-text-primary);
+}
+
+.aggregated-item .item-category {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    text-transform: capitalize;
+}
+
+/* Individual Orders */
+.individual-orders {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.individual-order {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    gap: var(--space-3);
+}
+
+.individual-order .order-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.individual-order .player-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    min-width: 120px;
+}
+
+.individual-order .order-amount {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.individual-order .order-status {
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    border: 1px solid;
+}
+
+.individual-order .order-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.btn-xs {
+    padding: 4px 10px;
+    font-size: var(--font-size-xs);
+}
+
+/* Bulk Actions */
+.bulk-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--glass-border);
+}
+
+/* View Toggle */
+.grocery-view-toggle {
+    display: flex;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 2px;
+}
+
+.view-toggle-btn {
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.view-toggle-btn:hover {
+    color: var(--color-text-primary);
+    background: var(--glass-hover);
+}
+
+.view-toggle-btn.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Consolidated View */
+.consolidated-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.consolidated-stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding: var(--space-5);
+}
+
+.consolidated-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
+}
+
+.consolidated-stat .stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.consolidated-stat .stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-1);
+}
+
+.consolidated-stat.pending .stat-value {
+    color: var(--color-warning);
+}
+
+.consolidated-stat.pending .stat-label {
+    color: var(--color-warning);
+}
+
+/* Houses Summary */
+.houses-summary {
+    padding: var(--space-4);
+}
+
+.houses-summary h3 {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.houses-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.house-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+.house-chip-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.house-chip-count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    padding: 2px 8px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-full);
+}
+
+.house-chip-amount {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+/* Master Shopping List */
+.master-shopping-list {
+    padding: var(--space-5);
+}
+
+.master-shopping-list h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.shopping-list-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 0 0 var(--space-5) 0;
+}
+
+.category-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.category-section {
+    border-top: 1px solid var(--glass-border);
+    padding-top: var(--space-4);
+}
+
+.category-section:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.category-icon {
+    font-size: var(--font-size-lg);
+}
+
+.category-count {
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    color: var(--color-text-tertiary);
+    margin-left: var(--space-2);
+}
+
+.category-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-2);
+}
+
+.shopping-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+.shopping-item-qty {
+    font-weight: 700;
+    color: var(--color-primary);
+    min-width: 36px;
+}
+
+.shopping-item-name {
+    color: var(--color-text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .grocery-admin-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .grocery-date-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .grocery-date-selector select {
+        min-width: 100%;
+    }
+
+    .grocery-view-toggle {
+        justify-content: center;
+    }
+
+    .aggregated-items {
+        grid-template-columns: 1fr;
+    }
+
+    .individual-order {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .individual-order .order-info {
+        justify-content: space-between;
+    }
+
+    .individual-order .order-actions {
+        justify-content: flex-end;
+    }
+
+    .consolidated-stats {
+        gap: var(--space-3);
+    }
+
+    .consolidated-stat .stat-value {
+        font-size: var(--font-size-xl);
+    }
+
+    .houses-chips {
+        flex-direction: column;
+    }
+
+    .house-chip {
+        justify-content: space-between;
+    }
+
+    .category-items {
+        grid-template-columns: 1fr;
+    }
+}

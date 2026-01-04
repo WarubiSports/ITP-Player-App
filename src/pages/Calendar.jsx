@@ -1,15 +1,37 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getEvents, getPlayers, createEvent, updateEvent, createEventAttendees, getPlayerEvents } from '../lib/data-service'
 import { useAuth } from '../contexts/AuthContext'
+import { getLocalDate } from '../lib/date-utils'
 import './Calendar.css'
+
+// Get current date in CET timezone
+const getTodayInCET = () => {
+    const cetDateStr = getLocalDate('Europe/Berlin')
+    const [year, month, day] = cetDateStr.split('-').map(Number)
+    return new Date(year, month - 1, day)
+}
+
+// Format time for display - handles both ISO strings and simple time strings
+const formatEventTime = (timeStr) => {
+    if (!timeStr) return '--:--'
+    // If it's a simple time string like "09:00", return as-is
+    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr
+    // If it's an ISO string, extract and format the time
+    try {
+        const date = new Date(timeStr)
+        return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    } catch {
+        return timeStr
+    }
+}
 
 export default function Calendar() {
     const { isStaff, profile } = useAuth()
     const [events, setEvents] = useState([])
     const [players, setPlayers] = useState([])
     const [currentPlayerId, setCurrentPlayerId] = useState(null)
-    const [currentDate, setCurrentDate] = useState(new Date())
-    const [selectedDate, setSelectedDate] = useState(new Date())
+    const [currentDate, setCurrentDate] = useState(getTodayInCET())
+    const [selectedDate, setSelectedDate] = useState(getTodayInCET())
     const [showModal, setShowModal] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [showRecurring, setShowRecurring] = useState(false)
@@ -132,7 +154,7 @@ export default function Calendar() {
     }
 
     const isToday = (date) => {
-        const today = new Date()
+        const today = getTodayInCET()
         return date.toDateString() === today.toDateString()
     }
 
@@ -150,7 +172,7 @@ export default function Calendar() {
     }
 
     const goToToday = () => {
-        const today = new Date()
+        const today = getTodayInCET()
         setCurrentDate(today)
         setSelectedDate(today)
     }
@@ -388,9 +410,9 @@ export default function Calendar() {
                             {selectedDateEvents.map(event => (
                                 <div key={event.id} className="ios-event-card" style={{ borderLeftColor: getEventTypeColor(event.type) }}>
                                     <div className="event-time-block">
-                                        <span className="event-time">{event.start_time}</span>
+                                        <span className="event-time">{formatEventTime(event.start_time)}</span>
                                         <span className="event-duration">
-                                            {event.end_time}
+                                            {formatEventTime(event.end_time)}
                                         </span>
                                     </div>
                                     <div className="event-details">

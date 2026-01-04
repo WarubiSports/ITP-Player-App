@@ -9,6 +9,7 @@ const navItems = [
     { path: '/wellness', icon: '💪', label: 'Wellness' },
     { path: '/progress', icon: '📈', label: 'Progress' },
     { path: '/housing', icon: '🏠', label: 'House & Tasks' },
+    { path: '/grocery', icon: '🛒', label: 'Grocery' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },
     { path: '/parent-portal', icon: '👨‍👩‍👧', label: 'Parent Portal' },
 ]

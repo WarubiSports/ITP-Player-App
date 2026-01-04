@@ -229,3 +229,33 @@
         gap: 1rem;
     }
 }
+
+/* Streak Section */
+.dashboard-streak-section {
+    margin-bottom: var(--space-6);
+}
+
+/* Goals & Achievements Grid */
+.dashboard-goals-achievements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+    .dashboard-goals-achievements {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-streak-section {
+        margin-bottom: var(--space-4);
+    }
+
+    .dashboard-goals-achievements {
+        gap: var(--space-4);
+        margin-top: var(--space-4);
+    }
+}

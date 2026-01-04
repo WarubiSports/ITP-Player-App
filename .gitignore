@@ -33,3 +33,7 @@ yarn-error.log*
 
 # Playwright test artifacts
 .playwright-mcp/
+
+# External repos and temp files
+n8n/
+supabase/.temp/

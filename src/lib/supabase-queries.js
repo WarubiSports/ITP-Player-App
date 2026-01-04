@@ -1235,6 +1235,227 @@ export const mentalWellnessQueries = {
 }
 
 // =============================================
+// GROCERY ORDERS
+// =============================================
+
+export const groceryQueries = {
+    // Get all grocery items
+    async getGroceryItems(category = null) {
+        let query = supabase
+            .from('grocery_items')
+            .select('*')
+            .eq('in_stock', true)
+            .order('category')
+            .order('name')
+
+        if (category && category !== 'all') {
+            query = query.eq('category', category)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        return data
+    },
+
+    // Get grocery orders for a player
+    async getGroceryOrders(playerId = null) {
+        let query = supabase
+            .from('grocery_orders')
+            .select(`
+                *,
+                items:grocery_order_items(
+                    *,
+                    item:grocery_items(id, name, category, price)
+                )
+            `)
+            .order('submitted_at', { ascending: false })
+
+        if (playerId) {
+            query = query.eq('player_id', playerId)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+
+        // Flatten item data for easier use
+        return data?.map(order => ({
+            ...order,
+            items: order.items?.map(oi => ({
+                ...oi,
+                name: oi.item?.name,
+                category: oi.item?.category
+            }))
+        }))
+    },
+
+    // Get all orders with player and house info (for admin)
+    async getAdminGroceryOrders() {
+        const { data, error } = await supabase
+            .from('grocery_orders')
+            .select(`
+                *,
+                player:players(
+                    id,
+                    first_name,
+                    last_name,
+                    house_id,
+                    house:houses(id, name)
+                ),
+                items:grocery_order_items(
+                    *,
+                    item:grocery_items(id, name, category, price)
+                )
+            `)
+            .order('submitted_at', { ascending: false })
+
+        if (error) throw error
+
+        // Transform data for easier consumption
+        return data?.map(order => ({
+            ...order,
+            player_name: order.player ? `${order.player.first_name} ${order.player.last_name}` : 'Unknown',
+            house_id: order.player?.house_id,
+            house_name: order.player?.house?.name || 'Unassigned',
+            items: order.items?.map(oi => ({
+                ...oi,
+                name: oi.item?.name,
+                category: oi.item?.category
+            }))
+        }))
+    },
+
+    // Get single order by ID with items
+    async getGroceryOrderById(orderId) {
+        const { data, error } = await supabase
+            .from('grocery_orders')
+            .select(`
+                *,
+                items:grocery_order_items(
+                    *,
+                    item:grocery_items(id, name, category, price)
+                )
+            `)
+            .eq('id', orderId)
+            .single()
+
+        if (error) throw error
+
+        return {
+            ...data,
+            items: data.items?.map(oi => ({
+                ...oi,
+                name: oi.item?.name,
+                category: oi.item?.category
+            }))
+        }
+    },
+
+    // Create grocery order with items
+    async createGroceryOrder(order) {
+        const { playerId, deliveryDate, items } = order
+
+        // First, get item prices
+        const itemIds = items.map(i => i.itemId)
+        const { data: groceryItems, error: itemsError } = await supabase
+            .from('grocery_items')
+            .select('id, price, category')
+            .in('id', itemIds)
+
+        if (itemsError) throw itemsError
+
+        // Calculate total (excluding household items)
+        let totalAmount = 0
+        const itemPrices = {}
+        groceryItems.forEach(gi => {
+            itemPrices[gi.id] = { price: gi.price, category: gi.category }
+            const orderItem = items.find(i => i.itemId === gi.id)
+            if (orderItem && gi.category !== 'household') {
+                totalAmount += gi.price * orderItem.quantity
+            }
+        })
+
+        // Create the order
+        const { data: newOrder, error: orderError } = await supabase
+            .from('grocery_orders')
+            .insert([{
+                player_id: playerId,
+                delivery_date: deliveryDate,
+                total_amount: totalAmount,
+                status: 'pending'
+            }])
+            .select()
+            .single()
+
+        if (orderError) throw orderError
+
+        // Create order items
+        const orderItems = items.map(item => ({
+            order_id: newOrder.id,
+            item_id: item.itemId,
+            quantity: item.quantity,
+            price_at_order: itemPrices[item.itemId]?.price || 0
+        }))
+
+        const { error: itemsInsertError } = await supabase
+            .from('grocery_order_items')
+            .insert(orderItems)
+
+        if (itemsInsertError) throw itemsInsertError
+
+        return newOrder
+    },
+
+    // Update grocery order status
+    async updateGroceryOrder(orderId, updates) {
+        const updateData = { ...updates }
+
+        // Add timestamps for status changes
+        if (updates.status === 'approved') {
+            const { data: { user } } = await supabase.auth.getUser()
+            updateData.approved_at = new Date().toISOString()
+            updateData.approved_by = user?.id
+        }
+        if (updates.status === 'delivered') {
+            updateData.delivered_at = new Date().toISOString()
+        }
+
+        const { data, error } = await supabase
+            .from('grocery_orders')
+            .update(updateData)
+            .eq('id', orderId)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Delete grocery order
+    async deleteGroceryOrder(orderId) {
+        const { error } = await supabase
+            .from('grocery_orders')
+            .delete()
+            .eq('id', orderId)
+
+        if (error) throw error
+    },
+
+    // Get weekly budget usage for a player
+    async getWeeklyBudgetUsage(playerId, weekStart) {
+        const { data, error } = await supabase
+            .rpc('get_weekly_budget_usage', {
+                p_player_id: playerId,
+                p_week_start: weekStart
+            })
+
+        if (error) throw error
+        return data
+    }
+}
+
+// =============================================
 // ANALYTICS / DASHBOARD
 // =============================================
 

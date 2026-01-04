@@ -794,3 +794,596 @@ export const getDashboardStats = async () => {
     }
     return await queries.dashboardQueries.getDashboardStats()
 }
+
+// =============================================
+// STREAKS & ACHIEVEMENTS (GAMIFICATION)
+// =============================================
+
+export const getWellnessStreak = async (playerId) => {
+    const logs = await getWellnessLogs(playerId, 60) // Get last 60 days
+    if (!logs || logs.length === 0) return { current: 0, longest: 0, lastLogDate: null }
+
+    // Sort logs by date (newest first)
+    const sortedLogs = logs.sort((a, b) => new Date(b.date) - new Date(a.date))
+    const today = getLocalDate('Europe/Berlin')
+
+    // Create a set of logged dates for fast lookup
+    const loggedDates = new Set(sortedLogs.map(log => log.date))
+
+    // Calculate current streak
+    let currentStreak = 0
+    let checkDate = new Date(today)
+
+    // Check if logged today or yesterday (allow 1 day grace)
+    const todayLogged = loggedDates.has(today)
+    const yesterday = new Date(checkDate)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const yesterdayLogged = loggedDates.has(yesterdayStr)
+
+    if (!todayLogged && !yesterdayLogged) {
+        // Streak is broken
+        currentStreak = 0
+    } else {
+        // Start counting from today or yesterday
+        if (!todayLogged) {
+            checkDate.setDate(checkDate.getDate() - 1)
+        }
+
+        // Count consecutive days
+        while (true) {
+            const dateStr = checkDate.toISOString().split('T')[0]
+            if (loggedDates.has(dateStr)) {
+                currentStreak++
+                checkDate.setDate(checkDate.getDate() - 1)
+            } else {
+                break
+            }
+        }
+    }
+
+    // Calculate longest streak from all logs
+    let longestStreak = currentStreak
+    const allDates = Array.from(loggedDates).sort()
+
+    if (allDates.length > 1) {
+        let tempStreak = 1
+        for (let i = 1; i < allDates.length; i++) {
+            const prevDate = new Date(allDates[i - 1])
+            const currDate = new Date(allDates[i])
+            const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24))
+
+            if (diffDays === 1) {
+                tempStreak++
+                longestStreak = Math.max(longestStreak, tempStreak)
+            } else {
+                tempStreak = 1
+            }
+        }
+    }
+
+    return {
+        current: currentStreak,
+        longest: Math.max(longestStreak, currentStreak),
+        lastLogDate: sortedLogs[0]?.date || null,
+        todayLogged
+    }
+}
+
+export const getPlayerAchievementsWithDetails = async (playerId) => {
+    const allAchievements = await getAchievements()
+    const playerAchievements = await getPlayerAchievements(playerId)
+
+    // Map achievements with unlock status
+    return allAchievements.map(achievement => {
+        const playerUnlock = playerAchievements.find(pa => pa.achievement_id === achievement.id)
+        return {
+            ...achievement,
+            unlocked: !!playerUnlock,
+            unlocked_at: playerUnlock?.unlocked_at || null
+        }
+    })
+}
+
+export const checkAndUnlockAchievements = async (playerId) => {
+    const newlyUnlocked = []
+    const allAchievements = await getAchievements()
+    const playerAchievements = await getPlayerAchievements(playerId)
+    const unlockedIds = new Set(playerAchievements.map(pa => pa.achievement_id))
+
+    // Get streak data
+    const streak = await getWellnessStreak(playerId)
+
+    // Check wellness streak achievements
+    for (const achievement of allAchievements) {
+        if (unlockedIds.has(achievement.id)) continue
+
+        let shouldUnlock = false
+
+        switch (achievement.code) {
+            case 'wellness_streak_7':
+                shouldUnlock = streak.current >= 7 || streak.longest >= 7
+                break
+            case 'wellness_streak_30':
+                shouldUnlock = streak.current >= 30 || streak.longest >= 30
+                break
+            // Add more achievement checks here as needed
+            default:
+                break
+        }
+
+        if (shouldUnlock) {
+            const unlock = await unlockAchievement(playerId, achievement.id)
+            if (unlock) {
+                newlyUnlocked.push({
+                    ...achievement,
+                    unlocked_at: unlock.unlocked_at
+                })
+            }
+        }
+    }
+
+    // Award points for newly unlocked achievements
+    if (newlyUnlocked.length > 0) {
+        const player = await getPlayerById(playerId)
+        if (player) {
+            const totalPoints = newlyUnlocked.reduce((sum, a) => sum + (a.points_value || 0), 0)
+            await updatePlayer(playerId, { points: (player.points || 0) + totalPoints })
+        }
+    }
+
+    return newlyUnlocked
+}
+
+// =============================================
+// GROCERY ORDERS
+// =============================================
+
+const WEEKLY_BUDGET = 35.00
+
+// Default grocery items for demo mode (from Google Sheets)
+const defaultGroceryItems = [
+    // Household Items (Free - provided by program)
+    { id: 'gi-1', name: 'Baking Paper', category: 'household', price: 0.00 },
+    { id: 'gi-2', name: 'Dish Soap', category: 'household', price: 0.00 },
+    { id: 'gi-3', name: 'Dishwasher Pods', category: 'household', price: 0.00 },
+    { id: 'gi-4', name: 'Disinfectant Spray', category: 'household', price: 0.00 },
+    { id: 'gi-5', name: 'Garbage Bags', category: 'household', price: 0.00 },
+    { id: 'gi-6', name: 'Hand Soap', category: 'household', price: 0.00 },
+    { id: 'gi-7', name: 'Laundry Detergent', category: 'household', price: 0.00 },
+    { id: 'gi-8', name: 'Paper Towels', category: 'household', price: 0.00 },
+    { id: 'gi-9', name: 'Sponges', category: 'household', price: 0.00 },
+    { id: 'gi-10', name: 'Swiffer Cloths', category: 'household', price: 0.00 },
+    { id: 'gi-11', name: 'Toilet Paper', category: 'household', price: 0.00 },
+    { id: 'gi-12', name: 'Toothpaste', category: 'household', price: 0.00 },
+    { id: 'gi-13', name: 'Body Soap', category: 'household', price: 0.00 },
+    { id: 'gi-14', name: 'Vacuum Bags', category: 'household', price: 0.00 },
+    { id: 'gi-15', name: 'Bandaids', category: 'household', price: 0.00 },
+    // Vegetables & Fruits
+    { id: 'gi-16', name: 'Apples', category: 'produce', price: 1.99 },
+    { id: 'gi-17', name: 'Arugula', category: 'produce', price: 1.99 },
+    { id: 'gi-18', name: 'Avocados', category: 'produce', price: 1.59 },
+    { id: 'gi-19', name: 'Bananas', category: 'produce', price: 0.40 },
+    { id: 'gi-20', name: 'Beans', category: 'produce', price: 1.39 },
+    { id: 'gi-21', name: 'Watermelon', category: 'produce', price: 3.99 },
+    { id: 'gi-22', name: 'Broccoli (frozen)', category: 'produce', price: 1.89 },
+    { id: 'gi-23', name: 'Carrots', category: 'produce', price: 1.29 },
+    { id: 'gi-24', name: 'Cherry Tomatoes', category: 'produce', price: 1.25 },
+    { id: 'gi-25', name: 'Cucumber', category: 'produce', price: 0.79 },
+    { id: 'gi-26', name: 'Garlic', category: 'produce', price: 1.49 },
+    { id: 'gi-27', name: 'Sour Pickles', category: 'produce', price: 0.99 },
+    { id: 'gi-28', name: 'Red Grapes', category: 'produce', price: 1.99 },
+    { id: 'gi-29', name: 'Lemons', category: 'produce', price: 1.69 },
+    { id: 'gi-30', name: 'Lentils', category: 'produce', price: 1.65 },
+    { id: 'gi-31', name: 'Lettuce', category: 'produce', price: 1.19 },
+    { id: 'gi-32', name: 'Limes', category: 'produce', price: 1.65 },
+    { id: 'gi-33', name: 'Mushrooms', category: 'produce', price: 1.99 },
+    { id: 'gi-34', name: 'Onions', category: 'produce', price: 1.29 },
+    { id: 'gi-35', name: 'Oranges', category: 'produce', price: 3.19 },
+    { id: 'gi-36', name: 'Potatoes', category: 'produce', price: 2.49 },
+    { id: 'gi-37', name: 'Red Pepper', category: 'produce', price: 1.59 },
+    { id: 'gi-38', name: 'Tomato Paste', category: 'produce', price: 0.95 },
+    { id: 'gi-39', name: 'Pomegranate', category: 'produce', price: 2.39 },
+    { id: 'gi-40', name: 'Mandarines', category: 'produce', price: 2.99 },
+    { id: 'gi-41', name: 'Blueberries', category: 'produce', price: 2.29 },
+    { id: 'gi-42', name: 'Kiwis', category: 'produce', price: 0.59 },
+    { id: 'gi-43', name: 'Spinach', category: 'produce', price: 2.00 },
+    { id: 'gi-44', name: 'Berry Mix', category: 'produce', price: 3.99 },
+    { id: 'gi-45', name: 'Dates', category: 'produce', price: 2.59 },
+    { id: 'gi-46', name: 'Green Grapes', category: 'produce', price: 1.80 },
+    { id: 'gi-47', name: 'Baby Carrots', category: 'produce', price: 0.99 },
+    { id: 'gi-48', name: 'Sweet Potatoes', category: 'produce', price: 1.85 },
+    { id: 'gi-49', name: 'Chickpeas', category: 'produce', price: 0.85 },
+    { id: 'gi-50', name: 'Lemon Juice', category: 'produce', price: 1.69 },
+    // Meat & Protein
+    { id: 'gi-51', name: 'Bacon', category: 'meat', price: 1.39 },
+    { id: 'gi-52', name: 'Bauchspeck', category: 'meat', price: 4.29 },
+    { id: 'gi-53', name: 'Canned Tuna', category: 'meat', price: 1.29 },
+    { id: 'gi-54', name: 'Chicken', category: 'meat', price: 6.79 },
+    { id: 'gi-55', name: 'Eggs', category: 'meat', price: 1.99 },
+    { id: 'gi-56', name: 'Ground Beef', category: 'meat', price: 4.47 },
+    { id: 'gi-57', name: 'Ham', category: 'meat', price: 2.49 },
+    { id: 'gi-58', name: 'Pork Steak', category: 'meat', price: 3.79 },
+    { id: 'gi-59', name: 'Salami', category: 'meat', price: 2.29 },
+    { id: 'gi-60', name: 'Salmon Fillet', category: 'meat', price: 5.49 },
+    { id: 'gi-61', name: 'Steak', category: 'meat', price: 6.87 },
+    // Dairy Products
+    { id: 'gi-62', name: 'Blueberry Yogurt', category: 'dairy', price: 0.59 },
+    { id: 'gi-63', name: 'Butter', category: 'dairy', price: 2.59 },
+    { id: 'gi-64', name: 'Butterkäse', category: 'dairy', price: 2.99 },
+    { id: 'gi-65', name: 'Cheddar', category: 'dairy', price: 2.99 },
+    { id: 'gi-66', name: 'Cream Cheese', category: 'dairy', price: 1.69 },
+    { id: 'gi-67', name: 'Gouda', category: 'dairy', price: 1.99 },
+    { id: 'gi-68', name: 'Greek Vanilla Yogurt', category: 'dairy', price: 2.29 },
+    { id: 'gi-69', name: 'Heavy Cream', category: 'dairy', price: 2.89 },
+    { id: 'gi-70', name: 'Mozzarella', category: 'dairy', price: 0.85 },
+    { id: 'gi-71', name: 'Parmesan Cheese', category: 'dairy', price: 1.99 },
+    { id: 'gi-72', name: 'Raspberry Yogurt', category: 'dairy', price: 0.65 },
+    { id: 'gi-73', name: 'Skyr', category: 'dairy', price: 1.49 },
+    { id: 'gi-74', name: 'Strawberry Yogurt', category: 'dairy', price: 0.65 },
+    { id: 'gi-75', name: 'Vanilla Yogurt', category: 'dairy', price: 0.65 },
+    // Carbohydrates
+    { id: 'gi-76', name: 'Bagels', category: 'carbs', price: 2.29 },
+    { id: 'gi-77', name: 'Bread (whole grain)', category: 'carbs', price: 1.99 },
+    { id: 'gi-78', name: 'Fusilli', category: 'carbs', price: 0.85 },
+    { id: 'gi-79', name: 'Gnocchi', category: 'carbs', price: 1.89 },
+    { id: 'gi-80', name: 'Hamburger Buns', category: 'carbs', price: 1.69 },
+    { id: 'gi-81', name: 'Maccaroni', category: 'carbs', price: 1.99 },
+    { id: 'gi-82', name: 'Musli', category: 'carbs', price: 2.49 },
+    { id: 'gi-83', name: 'Oats', category: 'carbs', price: 0.85 },
+    { id: 'gi-84', name: 'Rice', category: 'carbs', price: 2.99 },
+    { id: 'gi-85', name: 'Spaghetti', category: 'carbs', price: 0.85 },
+    { id: 'gi-86', name: 'Tagliatelle', category: 'carbs', price: 1.99 },
+    { id: 'gi-87', name: 'Tortellini', category: 'carbs', price: 3.49 },
+    { id: 'gi-88', name: 'Tortiglioni', category: 'carbs', price: 1.39 },
+    { id: 'gi-89', name: 'Tortilla', category: 'carbs', price: 1.29 },
+    { id: 'gi-90', name: 'Waffles', category: 'carbs', price: 1.59 },
+    { id: 'gi-91', name: 'White Bread', category: 'carbs', price: 1.69 },
+    { id: 'gi-92', name: 'Buldak Spicy Ramen', category: 'carbs', price: 2.29 },
+    { id: 'gi-93', name: 'Croissant', category: 'carbs', price: 1.99 },
+    { id: 'gi-94', name: 'Pretzels', category: 'carbs', price: 1.11 },
+    { id: 'gi-95', name: 'Eierspätzle', category: 'carbs', price: 2.29 },
+    { id: 'gi-96', name: 'Konjac Root Pasta', category: 'carbs', price: 3.00 },
+    { id: 'gi-97', name: 'Shirataki Rice', category: 'carbs', price: 2.39 },
+    { id: 'gi-98', name: 'Orecchiette', category: 'carbs', price: 2.79 },
+    // Beverages
+    { id: 'gi-99', name: 'Apple Juice', category: 'drinks', price: 1.29 },
+    { id: 'gi-100', name: 'Chai Tea', category: 'drinks', price: 2.29 },
+    { id: 'gi-101', name: 'Chocolate Milk', category: 'drinks', price: 2.29 },
+    { id: 'gi-102', name: 'Instant Coffee', category: 'drinks', price: 2.69 },
+    { id: 'gi-103', name: 'Mango Juice', category: 'drinks', price: 1.69 },
+    { id: 'gi-104', name: 'Milk', category: 'drinks', price: 0.99 },
+    { id: 'gi-105', name: 'Orange Juice', category: 'drinks', price: 2.65 },
+    { id: 'gi-106', name: 'Pomegranate Juice', category: 'drinks', price: 2.69 },
+    { id: 'gi-107', name: 'Sparkling Water', category: 'drinks', price: 2.34 },
+    { id: 'gi-108', name: 'Coconut Water', category: 'drinks', price: 1.99 },
+    // Spices & Sauces
+    { id: 'gi-109', name: 'Basil', category: 'spices', price: 0.99 },
+    { id: 'gi-110', name: 'Basilico Sauce', category: 'spices', price: 1.59 },
+    { id: 'gi-111', name: 'BBQ Sauce', category: 'spices', price: 1.69 },
+    { id: 'gi-112', name: 'Buldak Hot Sauce', category: 'spices', price: 5.89 },
+    { id: 'gi-113', name: 'Brown Sugar', category: 'spices', price: 1.69 },
+    { id: 'gi-114', name: 'Canned Tomatoes', category: 'spices', price: 1.19 },
+    { id: 'gi-115', name: 'Chicken Seasoning', category: 'spices', price: 1.99 },
+    { id: 'gi-116', name: 'Chili Flakes', category: 'spices', price: 2.39 },
+    { id: 'gi-117', name: 'Cinnamon', category: 'spices', price: 2.19 },
+    { id: 'gi-118', name: 'Dill', category: 'spices', price: 2.29 },
+    { id: 'gi-119', name: 'Dried Thyme', category: 'spices', price: 2.19 },
+    { id: 'gi-120', name: 'Flour', category: 'spices', price: 0.99 },
+    { id: 'gi-121', name: 'Garlic Powder', category: 'spices', price: 2.29 },
+    { id: 'gi-122', name: 'Green Pesto', category: 'spices', price: 1.09 },
+    { id: 'gi-123', name: 'Honey', category: 'spices', price: 2.99 },
+    { id: 'gi-124', name: 'Jam', category: 'spices', price: 3.29 },
+    { id: 'gi-125', name: 'Ketchup', category: 'spices', price: 3.49 },
+    { id: 'gi-126', name: 'Maple Syrup', category: 'spices', price: 4.99 },
+    { id: 'gi-127', name: 'Mayo', category: 'spices', price: 3.39 },
+    { id: 'gi-128', name: 'Mustard', category: 'spices', price: 1.79 },
+    { id: 'gi-129', name: 'Nutella', category: 'spices', price: 4.89 },
+    { id: 'gi-130', name: 'Olive Oil', category: 'spices', price: 10.99 },
+    { id: 'gi-131', name: 'Onion Powder', category: 'spices', price: 2.29 },
+    { id: 'gi-132', name: 'Orange Pesto', category: 'spices', price: 1.09 },
+    { id: 'gi-133', name: 'Oregano', category: 'spices', price: 1.99 },
+    { id: 'gi-134', name: 'Paprika', category: 'spices', price: 2.19 },
+    { id: 'gi-135', name: 'Parsley', category: 'spices', price: 2.29 },
+    { id: 'gi-136', name: 'Peanut Butter', category: 'spices', price: 2.99 },
+    { id: 'gi-137', name: 'Pepper', category: 'spices', price: 2.09 },
+    { id: 'gi-138', name: 'Cayenne Pepper', category: 'spices', price: 2.29 },
+    { id: 'gi-139', name: 'Salt', category: 'spices', price: 1.29 },
+    { id: 'gi-140', name: 'Sriracha', category: 'spices', price: 5.79 },
+    { id: 'gi-141', name: 'Soy Sauce', category: 'spices', price: 1.79 },
+    { id: 'gi-142', name: 'Teriyaki Sauce', category: 'spices', price: 3.39 },
+    { id: 'gi-143', name: 'White Sugar', category: 'spices', price: 1.19 },
+    { id: 'gi-144', name: 'Blueberry Jam', category: 'spices', price: 3.89 },
+    { id: 'gi-145', name: 'Cajun', category: 'spices', price: 4.99 },
+    { id: 'gi-146', name: 'Salad Dressing', category: 'spices', price: 2.19 },
+    { id: 'gi-147', name: 'Baking Soda', category: 'spices', price: 0.85 },
+    // Frozen Foods
+    { id: 'gi-148', name: 'Frozen Blueberries', category: 'frozen', price: 2.99 },
+    { id: 'gi-149', name: 'Frozen Mango', category: 'frozen', price: 3.29 },
+    { id: 'gi-150', name: 'Frozen Raspberries', category: 'frozen', price: 4.69 },
+    { id: 'gi-151', name: 'Frozen Strawberries', category: 'frozen', price: 2.69 },
+    { id: 'gi-152', name: 'Ice', category: 'frozen', price: 2.49 },
+    { id: 'gi-153', name: 'Frosta Penne All\'Arrabbiata', category: 'frozen', price: 4.79 },
+    { id: 'gi-154', name: 'Frosta Hähnchen-Paella', category: 'frozen', price: 4.79 },
+    { id: 'gi-155', name: 'Frosta Butter Chicken', category: 'frozen', price: 4.79 },
+    { id: 'gi-156', name: 'Frosta Hähnchen-Geschnetzeltes', category: 'frozen', price: 4.79 },
+    { id: 'gi-157', name: 'Frosta Penne Gorgonzola', category: 'frozen', price: 4.79 },
+    { id: 'gi-158', name: 'Iglo Tagliatelle Pilz-Pfanne', category: 'frozen', price: 3.99 }
+]
+
+// Version for grocery items - increment when items change to force refresh
+const GROCERY_VERSION = 2
+
+export const getGroceryItems = async (category = null) => {
+    if (checkIsDemoMode()) {
+        const storedVersion = localStorage.getItem('groceryItemsVersion')
+        let items = getDemoDataFromStorage('groceryItems')
+
+        // Force refresh if version changed or no items
+        if (!items || items.length === 0 || storedVersion !== String(GROCERY_VERSION)) {
+            saveDemoDataToStorage('groceryItems', defaultGroceryItems)
+            localStorage.setItem('groceryItemsVersion', String(GROCERY_VERSION))
+            items = defaultGroceryItems
+        }
+        if (category && category !== 'all') {
+            items = items.filter(item => item.category === category)
+        }
+        return items.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+    }
+    return await queries.groceryQueries?.getGroceryItems(category) || []
+}
+
+export const getGroceryOrders = async (playerId = null) => {
+    if (checkIsDemoMode()) {
+        let orders = getDemoDataFromStorage('groceryOrders') || []
+        if (playerId) {
+            orders = orders.filter(o => o.player_id === playerId)
+        }
+        return orders.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
+    }
+    return await queries.groceryQueries?.getGroceryOrders(playerId) || []
+}
+
+// Admin: Get all orders with player and house info for aggregation
+export const getAdminGroceryOrders = async () => {
+    if (checkIsDemoMode()) {
+        const orders = getDemoDataFromStorage('groceryOrders') || []
+        const players = getDemoDataFromStorage('players') || []
+        const houses = getDemoDataFromStorage('houses') || []
+        const orderItems = getDemoDataFromStorage('groceryOrderItems') || []
+        const groceryItems = getDemoDataFromStorage('groceryItems') || defaultGroceryItems
+
+        // Enrich orders with player, house, and items info
+        const enrichedOrders = orders.map(order => {
+            const player = players.find(p => p.id === order.player_id)
+            const house = player ? houses.find(h => h.id === player.house_id) : null
+            const items = orderItems
+                .filter(oi => oi.order_id === order.id)
+                .map(oi => {
+                    const item = groceryItems.find(gi => gi.id === oi.item_id)
+                    return {
+                        ...oi,
+                        name: item?.name || 'Unknown Item',
+                        category: item?.category || 'unknown'
+                    }
+                })
+
+            return {
+                ...order,
+                player_name: player ? `${player.first_name} ${player.last_name}` : 'Unknown',
+                house_id: player?.house_id || null,
+                house_name: house?.name || 'Unassigned',
+                items
+            }
+        })
+
+        return enrichedOrders.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
+    }
+    // For production, you'd have a proper query with JOINs
+    return await queries.groceryQueries?.getAdminGroceryOrders?.() || []
+}
+
+export const getGroceryOrderById = async (orderId) => {
+    if (checkIsDemoMode()) {
+        const orders = getDemoDataFromStorage('groceryOrders') || []
+        const order = orders.find(o => o.id === orderId)
+        if (!order) return null
+
+        const orderItems = getDemoDataFromStorage('groceryOrderItems') || []
+        const items = orderItems.filter(oi => oi.order_id === orderId)
+
+        // Enrich items with item details
+        const groceryItems = getDemoDataFromStorage('groceryItems') || defaultGroceryItems
+        const enrichedItems = items.map(oi => {
+            const item = groceryItems.find(gi => gi.id === oi.item_id)
+            return {
+                ...oi,
+                name: item?.name || 'Unknown Item',
+                category: item?.category || 'unknown'
+            }
+        })
+
+        return { ...order, items: enrichedItems }
+    }
+    return await queries.groceryQueries?.getGroceryOrderById(orderId) || null
+}
+
+export const createGroceryOrder = async (order) => {
+    if (checkIsDemoMode()) {
+        const orders = getDemoDataFromStorage('groceryOrders') || []
+        const orderItems = getDemoDataFromStorage('groceryOrderItems') || []
+
+        // Calculate total (excluding household items)
+        const groceryItems = getDemoDataFromStorage('groceryItems') || defaultGroceryItems
+        let totalAmount = 0
+
+        for (const item of order.items) {
+            const groceryItem = groceryItems.find(gi => gi.id === item.itemId)
+            if (groceryItem && groceryItem.category !== 'household') {
+                totalAmount += groceryItem.price * item.quantity
+            }
+        }
+
+        // Check budget
+        if (totalAmount > WEEKLY_BUDGET) {
+            throw new Error(`Order total (€${totalAmount.toFixed(2)}) exceeds weekly budget (€${WEEKLY_BUDGET})`)
+        }
+
+        const newOrder = {
+            id: generateId(),
+            player_id: order.playerId,
+            delivery_date: order.deliveryDate,
+            total_amount: totalAmount,
+            status: 'pending',
+            submitted_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }
+
+        orders.push(newOrder)
+        saveDemoDataToStorage('groceryOrders', orders)
+
+        // Save order items
+        for (const item of order.items) {
+            const groceryItem = groceryItems.find(gi => gi.id === item.itemId)
+            orderItems.push({
+                id: generateId(),
+                order_id: newOrder.id,
+                item_id: item.itemId,
+                quantity: item.quantity,
+                price_at_order: groceryItem?.price || 0,
+                created_at: new Date().toISOString()
+            })
+        }
+        saveDemoDataToStorage('groceryOrderItems', orderItems)
+
+        return newOrder
+    }
+    return await queries.groceryQueries?.createGroceryOrder(order)
+}
+
+export const updateGroceryOrder = async (orderId, updates) => {
+    if (checkIsDemoMode()) {
+        const orders = getDemoDataFromStorage('groceryOrders') || []
+        const index = orders.findIndex(o => o.id === orderId)
+        if (index !== -1) {
+            orders[index] = {
+                ...orders[index],
+                ...updates,
+                updated_at: new Date().toISOString()
+            }
+            if (updates.status === 'approved') {
+                orders[index].approved_at = new Date().toISOString()
+            }
+            if (updates.status === 'delivered') {
+                orders[index].delivered_at = new Date().toISOString()
+            }
+            saveDemoDataToStorage('groceryOrders', orders)
+            return orders[index]
+        }
+        return null
+    }
+    return await queries.groceryQueries?.updateGroceryOrder(orderId, updates)
+}
+
+export const getDeliveryDates = () => {
+    const dates = []
+    const today = new Date()
+
+    // Generate next 4 Tuesday and Friday dates
+    for (let i = 0; i < 30 && dates.length < 4; i++) {
+        const date = new Date(today)
+        date.setDate(today.getDate() + i)
+        const day = date.getDay()
+
+        if (day === 2 || day === 5) { // Tuesday = 2, Friday = 5
+            const dateStr = date.toISOString().split('T')[0]
+            const deadlinePassed = isDeadlinePassed(dateStr)
+
+            dates.push({
+                date: dateStr,
+                dayName: day === 2 ? 'Tuesday' : 'Friday',
+                formattedDate: date.toLocaleDateString('en-GB'),
+                deadlineText: formatDeadline(dateStr),
+                expired: deadlinePassed
+            })
+        }
+    }
+
+    return dates
+}
+
+// Check if deadline has passed (orders must be placed by 8 AM Berlin time, 1 day before delivery)
+const isDeadlinePassed = (deliveryDateStr) => {
+    try {
+        const [year, month, day] = deliveryDateStr.split('-').map(Number)
+
+        // Get current time in Berlin
+        const now = new Date()
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Europe/Berlin',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        })
+
+        const parts = formatter.formatToParts(now)
+        const currentYear = parseInt(parts.find(p => p.type === 'year').value)
+        const currentMonth = parseInt(parts.find(p => p.type === 'month').value)
+        const currentDay = parseInt(parts.find(p => p.type === 'day').value)
+        const currentHour = parseInt(parts.find(p => p.type === 'hour').value)
+
+        // Calculate deadline (1 day before delivery at 8 AM)
+        let deadlineDay = day - 1
+        let deadlineMonth = month
+        let deadlineYear = year
+
+        if (deadlineDay < 1) {
+            deadlineMonth--
+            if (deadlineMonth < 1) {
+                deadlineMonth = 12
+                deadlineYear--
+            }
+            const daysInMonth = [31, (deadlineYear % 4 === 0 && deadlineYear % 100 !== 0) || deadlineYear % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+            deadlineDay = daysInMonth[deadlineMonth - 1]
+        }
+
+        const currentDateNum = currentYear * 10000 + currentMonth * 100 + currentDay
+        const deadlineDateNum = deadlineYear * 10000 + deadlineMonth * 100 + deadlineDay
+
+        if (currentDateNum > deadlineDateNum) return true
+        if (currentDateNum < deadlineDateNum) return false
+        return currentHour >= 8
+    } catch (e) {
+        return true
+    }
+}
+
+const formatDeadline = (deliveryDateStr) => {
+    const [year, month, day] = deliveryDateStr.split('-').map(Number)
+
+    let deadlineDay = day - 1
+    let deadlineMonth = month
+    let deadlineYear = year
+
+    if (deadlineDay < 1) {
+        deadlineMonth--
+        if (deadlineMonth < 1) {
+            deadlineMonth = 12
+            deadlineYear--
+        }
+        const daysInMonth = [31, (deadlineYear % 4 === 0 && deadlineYear % 100 !== 0) || deadlineYear % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        deadlineDay = daysInMonth[deadlineMonth - 1]
+    }
+
+    const date = new Date(Date.UTC(deadlineYear, deadlineMonth - 1, deadlineDay))
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+    return `${days[date.getUTCDay()]} ${deadlineDay} ${months[deadlineMonth - 1]}, 8:00 AM`
+}
+
+export const GROCERY_BUDGET = WEEKLY_BUDGET

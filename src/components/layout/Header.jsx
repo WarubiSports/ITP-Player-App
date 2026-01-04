@@ -3,9 +3,13 @@ import { useLocation } from 'react-router-dom'
 const pageTitles = {
     '/dashboard': { title: 'Dashboard', subtitle: 'Welcome back to the ITP' },
     '/players': { title: 'Players', subtitle: 'Manage talent program participants' },
+    '/wellness': { title: 'Wellness', subtitle: 'Track your health and recovery' },
+    '/progress': { title: 'Progress', subtitle: 'Your development journey' },
     '/housing': { title: 'Housing', subtitle: 'Widdersdorf houses overview' },
     '/chores': { title: 'Chores', subtitle: 'Task management and assignments' },
     '/calendar': { title: 'Calendar', subtitle: 'Training sessions and events' },
+    '/parent-portal': { title: 'Parent Portal', subtitle: 'Weekly progress reports' },
+    '/pathway': { title: 'Pathway', subtitle: 'College recruitment tracker' },
     '/admin': { title: 'Administration', subtitle: 'User and system management' },
 }
 

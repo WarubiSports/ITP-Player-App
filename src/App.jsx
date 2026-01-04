@@ -19,6 +19,8 @@ const Progress = lazy(() => import('./pages/Progress'))
 const Housing = lazy(() => import('./pages/Housing'))
 const Calendar = lazy(() => import('./pages/Calendar'))
 const ParentPortal = lazy(() => import('./pages/ParentPortal'))
+const GroceryOrder = lazy(() => import('./pages/GroceryOrder'))
+const OrderHistory = lazy(() => import('./pages/OrderHistory'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 // Loading component
@@ -72,6 +74,8 @@ export default function App() {
                     <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
                     <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
                     <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
+                    <Route path="grocery" element={<Suspense fallback={<PageLoader />}><GroceryOrder /></Suspense>} />
+                    <Route path="order-history" element={<Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>} />
                     <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
                 </Route>
 

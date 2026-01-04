@@ -9,6 +9,8 @@ import SmartGuidance from '../components/dashboard/SmartGuidance'
 import Marketplace from '../components/gamification/Marketplace'
 import DailyCheckIn from '../components/performance/DailyCheckIn'
 import GoalsWidget from '../components/goals/GoalsWidget'
+import StreakWidget from '../components/achievements/StreakWidget'
+import AchievementsWidget from '../components/achievements/AchievementsWidget'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -54,7 +56,7 @@ export default function Dashboard() {
                 if (wellnessData) {
                     setReadinessScore(wellnessData.score);
                     const avgSleep = wellnessData.average.sleep_quality;
-                    setSleepAverage((avgSleep * 2).toFixed(1)); // Convert 1-5 scale to hours estimate
+                    setSleepAverage(avgSleep.toFixed(1)); // Sleep quality on 1-5 scale
                 }
 
                 // Get training load (7-day total)
@@ -111,6 +113,13 @@ export default function Dashboard() {
 
             {/* Smart Guidance - Personalized Next Steps (only for players) */}
             {playerData && playerData.id && <SmartGuidance key={refreshKey} playerId={playerData.id} />}
+
+            {/* Streak & Achievements Section (only for players) */}
+            {playerData && playerData.id && (
+                <div className="dashboard-streak-section">
+                    <StreakWidget key={`streak-${refreshKey}`} playerId={playerData.id} />
+                </div>
+            )}
 
             {/* Staff View Message (only for staff - playerData === false) */}
             {playerData === false && (
@@ -177,9 +186,10 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Goals Widget */}
-                    <div style={{ marginTop: 'var(--space-6)' }}>
+                    {/* Goals & Achievements Row */}
+                    <div className="dashboard-goals-achievements">
                         <GoalsWidget playerId={playerData.id} />
+                        <AchievementsWidget key={`achievements-${refreshKey}`} playerId={playerData.id} />
                     </div>
 
                     {showMarket && <Marketplace onClose={() => setShowMarket(false)} />}
