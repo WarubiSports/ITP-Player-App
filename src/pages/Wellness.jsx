@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useNotification } from '../contexts/NotificationContext'
 import { getWellnessLogs, getTrainingLoads, getInjuries, createWellnessLog, createTrainingLoad } from '../lib/data-service'
 import { getLocalDate, formatDateForDisplay } from '../lib/date-utils'
+import Confetti from '../components/celebrations/Confetti'
 import './Wellness.css'
+
+// Milestone days for streak celebrations
+const STREAK_MILESTONES = [7, 14, 30, 60, 100]
 
 // Parse date string as local date (not UTC)
 const parseLocalDate = (dateStr) => {
@@ -13,6 +18,7 @@ const parseLocalDate = (dateStr) => {
 
 export default function Wellness() {
     const { profile } = useAuth()
+    const { showNotification } = useNotification()
     const [wellnessLogs, setWellnessLogs] = useState([])
     const [trainingLoads, setTrainingLoads] = useState([])
     const [injuries, setInjuries] = useState([])
@@ -20,6 +26,7 @@ export default function Wellness() {
     const [showTrainingForm, setShowTrainingForm] = useState(false)
     const [selectedDate, setSelectedDate] = useState(getLocalDate())
     const [loading, setLoading] = useState(true)
+    const [showConfetti, setShowConfetti] = useState(false)
 
     useEffect(() => {
         loadData()
@@ -43,6 +50,36 @@ export default function Wellness() {
         }
     }
 
+    // Calculate consecutive days streak from logs
+    const calculateStreak = (logs) => {
+        if (!logs || logs.length === 0) return 0
+
+        const sortedDates = [...new Set(logs.map(l => l.date))].sort().reverse()
+        const today = getLocalDate()
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+        // Check if most recent log is today or yesterday
+        if (sortedDates[0] !== today && sortedDates[0] !== yesterdayStr) {
+            return sortedDates[0] === today ? 1 : 0
+        }
+
+        let streak = 1
+        for (let i = 0; i < sortedDates.length - 1; i++) {
+            const current = parseLocalDate(sortedDates[i])
+            const next = parseLocalDate(sortedDates[i + 1])
+            const diffDays = Math.round((current - next) / (1000 * 60 * 60 * 24))
+
+            if (diffDays === 1) {
+                streak++
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
     const handleWellnessSubmit = async (e) => {
         e.preventDefault()
         const form = e.target
@@ -59,10 +96,21 @@ export default function Wellness() {
         }
         try {
             const savedLog = await createWellnessLog(newLog)
-            setWellnessLogs(prev => [savedLog, ...prev])
+            const updatedLogs = [savedLog, ...wellnessLogs]
+            setWellnessLogs(updatedLogs)
             setShowWellnessForm(false)
+
+            // Check for streak milestone
+            const newStreak = calculateStreak(updatedLogs)
+            if (STREAK_MILESTONES.includes(newStreak)) {
+                setShowConfetti(true)
+                showNotification(`🔥 ${newStreak}-Day Streak! Amazing consistency!`, 'success')
+            } else {
+                showNotification('Wellness log saved!', 'success')
+            }
         } catch (error) {
             console.error('Error saving wellness log:', error)
+            showNotification('Failed to save wellness log', 'error')
         }
     }
 
@@ -120,6 +168,12 @@ export default function Wellness() {
 
     return (
         <div className="wellness-page">
+            {/* Milestone Celebration */}
+            <Confetti
+                active={showConfetti}
+                onComplete={() => setShowConfetti(false)}
+            />
+
             {/* Header Stats */}
             <div className="wellness-header">
                 <div className="glass-card-static stat-card">
@@ -353,10 +407,12 @@ export default function Wellness() {
                                 <div className="input-group">
                                     <label className="input-label">Session Type</label>
                                     <select name="sessionType" className="input" required>
-                                        <option value="training">Training</option>
-                                        <option value="match">Match</option>
-                                        <option value="gym">Gym</option>
+                                        <option value="team_training">Team Training</option>
+                                        <option value="gym_explosiveness">Gym - Explosiveness</option>
+                                        <option value="gym_hypertrophy">Gym - Hypertrophy</option>
+                                        <option value="match">GSA League Match</option>
                                         <option value="recovery">Recovery</option>
+                                        <option value="individual">Individual Training</option>
                                     </select>
                                 </div>
 

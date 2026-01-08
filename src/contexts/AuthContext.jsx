@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, checkIsDemoMode, demoData } from '../lib/supabase'
 
 const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
+
+// Demo password for all demo accounts
+const DEMO_PASSWORD = 'ITP2024'
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
@@ -11,7 +14,17 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Check for existing session
+        // Check for demo user first
+        const demoUser = localStorage.getItem('itp_demo_user')
+        if (demoUser) {
+            const parsed = JSON.parse(demoUser)
+            setUser(parsed)
+            setProfile(parsed)
+            setLoading(false)
+            return
+        }
+
+        // Check for existing Supabase session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
             if (session?.user) {
@@ -42,6 +55,18 @@ export function AuthProvider({ children }) {
     }
 
     const signIn = async (email, password) => {
+        // Try demo login first if Supabase is not configured
+        if (!import.meta.env.VITE_SUPABASE_URL) {
+            const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
+            if (demoUser && password === DEMO_PASSWORD) {
+                localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
+                setUser(demoUser)
+                setProfile(demoUser)
+                return { error: null }
+            }
+            return { error: { message: 'Invalid login credentials' } }
+        }
+
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return { error }
     }
@@ -56,6 +81,9 @@ export function AuthProvider({ children }) {
     }
 
     const signOut = async () => {
+        // Clear demo user
+        localStorage.removeItem('itp_demo_user')
+
         const { error } = await supabase.auth.signOut()
         setUser(null)
         setProfile(null)
@@ -63,6 +91,10 @@ export function AuthProvider({ children }) {
     }
 
     const resetPassword = async (email) => {
+        // In demo mode, simulate successful password reset
+        if (checkIsDemoMode()) {
+            return { error: null }
+        }
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password`,
         })
@@ -79,6 +111,7 @@ export function AuthProvider({ children }) {
         resetPassword,
         isAdmin: profile?.role === 'admin',
         isStaff: profile?.role === 'staff' || profile?.role === 'admin',
+        isDemoMode: checkIsDemoMode(),
     }
 
     return (

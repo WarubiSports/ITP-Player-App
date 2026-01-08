@@ -1,86 +1,126 @@
 import React, { useState, useEffect } from 'react';
-import { getEvents } from '../../lib/data-service';
+import { getEvents, getChores } from '../../lib/data-service';
+import { useAuth } from '../../contexts/AuthContext';
 
 const eventIcons = {
     training: '⚽',
     match: '🏆',
     meeting: '👥',
-    assessment: '📋'
+    assessment: '📋',
+    gym: '🏋️',
+    german_class: '🇩🇪',
+    online_school: '💻',
+    recovery: '🧘',
+    social: '🎉'
+};
+
+const taskIcons = {
+    high: '🔴',
+    medium: '🟡',
+    low: '🟢'
 };
 
 export default function NextObjective() {
-    const [nextEvent, setNextEvent] = useState(null);
+    const [nextItem, setNextItem] = useState(null);
     const [timeRemaining, setTimeRemaining] = useState('');
+    const { user } = useAuth();
 
     useEffect(() => {
-        loadNextEvent();
-    }, []);
+        loadNextObjective();
+    }, [user]);
 
-    const loadNextEvent = async () => {
+    const loadNextObjective = async () => {
         try {
-            const events = await getEvents();
+            const [events, chores] = await Promise.all([getEvents(), getChores()]);
             const now = new Date();
 
+            // Process events
             const upcomingEvents = events
                 .map(event => {
-                    // Handle both old format (date + start_time) and new format (start_time as full datetime)
                     let eventDate;
                     if (event.date && event.start_time) {
                         eventDate = new Date(event.date + 'T' + event.start_time);
                     } else if (event.start_time) {
                         eventDate = new Date(event.start_time);
                     }
-                    return { ...event, datetime: eventDate };
+                    return { ...event, datetime: eventDate, itemType: 'event' };
                 })
-                .filter(event => event.datetime && event.datetime > now)
+                .filter(event => event.datetime && event.datetime > now);
+
+            // Process tasks (pending chores assigned to current user)
+            const pendingTasks = chores
+                .filter(chore => chore.status === 'pending' && chore.assigned_to === user?.id)
+                .map(chore => {
+                    const deadlineDate = chore.deadline ? new Date(chore.deadline + 'T23:59:59') : null;
+                    return {
+                        ...chore,
+                        datetime: deadlineDate,
+                        itemType: 'task',
+                        title: chore.title
+                    };
+                })
+                .filter(task => task.datetime);
+
+            // Combine and sort by datetime (soonest first)
+            const allItems = [...upcomingEvents, ...pendingTasks]
                 .sort((a, b) => a.datetime - b.datetime);
 
-            if (upcomingEvents.length > 0) {
-                setNextEvent(upcomingEvents[0]);
+            if (allItems.length > 0) {
+                setNextItem(allItems[0]);
             }
         } catch (error) {
-            console.error('Error loading next event:', error);
+            console.error('Error loading next objective:', error);
         }
     };
 
     useEffect(() => {
-        if (!nextEvent) return;
+        if (!nextItem) return;
 
         const updateCountdown = () => {
             const now = new Date();
-            const diff = nextEvent.datetime - now;
+            const diff = nextItem.datetime - now;
 
             if (diff <= 0) {
-                setTimeRemaining('LIVE NOW');
+                setTimeRemaining(nextItem.itemType === 'task' ? 'OVERDUE' : 'LIVE NOW');
                 return;
             }
 
-            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            setTimeRemaining(
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-            );
+            if (days > 0) {
+                setTimeRemaining(`${days}d ${hours}h`);
+            } else {
+                setTimeRemaining(
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+                );
+            }
         };
 
         updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
 
         return () => clearInterval(interval);
-    }, [nextEvent]);
+    }, [nextItem]);
 
-    if (!nextEvent) {
+    if (!nextItem) {
         return (
             <div className="glass-panel" style={{ padding: '1.5rem', flex: 1 }}>
                 <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Objective</h3>
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-tertiary)' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>📅</div>
-                    <div>No upcoming events</div>
+                    <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✨</div>
+                    <div>All caught up!</div>
                 </div>
             </div>
         );
     }
+
+    const isTask = nextItem.itemType === 'task';
+    const icon = isTask ? (taskIcons[nextItem.priority] || '✅') : (eventIcons[nextItem.type] || '📌');
+    const label = isTask ? 'TASK DUE' : 'TIME TO START';
+    const overdueLabel = isTask ? 'TASK OVERDUE' : 'HAPPENING NOW';
 
     return (
         <div className="glass-panel" style={{ padding: '1.5rem', flex: 1 }}>
@@ -88,32 +128,41 @@ export default function NextObjective() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{
-                    background: 'rgba(227, 6, 19, 0.1)',
-                    border: '1px solid var(--color-primary)',
+                    background: isTask ? 'rgba(255, 193, 7, 0.1)' : 'rgba(227, 6, 19, 0.1)',
+                    border: `1px solid ${isTask ? '#FFC107' : 'var(--color-primary)'}`,
                     borderRadius: '12px',
                     padding: '1rem',
-                    color: 'var(--color-primary)',
+                    color: isTask ? '#FFC107' : 'var(--color-primary)',
                     fontSize: '1.5rem'
                 }}>
-                    {eventIcons[nextEvent.type] || '📌'}
+                    {icon}
                 </div>
-                <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'white' }}>{nextEvent.title}</h2>
-                    <div style={{ color: 'var(--color-accent)', fontWeight: '500' }}>
-                        {nextEvent.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                        {nextEvent.end_time && ` - ${new Date(nextEvent.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextItem.title}</h2>
+                    <div style={{ color: 'var(--color-accent)', fontWeight: '500', fontSize: '0.9rem' }}>
+                        {isTask ? (
+                            `Due: ${nextItem.datetime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
+                        ) : (
+                            <>
+                                {nextItem.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                {nextItem.end_time && ` - ${new Date(nextItem.date + 'T' + nextItem.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                            </>
+                        )}
                     </div>
-                    {nextEvent.location && (
-                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{nextEvent.location}</div>
+                    {!isTask && nextItem.location && (
+                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>{nextItem.location}</div>
+                    )}
+                    {isTask && (
+                        <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>{nextItem.points} pts • {nextItem.priority} priority</div>
                     )}
                 </div>
 
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'monospace' }}>
                         {timeRemaining}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        {timeRemaining === 'LIVE NOW' ? 'HAPPENING NOW' : 'TIME TO START'}
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                        {timeRemaining === 'LIVE NOW' || timeRemaining === 'OVERDUE' ? overdueLabel : label}
                     </div>
                 </div>
             </div>

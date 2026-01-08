@@ -2,9 +2,9 @@ import React from 'react';
 
 export default function LiveLeaderboard() {
     const leaders = [
-        { name: 'Podolski House', points: 1250, color: '#E30613' },
-        { name: 'Hector House', points: 1100, color: '#00E5FF' },
-        { name: 'Schumacher House', points: 950, color: '#FFD700' },
+        { name: 'Widdersdorf 1', points: 1250, color: '#E30613' },
+        { name: 'Widdersdorf 2', points: 1100, color: '#00E5FF' },
+        { name: 'Widdersdorf 3', points: 950, color: '#FFD700' },
     ];
 
     return (

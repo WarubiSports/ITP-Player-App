@@ -15,7 +15,7 @@ export const checkIsDemoMode = () => {
 export const isDemoMode = checkIsDemoMode()
 
 // Demo data version - increment this when you change demo data structure
-const DEMO_DATA_VERSION = 3
+const DEMO_DATA_VERSION = 4
 
 // Initialize demo data on first load or when version changes
 const initializeDemoData = () => {
@@ -71,38 +71,62 @@ export const demoData = {
         { id: 'h3', name: 'Widdersdorf 3', total_points: 885 },
     ],
     chores: [
-        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2025-01-03' },
-        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p3', status: 'pending', points: 15, deadline: '2025-01-04' },
-        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p2', status: 'pending', points: 10, deadline: '2025-01-05' },
-        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p4', status: 'completed', points: 20, deadline: '2025-01-02', completed_at: '2025-01-01' },
+        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2026-01-03' },
+        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p3', status: 'pending', points: 15, deadline: '2026-01-04' },
+        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p2', status: 'pending', points: 10, deadline: '2026-01-05' },
+        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p4', status: 'completed', points: 20, deadline: '2026-01-02', completed_at: '2026-01-01' },
     ],
     events: [
-        { id: 'e1', title: 'Morning Training', type: 'training', date: '2025-01-02', start_time: '09:00', end_time: '11:00', location: 'Training Ground A' },
-        { id: 'e2', title: 'Tactical Meeting', type: 'meeting', date: '2025-01-02', start_time: '14:00', end_time: '15:30', location: 'Conference Room' },
-        { id: 'e3', title: 'Fitness Assessment', type: 'assessment', date: '2025-01-03', start_time: '10:00', end_time: '12:00', location: 'Gym' },
+        // Monday - Typical ITP day
+        { id: 'e1', title: 'Team Training', type: 'training', date: '2026-01-06', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
+        { id: 'e2', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-06', start_time: '14:00', end_time: '16:00', location: 'Cologne Language Center' },
+        // Tuesday
+        { id: 'e3', title: 'Team Training', type: 'training', date: '2026-01-07', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
+        { id: 'e4', title: 'ASU Prep - Online School', type: 'online_school', date: '2026-01-07', start_time: '14:00', end_time: '17:00', location: 'Housing - Study Room' },
+        // Wednesday
+        { id: 'e5', title: 'Team Training', type: 'training', date: '2026-01-08', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
+        { id: 'e6', title: 'Gym - Explosiveness', type: 'gym', date: '2026-01-08', start_time: '14:00', end_time: '15:30', location: 'German Sports University Gym' },
+        { id: 'e7', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-08', start_time: '16:00', end_time: '18:00', location: 'Cologne Language Center' },
+        // Thursday
+        { id: 'e8', title: 'Team Training', type: 'training', date: '2026-01-09', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
+        { id: 'e9', title: 'ASU Prep - Online School', type: 'online_school', date: '2026-01-09', start_time: '14:00', end_time: '17:00', location: 'Housing - Study Room' },
+        // Friday
+        { id: 'e10', title: 'Team Training', type: 'training', date: '2026-01-10', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
+        { id: 'e11', title: 'Gym - Hypertrophy', type: 'gym', date: '2026-01-10', start_time: '14:00', end_time: '15:30', location: 'German Sports University Gym' },
+        { id: 'e12', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-10', start_time: '16:00', end_time: '18:00', location: 'Cologne Language Center' },
+        // Saturday - Match Day
+        { id: 'e13', title: 'GSA League Match vs Bayern Munich Academy', type: 'match', date: '2026-01-11', start_time: '14:00', end_time: '16:00', location: 'FC Köln Training Ground 1' },
+        // Sunday - Recovery
+        { id: 'e14', title: 'Recovery Session', type: 'recovery', date: '2026-01-12', start_time: '10:00', end_time: '11:30', location: 'German Sports University - Wellness' },
+        // Upcoming assessment
+        { id: 'e15', title: 'Performance Testing', type: 'assessment', date: '2026-01-15', start_time: '09:00', end_time: '12:00', location: 'German Sports University' },
+        // Social event
+        { id: 'e16', title: 'Bundesliga Match Visit - FC Köln vs Leverkusen', type: 'social', date: '2026-01-18', start_time: '15:30', end_time: '18:00', location: 'RheinEnergieStadion' },
     ],
     messages: [
-        { id: 'm1', from_user: 'admin-1', to_user: 'p1', subject: 'Training Schedule Update', content: 'Please note the morning training has been moved to 9 AM starting next week.', is_read: false, created_at: '2025-01-01T10:00:00Z' },
+        { id: 'm1', from_user: 'admin-1', to_user: 'p1', subject: 'Training Schedule Update', content: 'Please note the morning training has been moved to 9 AM starting next week.', is_read: false, created_at: '2026-01-01T10:00:00Z' },
         { id: 'm2', from_user: 'staff-1', to_user: 'p2', subject: 'Performance Review', content: 'Great progress this month! Keep up the good work.', is_read: true, created_at: '2024-12-28T14:30:00Z' },
     ],
     // Phase 1: Wellness & Performance Data
     wellnessLogs: [
-        { id: 'w1', player_id: 'p1', date: '2025-01-02', sleep_hours: 8, sleep_quality: 4, energy_level: 8, muscle_soreness: 2, stress_level: 3, mood: 'good', notes: 'Feeling great after rest day', created_at: '2025-01-02T07:30:00Z' },
-        { id: 'w2', player_id: 'p1', date: '2025-01-01', sleep_hours: 7, sleep_quality: 3, energy_level: 6, muscle_soreness: 5, stress_level: 4, mood: 'tired', notes: 'Legs heavy from yesterday', created_at: '2025-01-01T07:30:00Z' },
-        { id: 'w3', player_id: 'p2', date: '2025-01-02', sleep_hours: 9, sleep_quality: 5, energy_level: 9, muscle_soreness: 1, stress_level: 2, mood: 'excellent', notes: '', created_at: '2025-01-02T07:30:00Z' },
+        { id: 'w1', player_id: 'p1', date: '2026-01-02', sleep_hours: 8, sleep_quality: 4, energy_level: 8, muscle_soreness: 2, stress_level: 3, mood: 'good', notes: 'Feeling great after rest day', created_at: '2026-01-02T07:30:00Z' },
+        { id: 'w2', player_id: 'p1', date: '2026-01-01', sleep_hours: 7, sleep_quality: 3, energy_level: 6, muscle_soreness: 5, stress_level: 4, mood: 'tired', notes: 'Legs heavy from yesterday', created_at: '2026-01-01T07:30:00Z' },
+        { id: 'w3', player_id: 'p2', date: '2026-01-02', sleep_hours: 9, sleep_quality: 5, energy_level: 9, muscle_soreness: 1, stress_level: 2, mood: 'excellent', notes: '', created_at: '2026-01-02T07:30:00Z' },
     ],
     trainingLoads: [
-        { id: 'tl1', player_id: 'p1', date: '2025-01-02', session_type: 'training', duration: 120, rpe: 7, load_score: 840, notes: 'High intensity tactical session', created_at: '2025-01-02T11:30:00Z' },
-        { id: 'tl2', player_id: 'p1', date: '2025-01-01', session_type: 'gym', duration: 60, rpe: 8, load_score: 480, notes: 'Explosiveness focus', created_at: '2025-01-01T16:00:00Z' },
-        { id: 'tl3', player_id: 'p2', date: '2025-01-02', session_type: 'training', duration: 120, rpe: 6, load_score: 720, notes: 'Technical drills', created_at: '2025-01-02T11:30:00Z' },
+        { id: 'tl1', player_id: 'p1', date: '2026-01-06', session_type: 'team_training', duration: 120, rpe: 7, load_score: 840, notes: 'High intensity tactical session', created_at: '2026-01-06T11:30:00Z' },
+        { id: 'tl2', player_id: 'p1', date: '2026-01-08', session_type: 'gym_explosiveness', duration: 90, rpe: 8, load_score: 720, notes: 'Focus on speed and power', created_at: '2026-01-08T15:30:00Z' },
+        { id: 'tl3', player_id: 'p1', date: '2026-01-10', session_type: 'gym_hypertrophy', duration: 75, rpe: 7, load_score: 525, notes: 'Strength building', created_at: '2026-01-10T15:30:00Z' },
+        { id: 'tl4', player_id: 'p2', date: '2026-01-06', session_type: 'team_training', duration: 120, rpe: 6, load_score: 720, notes: 'Technical drills', created_at: '2026-01-06T11:30:00Z' },
+        { id: 'tl5', player_id: 'p1', date: '2026-01-11', session_type: 'match', duration: 90, rpe: 9, load_score: 810, notes: 'GSA League vs Bayern Munich Academy', created_at: '2026-01-11T16:00:00Z' },
     ],
     injuries: [
-        { id: 'inj1', player_id: 'p3', injury_type: 'Hamstring Strain', severity: 'minor', date_occurred: '2024-12-28', expected_return: '2025-01-06', status: 'recovering', treatment_plan: 'Physio 3x/week, light jogging', notes: 'Grade 1 strain, progressing well' },
+        { id: 'inj1', player_id: 'p3', injury_type: 'Hamstring Strain', severity: 'minor', date_occurred: '2024-12-28', expected_return: '2026-01-06', status: 'recovering', treatment_plan: 'Physio 3x/week, light jogging', notes: 'Grade 1 strain, progressing well' },
     ],
     // Phase 1: Pathway & Recruitment Data
     collegeTargets: [
         { id: 'ct1', player_id: 'p1', college_name: 'UCLA', division: 'D1', conference: 'Big Ten', location: 'Los Angeles, CA', interest_level: 'hot', status: 'offer_received', scholarship_amount: 75, notes: 'Head coach watched last 2 matches', contact_name: 'Coach Anderson', contact_email: 'anderson@ucla.edu', last_contact: '2024-12-20' },
-        { id: 'ct2', player_id: 'p1', college_name: 'Stanford', division: 'D1', conference: 'ACC', location: 'Stanford, CA', interest_level: 'warm', status: 'in_contact', scholarship_amount: null, notes: 'Scheduled official visit Feb 2025', contact_name: 'Coach Martinez', contact_email: 'martinez@stanford.edu', last_contact: '2024-12-15' },
+        { id: 'ct2', player_id: 'p1', college_name: 'Stanford', division: 'D1', conference: 'ACC', location: 'Stanford, CA', interest_level: 'warm', status: 'in_contact', scholarship_amount: null, notes: 'Scheduled official visit Feb 2026', contact_name: 'Coach Martinez', contact_email: 'martinez@stanford.edu', last_contact: '2024-12-15' },
         { id: 'ct3', player_id: 'p1', college_name: 'Georgetown', division: 'D1', conference: 'Big East', location: 'Washington, DC', interest_level: 'cold', status: 'researching', scholarship_amount: null, notes: 'Strong academic program', contact_name: null, contact_email: null, last_contact: null },
         { id: 'ct4', player_id: 'p2', college_name: 'Wake Forest', division: 'D1', conference: 'ACC', location: 'Winston-Salem, NC', interest_level: 'hot', status: 'offer_received', scholarship_amount: 100, notes: 'Full ride offer received!', contact_name: 'Coach Williams', contact_email: 'williams@wfu.edu', last_contact: '2024-12-22' },
     ],
@@ -129,11 +153,11 @@ export const demoData = {
     eventAttendees: [],
     // Goals, Achievements & Mental Wellness
     playerGoals: [
-        { id: 'g1', player_id: 'p1', title: 'Improve Sprint Speed', description: 'Reduce 30m sprint time by 0.1 seconds', category: 'performance', goal_type: 'short_term', target_value: 4.05, current_value: 4.15, unit: 'seconds', target_date: '2025-03-01', status: 'in_progress', priority: 'high', notes: 'Focus on explosiveness training', created_at: '2024-12-15T10:00:00Z' },
-        { id: 'g2', player_id: 'p1', title: 'Maintain 3.5+ GPA', description: 'Keep GPA above 3.5 for NCAA eligibility', category: 'academic', goal_type: 'long_term', target_value: 3.5, current_value: 3.7, unit: 'GPA', target_date: '2025-06-01', status: 'in_progress', priority: 'high', notes: 'All courses on track', created_at: '2024-12-10T10:00:00Z' },
-        { id: 'g3', player_id: 'p1', title: 'Get First Scholarship Offer', description: 'Secure at least one D1 scholarship offer', category: 'recruitment', goal_type: 'long_term', target_value: 1, current_value: 1, unit: 'offers', target_date: '2025-02-01', status: 'completed', priority: 'high', notes: 'UCLA offer received!', completed_at: '2024-12-20T15:00:00Z', created_at: '2024-11-01T10:00:00Z' },
-        { id: 'g4', player_id: 'p2', title: 'Improve Vertical Jump', description: 'Reach 65cm vertical jump', category: 'performance', goal_type: 'short_term', target_value: 65, current_value: 60, unit: 'cm', target_date: '2025-02-15', status: 'in_progress', priority: 'medium', notes: 'Added plyometrics to training', created_at: '2024-12-20T10:00:00Z' },
-        { id: 'g5', player_id: 'p2', title: 'Mental Resilience', description: 'Log wellness 7 days in a row', category: 'wellness', goal_type: 'short_term', target_value: 7, current_value: 5, unit: 'days', target_date: '2025-01-10', status: 'in_progress', priority: 'medium', notes: 'Building consistency', created_at: '2024-12-28T10:00:00Z' },
+        { id: 'g1', player_id: 'p1', title: 'Improve Sprint Speed', description: 'Reduce 30m sprint time by 0.1 seconds', category: 'performance', goal_type: 'short_term', target_value: 4.05, current_value: 4.15, unit: 'seconds', target_date: '2026-03-01', status: 'in_progress', priority: 'high', notes: 'Focus on explosiveness training', created_at: '2024-12-15T10:00:00Z' },
+        { id: 'g2', player_id: 'p1', title: 'Maintain 3.5+ GPA', description: 'Keep GPA above 3.5 for NCAA eligibility', category: 'academic', goal_type: 'long_term', target_value: 3.5, current_value: 3.7, unit: 'GPA', target_date: '2026-06-01', status: 'in_progress', priority: 'high', notes: 'All courses on track', created_at: '2024-12-10T10:00:00Z' },
+        { id: 'g3', player_id: 'p1', title: 'Get First Scholarship Offer', description: 'Secure at least one D1 scholarship offer', category: 'recruitment', goal_type: 'long_term', target_value: 1, current_value: 1, unit: 'offers', target_date: '2026-02-01', status: 'completed', priority: 'high', notes: 'UCLA offer received!', completed_at: '2024-12-20T15:00:00Z', created_at: '2024-11-01T10:00:00Z' },
+        { id: 'g4', player_id: 'p2', title: 'Improve Vertical Jump', description: 'Reach 65cm vertical jump', category: 'performance', goal_type: 'short_term', target_value: 65, current_value: 60, unit: 'cm', target_date: '2026-02-15', status: 'in_progress', priority: 'medium', notes: 'Added plyometrics to training', created_at: '2024-12-20T10:00:00Z' },
+        { id: 'g5', player_id: 'p2', title: 'Mental Resilience', description: 'Log wellness 7 days in a row', category: 'wellness', goal_type: 'short_term', target_value: 7, current_value: 5, unit: 'days', target_date: '2026-01-10', status: 'in_progress', priority: 'medium', notes: 'Building consistency', created_at: '2024-12-28T10:00:00Z' },
     ],
     achievements: [
         { id: 'ach1', code: 'wellness_streak_7', name: '7-Day Wellness Streak', description: 'Logged wellness for 7 consecutive days', category: 'consistency', icon: '🔥', rarity: 'common', points_value: 50 },
@@ -154,10 +178,10 @@ export const demoData = {
         { id: 'pa4', player_id: 'p2', achievement_id: 'ach1', unlocked_at: '2024-12-28T08:00:00Z' },
     ],
     mentalWellness: [
-        { id: 'mw1', player_id: 'p1', date: '2025-01-02', confidence_level: 8, focus_quality: 7, anxiety_level: 3, motivation_level: 9, social_connection: 8, overall_mood: 'excellent', notes: 'Feeling ready for the new year', created_at: '2025-01-02T07:30:00Z' },
-        { id: 'mw2', player_id: 'p1', date: '2025-01-01', confidence_level: 7, focus_quality: 6, anxiety_level: 4, motivation_level: 7, social_connection: 7, overall_mood: 'good', notes: '', created_at: '2025-01-01T07:30:00Z' },
+        { id: 'mw1', player_id: 'p1', date: '2026-01-02', confidence_level: 8, focus_quality: 7, anxiety_level: 3, motivation_level: 9, social_connection: 8, overall_mood: 'excellent', notes: 'Feeling ready for the new year', created_at: '2026-01-02T07:30:00Z' },
+        { id: 'mw2', player_id: 'p1', date: '2026-01-01', confidence_level: 7, focus_quality: 6, anxiety_level: 4, motivation_level: 7, social_connection: 7, overall_mood: 'good', notes: '', created_at: '2026-01-01T07:30:00Z' },
         { id: 'mw3', player_id: 'p1', date: '2024-12-31', confidence_level: 6, focus_quality: 5, anxiety_level: 5, motivation_level: 6, social_connection: 6, overall_mood: 'okay', notes: 'Year-end reflection', created_at: '2024-12-31T07:30:00Z' },
-        { id: 'mw4', player_id: 'p2', date: '2025-01-02', confidence_level: 9, focus_quality: 8, anxiety_level: 2, motivation_level: 9, social_connection: 9, overall_mood: 'excellent', notes: 'Great start to the year', created_at: '2025-01-02T07:30:00Z' },
+        { id: 'mw4', player_id: 'p2', date: '2026-01-02', confidence_level: 9, focus_quality: 8, anxiety_level: 2, motivation_level: 9, social_connection: 9, overall_mood: 'excellent', notes: 'Great start to the year', created_at: '2026-01-02T07:30:00Z' },
     ],
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
     getGroceryItems,
@@ -23,6 +23,7 @@ const CATEGORIES = [
 
 export default function GroceryOrder() {
     const { profile } = useAuth()
+    const navigate = useNavigate()
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
     const [cart, setCart] = useState([])
@@ -164,7 +165,7 @@ export default function GroceryOrder() {
 
         setSubmitting(true)
         try {
-            const order = await createGroceryOrder({
+            await createGroceryOrder({
                 playerId: profile?.id,
                 deliveryDate,
                 items: cart.map(item => ({
@@ -173,10 +174,11 @@ export default function GroceryOrder() {
                 }))
             })
 
-            showMessage(`Order submitted! Total: €${order.total_amount.toFixed(2)}`, 'success')
             saveCart([])
             localStorage.removeItem('grocery_delivery_date')
             setDeliveryDate('')
+            // Redirect to order history to see the submitted order
+            navigate('/order-history')
         } catch (error) {
             showMessage(error.message || 'Failed to submit order', 'error')
         } finally {
@@ -200,7 +202,7 @@ export default function GroceryOrder() {
             <header className="grocery-header">
                 <div className="grocery-header__left">
                     <h1>Grocery Order</h1>
-                    <p>Budget: €{GROCERY_BUDGET.toFixed(2)} per order (2 orders/week)</p>
+                    <p>Personal Budget: €{GROCERY_BUDGET.toFixed(2)} per order (2x/week) - Main meals at canteen</p>
                 </div>
                 <div className="grocery-header__right">
                     <Link to="/order-history" className="history-link">

@@ -134,10 +134,14 @@ export default function Calendar() {
     const getEventTypeIcon = (type) => {
         const icons = {
             training: '⚽',
+            gym: '🏋️',
+            match: '🏟️',
+            german_class: '🇩🇪',
+            online_school: '💻',
             meeting: '👥',
             assessment: '📊',
-            match: '🏟️',
-            social: '🎉'
+            social: '🎉',
+            recovery: '🧘'
         }
         return icons[type] || '📅'
     }
@@ -145,10 +149,14 @@ export default function Calendar() {
     const getEventTypeColor = (type) => {
         const colors = {
             training: '#22C55E',
-            meeting: '#3B82F6',
-            assessment: '#F59E0B',
+            gym: '#8B5CF6',
             match: '#EF4444',
-            social: '#DC143C'
+            german_class: '#F59E0B',
+            online_school: '#3B82F6',
+            meeting: '#6366F1',
+            assessment: '#F97316',
+            social: '#DC143C',
+            recovery: '#10B981'
         }
         return colors[type] || '#3B82F6'
     }
@@ -481,10 +489,14 @@ export default function Calendar() {
                                 <div className="input-group">
                                     <label className="input-label">Event Type</label>
                                     <select name="type" className="input" defaultValue={selectedEvent?.type || 'training'}>
-                                        <option value="training">⚽ Training</option>
+                                        <option value="training">⚽ Team Training</option>
+                                        <option value="gym">🏋️ Gym Session</option>
+                                        <option value="match">🏟️ GSA League Match</option>
+                                        <option value="german_class">🇩🇪 German Class</option>
+                                        <option value="online_school">💻 Online School / ASU Prep</option>
                                         <option value="meeting">👥 Meeting</option>
                                         <option value="assessment">📊 Assessment</option>
-                                        <option value="match">🏟️ Match</option>
+                                        <option value="recovery">🧘 Recovery</option>
                                         <option value="social">🎉 Social Event</option>
                                     </select>
                                 </div>
