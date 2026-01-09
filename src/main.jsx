@@ -4,15 +4,18 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
+import { RealtimeProvider } from './contexts/RealtimeContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
-                <NotificationProvider>
-                    <App />
-                </NotificationProvider>
+                <RealtimeProvider>
+                    <NotificationProvider>
+                        <App />
+                    </NotificationProvider>
+                </RealtimeProvider>
             </AuthProvider>
         </BrowserRouter>
     </React.StrictMode>

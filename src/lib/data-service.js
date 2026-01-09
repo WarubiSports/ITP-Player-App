@@ -3,7 +3,7 @@
 // Works seamlessly in demo and production mode
 // =============================================
 
-import { checkIsDemoMode, demoData } from './supabase'
+import { shouldUseDemoData, demoData } from './supabase'
 import * as queries from './supabase-queries'
 import { getLocalDate } from './date-utils'
 
@@ -26,21 +26,36 @@ const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2
 // =============================================
 
 export const getPlayers = async () => {
-    if (checkIsDemoMode()) {
-        return getDemoDataFromStorage('players')
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const players = await queries.playerQueries.getAllPlayers()
+        if (players && players.length > 0) {
+            return players
+        }
+    } catch (error) {
+        console.error('Error fetching players from Supabase:', error)
     }
-    return await queries.playerQueries.getAllPlayers()
+    // Fallback to demo data - only return active players
+    const allPlayers = getDemoDataFromStorage('players')
+    return allPlayers.filter(p => p.status === 'active')
 }
 
 export const getPlayerById = async (id) => {
-    if (checkIsDemoMode()) {
-        return getDemoDataFromStorage('players').find(p => p.id === id)
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const player = await queries.playerQueries.getPlayerById(id)
+        if (player) {
+            return player
+        }
+    } catch (error) {
+        console.error('Error fetching player from Supabase:', error)
     }
-    return await queries.playerQueries.getPlayerById(id)
+    // Fallback to demo data
+    return getDemoDataFromStorage('players').find(p => p.id === id)
 }
 
 export const createPlayer = async (player) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const players = getDemoDataFromStorage('players')
         const newPlayer = { ...player, id: generateId(), created_at: new Date().toISOString() }
         players.push(newPlayer)
@@ -51,7 +66,7 @@ export const createPlayer = async (player) => {
 }
 
 export const updatePlayer = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const players = getDemoDataFromStorage('players')
         const index = players.findIndex(p => p.id === id)
         if (index !== -1) {
@@ -65,7 +80,7 @@ export const updatePlayer = async (id, updates) => {
 }
 
 export const deletePlayer = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const players = getDemoDataFromStorage('players')
         const filtered = players.filter(p => p.id !== id)
         saveDemoDataToStorage('players', filtered)
@@ -90,7 +105,7 @@ export const deletePlayer = async (id) => {
 
 // Delete a user (profile/staff) - for non-player users
 export const deleteUser = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const users = getDemoDataFromStorage('users')
         const filtered = users.filter(u => u.id !== id)
         saveDemoDataToStorage('users', filtered)
@@ -104,18 +119,63 @@ export const deleteUser = async (id) => {
 // =============================================
 
 export const getHouses = async () => {
-    if (checkIsDemoMode()) {
-        return getDemoDataFromStorage('houses')
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const houses = await queries.houseQueries.getAllHouses()
+        // If houses exist in DB, return them
+        if (houses && houses.length > 0) {
+            return houses
+        }
+        // Calculate houses from active players (house_id is stored as TEXT name)
+        const players = await queries.playerQueries.getAllPlayers()
+        if (players && players.length > 0) {
+            // Group players by house_id (TEXT) and calculate totals
+            const houseMap = new Map()
+            // Initialize all known houses
+            const defaultHouses = [
+                { id: 'Widdersdorf 1', name: 'Widdersdorf 1', total_points: 0, player_count: 0 },
+                { id: 'Widdersdorf 2', name: 'Widdersdorf 2', total_points: 0, player_count: 0 },
+                { id: 'Widdersdorf 3', name: 'Widdersdorf 3', total_points: 0, player_count: 0 },
+                { id: 'Widdersdorf 4', name: 'Widdersdorf 4', total_points: 0, player_count: 0 },
+            ]
+            defaultHouses.forEach(h => houseMap.set(h.id, { ...h }))
+
+            players.forEach(player => {
+                const houseId = player.house_id
+                if (houseId) {
+                    // If house exists in map, update it; otherwise create it
+                    if (houseMap.has(houseId)) {
+                        const house = houseMap.get(houseId)
+                        house.total_points += (player.points || 0)
+                        house.player_count += 1
+                    } else {
+                        // Handle any custom house names
+                        houseMap.set(houseId, {
+                            id: houseId,
+                            name: houseId,
+                            total_points: player.points || 0,
+                            player_count: 1
+                        })
+                    }
+                }
+            })
+            // Only return houses that have players
+            const housesWithPlayers = Array.from(houseMap.values())
+                .filter(h => h.player_count > 0)
+                .sort((a, b) => b.total_points - a.total_points)
+            return housesWithPlayers
+        }
+    } catch (error) {
+        console.error('Error fetching houses from Supabase:', error)
     }
-    return await queries.houseQueries.getAllHouses()
+    // Fallback to demo data
+    return getDemoDataFromStorage('houses')
 }
 
 export const getHouseLeaderboard = async () => {
-    if (checkIsDemoMode()) {
-        const houses = getDemoDataFromStorage('houses')
-        return houses.sort((a, b) => b.total_points - a.total_points)
-    }
-    return await queries.houseQueries.getLeaderboard()
+    // Use getHouses which already calculates from players if needed
+    const houses = await getHouses()
+    return houses.sort((a, b) => b.total_points - a.total_points)
 }
 
 // =============================================
@@ -123,14 +183,21 @@ export const getHouseLeaderboard = async () => {
 // =============================================
 
 export const getChores = async () => {
-    if (checkIsDemoMode()) {
-        return getDemoDataFromStorage('chores')
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const chores = await queries.choreQueries.getAllChores()
+        if (chores) {
+            return chores
+        }
+    } catch (error) {
+        console.error('Error fetching chores from Supabase:', error)
     }
-    return await queries.choreQueries.getAllChores()
+    // Fallback to demo data
+    return getDemoDataFromStorage('chores')
 }
 
 export const createChore = async (chore) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const chores = getDemoDataFromStorage('chores')
         const newChore = { ...chore, id: generateId(), created_at: new Date().toISOString(), status: 'pending' }
         chores.push(newChore)
@@ -141,7 +208,7 @@ export const createChore = async (chore) => {
 }
 
 export const updateChore = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const chores = getDemoDataFromStorage('chores')
         const index = chores.findIndex(c => c.id === id)
         if (index !== -1) {
@@ -181,7 +248,7 @@ export const completeChore = async (choreId) => {
 }
 
 export const deleteChore = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const chores = getDemoDataFromStorage('chores')
         const filtered = chores.filter(c => c.id !== id)
         saveDemoDataToStorage('chores', filtered)
@@ -195,14 +262,21 @@ export const deleteChore = async (id) => {
 // =============================================
 
 export const getEvents = async () => {
-    if (checkIsDemoMode()) {
-        return getDemoDataFromStorage('events')
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const events = await queries.eventQueries.getAllEvents()
+        if (events) {
+            return events
+        }
+    } catch (error) {
+        console.error('Error fetching events from Supabase:', error)
     }
-    return await queries.eventQueries.getAllEvents()
+    // Fallback to demo data
+    return getDemoDataFromStorage('events')
 }
 
 export const createEvent = async (event) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const events = getDemoDataFromStorage('events')
         const newEvent = { ...event, id: generateId(), created_at: new Date().toISOString() }
         events.push(newEvent)
@@ -213,7 +287,7 @@ export const createEvent = async (event) => {
 }
 
 export const updateEvent = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const events = getDemoDataFromStorage('events')
         const index = events.findIndex(e => e.id === id)
         if (index !== -1) {
@@ -227,7 +301,7 @@ export const updateEvent = async (id, updates) => {
 }
 
 export const deleteEvent = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const events = getDemoDataFromStorage('events')
         const filtered = events.filter(e => e.id !== id)
         saveDemoDataToStorage('events', filtered)
@@ -242,7 +316,7 @@ export const deleteEvent = async (id) => {
 
 // Event Attendees
 export const createEventAttendees = async (eventId, playerIds) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const attendees = getDemoDataFromStorage('eventAttendees')
         const newAttendees = playerIds.map(playerId => ({
             id: generateId(),
@@ -259,32 +333,51 @@ export const createEventAttendees = async (eventId, playerIds) => {
 }
 
 export const getEventAttendees = async (eventId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('eventAttendees').filter(a => a.event_id === eventId)
     }
     return await queries.eventQueries.getEventAttendees(eventId)
 }
 
 export const getPlayerEvents = async (playerId) => {
-    if (checkIsDemoMode()) {
-        const events = getDemoDataFromStorage('events')
-        const attendees = getDemoDataFromStorage('eventAttendees')
+    // Event types that should be hidden from players (staff-only)
+    // Based on Staff App CalendarEventType: trial, prospect_trial, meeting, medical, visa
+    const staffOnlyEventTypes = ['trial', 'prospect_trial', 'meeting', 'medical', 'visa']
 
-        // Get events where player is an attendee
-        const playerEventIds = attendees
-            .filter(a => a.player_id === playerId)
-            .map(a => a.event_id)
-
-        // Get events that match player's event IDs or have no attendees (everyone events)
-        const allAttendees = attendees
-        const eventsWithAttendees = [...new Set(allAttendees.map(a => a.event_id))]
-
-        return events.filter(event =>
-            playerEventIds.includes(event.id) || // Player is specifically invited
-            !eventsWithAttendees.includes(event.id) // Event has no specific attendees (everyone)
-        )
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const events = await queries.eventQueries.getPlayerEvents(playerId)
+        if (events) {
+            return events
+        }
+    } catch (error) {
+        console.error('Error fetching player events from Supabase:', error)
     }
-    return await queries.eventQueries.getPlayerEvents(playerId)
+    // Fallback to demo data
+    const events = getDemoDataFromStorage('events')
+    const attendees = getDemoDataFromStorage('eventAttendees')
+
+    // Get events where player is an attendee
+    const playerEventIds = attendees
+        .filter(a => a.player_id === playerId)
+        .map(a => a.event_id)
+
+    // Get events that have specific attendees
+    const eventsWithAttendees = [...new Set(attendees.map(a => a.event_id))]
+
+    // Filter events - exclude staff-only, show player's events or everyone events
+    return events.filter(event => {
+        const eventType = event.event_type || event.type || ''
+        const isStaffOnly = staffOnlyEventTypes.includes(eventType)
+        const hasNoAttendees = !eventsWithAttendees.includes(event.id)
+        const playerIsAttendee = playerEventIds.includes(event.id)
+
+        // Hide staff-only events
+        if (isStaffOnly) return false
+
+        // Show event if player is attendee OR event has no specific attendees (everyone)
+        return playerIsAttendee || hasNoAttendees
+    })
 }
 
 // =============================================
@@ -292,7 +385,7 @@ export const getPlayerEvents = async (playerId) => {
 // =============================================
 
 export const getPlayerGoals = async (playerId, status = null) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const goals = getDemoDataFromStorage('playerGoals')
         let filtered = goals.filter(g => g.player_id === playerId)
         if (status) {
@@ -304,7 +397,7 @@ export const getPlayerGoals = async (playerId, status = null) => {
 }
 
 export const createGoal = async (goal) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const goals = getDemoDataFromStorage('playerGoals')
         const newGoal = {
             ...goal,
@@ -322,7 +415,7 @@ export const createGoal = async (goal) => {
 }
 
 export const updateGoal = async (goalId, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const goals = getDemoDataFromStorage('playerGoals')
         const index = goals.findIndex(g => g.id === goalId)
         if (index !== -1) {
@@ -340,14 +433,14 @@ export const updateGoal = async (goalId, updates) => {
 }
 
 export const getAchievements = async () => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('achievements')
     }
     return await queries.achievementsQueries.getAllAchievements()
 }
 
 export const getPlayerAchievements = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('playerAchievements')
             .filter(pa => pa.player_id === playerId)
     }
@@ -355,7 +448,7 @@ export const getPlayerAchievements = async (playerId) => {
 }
 
 export const unlockAchievement = async (playerId, achievementId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const playerAchievements = getDemoDataFromStorage('playerAchievements')
         // Check if already unlocked
         if (playerAchievements.some(pa => pa.player_id === playerId && pa.achievement_id === achievementId)) {
@@ -375,7 +468,7 @@ export const unlockAchievement = async (playerId, achievementId) => {
 }
 
 export const getMentalWellness = async (playerId, limit = 30) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('mentalWellness')
             .filter(m => m.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -385,7 +478,7 @@ export const getMentalWellness = async (playerId, limit = 30) => {
 }
 
 export const createMentalWellnessLog = async (log) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const logs = getDemoDataFromStorage('mentalWellness')
         const newLog = {
             ...log,
@@ -405,7 +498,7 @@ export const createMentalWellnessLog = async (log) => {
 // =============================================
 
 export const getWellnessLogs = async (playerId, limit = 30) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('wellnessLogs')
             .filter(w => w.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -415,7 +508,7 @@ export const getWellnessLogs = async (playerId, limit = 30) => {
 }
 
 export const createWellnessLog = async (log) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const logs = getDemoDataFromStorage('wellnessLogs')
         const newLog = { ...log, id: generateId(), created_at: new Date().toISOString() }
         logs.push(newLog)
@@ -426,7 +519,7 @@ export const createWellnessLog = async (log) => {
 }
 
 export const getWellnessScore = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const sevenDaysAgo = new Date()
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -470,7 +563,7 @@ export const getWellnessScore = async (playerId) => {
 // =============================================
 
 export const getTrainingLoads = async (playerId, limit = 30) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('trainingLoads')
             .filter(t => t.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -480,7 +573,7 @@ export const getTrainingLoads = async (playerId, limit = 30) => {
 }
 
 export const createTrainingLoad = async (load) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const loads = getDemoDataFromStorage('trainingLoads')
         const newLoad = {
             ...load,
@@ -500,7 +593,7 @@ export const createTrainingLoad = async (load) => {
 // =============================================
 
 export const getInjuries = async (playerId, includeCleared = false) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         let injuries = getDemoDataFromStorage('injuries').filter(i => i.player_id === playerId)
         if (!includeCleared) {
             injuries = injuries.filter(i => i.status !== 'cleared')
@@ -511,7 +604,7 @@ export const getInjuries = async (playerId, includeCleared = false) => {
 }
 
 export const createInjury = async (injury) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const injuries = getDemoDataFromStorage('injuries')
         const newInjury = { ...injury, id: generateId(), created_at: new Date().toISOString() }
         injuries.push(newInjury)
@@ -522,7 +615,7 @@ export const createInjury = async (injury) => {
 }
 
 export const updateInjury = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const injuries = getDemoDataFromStorage('injuries')
         const index = injuries.findIndex(i => i.id === id)
         if (index !== -1) {
@@ -540,7 +633,7 @@ export const updateInjury = async (id, updates) => {
 // =============================================
 
 export const getCollegeTargets = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('collegeTargets')
             .filter(ct => ct.player_id === playerId)
             .sort((a, b) => {
@@ -552,7 +645,7 @@ export const getCollegeTargets = async (playerId) => {
 }
 
 export const createCollegeTarget = async (target) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const newTarget = { ...target, id: generateId(), created_at: new Date().toISOString() }
         targets.push(newTarget)
@@ -563,7 +656,7 @@ export const createCollegeTarget = async (target) => {
 }
 
 export const updateCollegeTarget = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const index = targets.findIndex(t => t.id === id)
         if (index !== -1) {
@@ -577,7 +670,7 @@ export const updateCollegeTarget = async (id, updates) => {
 }
 
 export const deleteCollegeTarget = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const targets = getDemoDataFromStorage('collegeTargets')
         const filtered = targets.filter(t => t.id !== id)
         saveDemoDataToStorage('collegeTargets', filtered)
@@ -591,7 +684,7 @@ export const deleteCollegeTarget = async (id) => {
 // =============================================
 
 export const getScoutActivities = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('scoutActivities')
             .filter(sa => sa.player_id === playerId)
             .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -600,7 +693,7 @@ export const getScoutActivities = async (playerId) => {
 }
 
 export const createScoutActivity = async (activity) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const newActivity = { ...activity, id: generateId(), created_at: new Date().toISOString() }
         activities.push(newActivity)
@@ -611,7 +704,7 @@ export const createScoutActivity = async (activity) => {
 }
 
 export const updateScoutActivity = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const index = activities.findIndex(a => a.id === id)
         if (index !== -1) {
@@ -625,7 +718,7 @@ export const updateScoutActivity = async (id, updates) => {
 }
 
 export const deleteScoutActivity = async (id) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const activities = getDemoDataFromStorage('scoutActivities')
         const filtered = activities.filter(a => a.id !== id)
         saveDemoDataToStorage('scoutActivities', filtered)
@@ -639,7 +732,7 @@ export const deleteScoutActivity = async (id) => {
 // =============================================
 
 export const getAcademicProgress = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         return getDemoDataFromStorage('academicProgress')
             .filter(ap => ap.player_id === playerId)
             .sort((a, b) => {
@@ -651,7 +744,7 @@ export const getAcademicProgress = async (playerId) => {
 }
 
 export const createAcademicProgress = async (progress) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const progressList = getDemoDataFromStorage('academicProgress')
         const newProgress = { ...progress, id: generateId(), created_at: new Date().toISOString() }
         progressList.push(newProgress)
@@ -662,7 +755,7 @@ export const createAcademicProgress = async (progress) => {
 }
 
 export const updateAcademicProgress = async (id, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const progressList = getDemoDataFromStorage('academicProgress')
         const index = progressList.findIndex(p => p.id === id)
         if (index !== -1) {
@@ -676,7 +769,7 @@ export const updateAcademicProgress = async (id, updates) => {
 }
 
 export const calculateGPA = async (playerId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const progressList = getDemoDataFromStorage('academicProgress')
             .filter(p => p.player_id === playerId && p.status === 'completed' && ['high_school', 'college'].includes(p.category))
 
@@ -708,7 +801,7 @@ export const calculateGPA = async (playerId) => {
 // =============================================
 
 export const getPerformanceTests = async (playerId, testType = null) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         let tests = getDemoDataFromStorage('performanceTests').filter(pt => pt.player_id === playerId)
         if (testType) {
             tests = tests.filter(t => t.test_type === testType)
@@ -719,7 +812,7 @@ export const getPerformanceTests = async (playerId, testType = null) => {
 }
 
 export const createPerformanceTest = async (test) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const tests = getDemoDataFromStorage('performanceTests')
         const newTest = { ...test, id: generateId(), created_at: new Date().toISOString() }
         tests.push(newTest)
@@ -813,21 +906,28 @@ export const getNextSteps = async (playerId) => {
 }
 
 export const getDashboardStats = async () => {
-    if (checkIsDemoMode()) {
-        const players = getDemoDataFromStorage('players')
-        const chores = getDemoDataFromStorage('chores')
-        const events = getDemoDataFromStorage('events')
-        const houses = getDemoDataFromStorage('houses').sort((a, b) => b.total_points - a.total_points)
-
-        return {
-            totalPlayers: players.length,
-            activeToday: players.filter(p => p.status === 'active').length,
-            pendingChores: chores.filter(c => c.status === 'pending').length,
-            upcomingEvents: events.filter(e => new Date(e.start_time) > new Date()).length,
-            topHouse: houses[0] || null
+    // Always try Supabase first, fallback to demo data on error
+    try {
+        const stats = await queries.dashboardQueries.getDashboardStats()
+        if (stats) {
+            return stats
         }
+    } catch (error) {
+        console.error('Error fetching dashboard stats from Supabase:', error)
     }
-    return await queries.dashboardQueries.getDashboardStats()
+    // Fallback to demo data
+    const players = getDemoDataFromStorage('players')
+    const chores = getDemoDataFromStorage('chores')
+    const events = getDemoDataFromStorage('events')
+    const houses = getDemoDataFromStorage('houses').sort((a, b) => b.total_points - a.total_points)
+
+    return {
+        totalPlayers: players.length,
+        activeToday: players.filter(p => p.status === 'active').length,
+        pendingChores: chores.filter(c => c.status === 'pending').length,
+        upcomingEvents: events.filter(e => new Date(e.start_time) > new Date()).length,
+        topHouse: houses[0] || null
+    }
 }
 
 // =============================================
@@ -1150,7 +1250,7 @@ const defaultGroceryItems = [
 const GROCERY_VERSION = 2
 
 export const getGroceryItems = async (category = null) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const storedVersion = localStorage.getItem('groceryItemsVersion')
         let items = getDemoDataFromStorage('groceryItems')
 
@@ -1169,7 +1269,7 @@ export const getGroceryItems = async (category = null) => {
 }
 
 export const getGroceryOrders = async (playerId = null) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         let orders = getDemoDataFromStorage('groceryOrders') || []
         if (playerId) {
             orders = orders.filter(o => o.player_id === playerId)
@@ -1181,7 +1281,7 @@ export const getGroceryOrders = async (playerId = null) => {
 
 // Admin: Get all orders with player and house info for aggregation
 export const getAdminGroceryOrders = async () => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const orders = getDemoDataFromStorage('groceryOrders') || []
         const players = getDemoDataFromStorage('players') || []
         const houses = getDemoDataFromStorage('houses') || []
@@ -1219,7 +1319,7 @@ export const getAdminGroceryOrders = async () => {
 }
 
 export const getGroceryOrderById = async (orderId) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const orders = getDemoDataFromStorage('groceryOrders') || []
         const order = orders.find(o => o.id === orderId)
         if (!order) return null
@@ -1244,7 +1344,7 @@ export const getGroceryOrderById = async (orderId) => {
 }
 
 export const createGroceryOrder = async (order) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const orders = getDemoDataFromStorage('groceryOrders') || []
         const orderItems = getDemoDataFromStorage('groceryOrderItems') || []
 
@@ -1298,7 +1398,7 @@ export const createGroceryOrder = async (order) => {
 }
 
 export const updateGroceryOrder = async (orderId, updates) => {
-    if (checkIsDemoMode()) {
+    if (shouldUseDemoData()) {
         const orders = getDemoDataFromStorage('groceryOrders') || []
         const index = orders.findIndex(o => o.id === orderId)
         if (index !== -1) {
@@ -1427,3 +1527,216 @@ const formatDeadline = (deliveryDateStr) => {
 }
 
 export const GROCERY_BUDGET = WEEKLY_BUDGET
+
+// =============================================
+// BODY COMPOSITION
+// =============================================
+
+export const getBodyComposition = async (playerId, limit = 10) => {
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('bodyComposition')
+            .filter(bc => bc.player_id === playerId)
+            .sort((a, b) => new Date(b.measurement_date) - new Date(a.measurement_date))
+            .slice(0, limit)
+    }
+    return await queries.bodyCompositionQueries?.getBodyComposition(playerId, limit) || []
+}
+
+export const createBodyComposition = async (data) => {
+    if (shouldUseDemoData()) {
+        const records = getDemoDataFromStorage('bodyComposition')
+        const newRecord = { ...data, id: generateId(), created_at: new Date().toISOString() }
+        records.push(newRecord)
+        saveDemoDataToStorage('bodyComposition', records)
+        return newRecord
+    }
+    return await queries.bodyCompositionQueries?.createBodyComposition(data)
+}
+
+// =============================================
+// PLAYER EVALUATIONS
+// =============================================
+
+export const getPlayerEvaluations = async (playerId, limit = 5) => {
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('playerEvaluations')
+            .filter(ev => ev.player_id === playerId)
+            .sort((a, b) => new Date(b.evaluation_date) - new Date(a.evaluation_date))
+            .slice(0, limit)
+    }
+    return await queries.evaluationQueries?.getPlayerEvaluations(playerId, limit) || []
+}
+
+export const createPlayerEvaluation = async (evaluation) => {
+    if (shouldUseDemoData()) {
+        const evaluations = getDemoDataFromStorage('playerEvaluations')
+        const newEval = { ...evaluation, id: generateId(), created_at: new Date().toISOString() }
+        evaluations.push(newEval)
+        saveDemoDataToStorage('playerEvaluations', evaluations)
+        return newEval
+    }
+    return await queries.evaluationQueries?.createPlayerEvaluation(evaluation)
+}
+
+export const updatePlayerEvaluation = async (id, updates) => {
+    if (shouldUseDemoData()) {
+        const evaluations = getDemoDataFromStorage('playerEvaluations')
+        const index = evaluations.findIndex(e => e.id === id)
+        if (index !== -1) {
+            evaluations[index] = { ...evaluations[index], ...updates, updated_at: new Date().toISOString() }
+            saveDemoDataToStorage('playerEvaluations', evaluations)
+            return evaluations[index]
+        }
+        return null
+    }
+    return await queries.evaluationQueries?.updatePlayerEvaluation(id, updates)
+}
+
+// =============================================
+// TRYOUT REPORTS
+// =============================================
+
+export const getTryoutReports = async (playerId) => {
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('tryoutReports')
+            .filter(tr => tr.player_id === playerId)
+            .sort((a, b) => new Date(b.tryout_date) - new Date(a.tryout_date))
+    }
+    return await queries.tryoutQueries?.getTryoutReports(playerId) || []
+}
+
+export const createTryoutReport = async (report) => {
+    if (shouldUseDemoData()) {
+        const reports = getDemoDataFromStorage('tryoutReports')
+        const newReport = { ...report, id: generateId(), created_at: new Date().toISOString() }
+        reports.push(newReport)
+        saveDemoDataToStorage('tryoutReports', reports)
+        return newReport
+    }
+    return await queries.tryoutQueries?.createTryoutReport(report)
+}
+
+// =============================================
+// PLAYER MEDIA
+// =============================================
+
+export const getPlayerMedia = async (playerId) => {
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('playerMedia')
+            .filter(pm => pm.player_id === playerId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }
+    return await queries.mediaQueries?.getPlayerMedia(playerId) || []
+}
+
+export const createPlayerMedia = async (media) => {
+    if (shouldUseDemoData()) {
+        const mediaList = getDemoDataFromStorage('playerMedia')
+        const newMedia = { ...media, id: generateId(), created_at: new Date().toISOString() }
+        mediaList.push(newMedia)
+        saveDemoDataToStorage('playerMedia', mediaList)
+        return newMedia
+    }
+    return await queries.mediaQueries?.createPlayerMedia(media)
+}
+
+export const deletePlayerMedia = async (id) => {
+    if (shouldUseDemoData()) {
+        const mediaList = getDemoDataFromStorage('playerMedia')
+        const filtered = mediaList.filter(m => m.id !== id)
+        saveDemoDataToStorage('playerMedia', filtered)
+        return
+    }
+    return await queries.mediaQueries?.deletePlayerMedia(id)
+}
+
+// =============================================
+// EUROPEAN ACADEMY BENCHMARKS (Static Data)
+// =============================================
+
+// Based on STATSports data for European academy players
+export const PERFORMANCE_BENCHMARKS = {
+    // Sprint benchmarks by age group (in seconds - lower is better)
+    sprint_10m: {
+        'U16': { elite: 1.70, good: 1.80, average: 1.90, developing: 2.00 },
+        'U17': { elite: 1.65, good: 1.75, average: 1.85, developing: 1.95 },
+        'U18': { elite: 1.62, good: 1.72, average: 1.82, developing: 1.92 },
+        'U19': { elite: 1.60, good: 1.70, average: 1.78, developing: 1.88 },
+        'U21': { elite: 1.58, good: 1.68, average: 1.75, developing: 1.85 },
+    },
+    sprint_30m: {
+        'U16': { elite: 4.00, good: 4.20, average: 4.40, developing: 4.60 },
+        'U17': { elite: 3.90, good: 4.10, average: 4.30, developing: 4.50 },
+        'U18': { elite: 3.85, good: 4.05, average: 4.20, developing: 4.40 },
+        'U19': { elite: 3.80, good: 4.00, average: 4.15, developing: 4.35 },
+        'U21': { elite: 3.75, good: 3.95, average: 4.10, developing: 4.30 },
+    },
+    // Vertical jump (in cm - higher is better)
+    vertical_jump: {
+        'U16': { elite: 55, good: 50, average: 45, developing: 40 },
+        'U17': { elite: 58, good: 53, average: 48, developing: 43 },
+        'U18': { elite: 62, good: 56, average: 50, developing: 45 },
+        'U19': { elite: 65, good: 58, average: 52, developing: 47 },
+        'U21': { elite: 68, good: 60, average: 54, developing: 48 },
+    },
+    // Yo-Yo IR1 (in meters - higher is better)
+    yoyo_ir1: {
+        'U16': { elite: 2000, good: 1800, average: 1600, developing: 1400 },
+        'U17': { elite: 2200, good: 2000, average: 1800, developing: 1600 },
+        'U18': { elite: 2400, good: 2200, average: 2000, developing: 1800 },
+        'U19': { elite: 2600, good: 2400, average: 2200, developing: 2000 },
+        'U21': { elite: 2800, good: 2600, average: 2400, developing: 2200 },
+    },
+    // Agility 5-0-5 (in seconds - lower is better)
+    agility_505: {
+        'U16': { elite: 2.20, good: 2.35, average: 2.50, developing: 2.65 },
+        'U17': { elite: 2.15, good: 2.30, average: 2.45, developing: 2.60 },
+        'U18': { elite: 2.10, good: 2.25, average: 2.40, developing: 2.55 },
+        'U19': { elite: 2.05, good: 2.20, average: 2.35, developing: 2.50 },
+        'U21': { elite: 2.00, good: 2.15, average: 2.30, developing: 2.45 },
+    },
+    // Body composition benchmarks
+    body_fat_percent: {
+        'U16': { elite: 10, good: 12, average: 14, developing: 16 },
+        'U17': { elite: 9, good: 11, average: 13, developing: 15 },
+        'U18': { elite: 8, good: 10, average: 12, developing: 14 },
+        'U19': { elite: 8, good: 10, average: 12, developing: 14 },
+        'U21': { elite: 8, good: 10, average: 12, developing: 14 },
+    }
+}
+
+// Helper to get age group from date of birth
+export const getAgeGroup = (dateOfBirth) => {
+    if (!dateOfBirth) return 'U19'
+    const today = new Date()
+    const birth = new Date(dateOfBirth)
+    const age = today.getFullYear() - birth.getFullYear()
+
+    if (age <= 16) return 'U16'
+    if (age <= 17) return 'U17'
+    if (age <= 18) return 'U18'
+    if (age <= 19) return 'U19'
+    return 'U21'
+}
+
+// Helper to evaluate performance against benchmarks
+export const evaluatePerformance = (testType, result, ageGroup) => {
+    const benchmarks = PERFORMANCE_BENCHMARKS[testType]?.[ageGroup]
+    if (!benchmarks) return { level: 'unknown', percentile: 50 }
+
+    // For sprint/agility tests (lower is better)
+    const lowerIsBetter = ['sprint_10m', 'sprint_30m', 'agility_505'].includes(testType)
+
+    if (lowerIsBetter) {
+        if (result <= benchmarks.elite) return { level: 'elite', percentile: 95, color: 'success' }
+        if (result <= benchmarks.good) return { level: 'good', percentile: 75, color: 'success' }
+        if (result <= benchmarks.average) return { level: 'average', percentile: 50, color: 'warning' }
+        return { level: 'developing', percentile: 25, color: 'error' }
+    } else {
+        // For jump/endurance tests (higher is better)
+        if (result >= benchmarks.elite) return { level: 'elite', percentile: 95, color: 'success' }
+        if (result >= benchmarks.good) return { level: 'good', percentile: 75, color: 'success' }
+        if (result >= benchmarks.average) return { level: 'average', percentile: 50, color: 'warning' }
+        return { level: 'developing', percentile: 25, color: 'error' }
+    }
+}

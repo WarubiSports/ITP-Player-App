@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { getCountryFlag, formatDateOfBirth } from '../utils/countryFlags'
-import { createPerformanceTest } from '../lib/data-service'
+import { createPerformanceTest, getPlayers, getHouses } from '../lib/data-service'
 import './Players.css'
 
 // Debounce hook for search optimization
@@ -23,6 +23,7 @@ function useDebounce(value, delay) {
 export default function Players() {
     const { isStaff } = useAuth()
     const [players, setPlayers] = useState([])
+    const [houses, setHouses] = useState([])
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [positionFilter, setPositionFilter] = useState('all')
@@ -35,7 +36,15 @@ export default function Players() {
     const debouncedSearch = useDebounce(search, 300)
 
     useEffect(() => {
-        setPlayers(demoData.players)
+        const loadData = async () => {
+            const [playersData, housesData] = await Promise.all([
+                getPlayers(),
+                getHouses()
+            ])
+            setPlayers(playersData || [])
+            setHouses(housesData || [])
+        }
+        loadData()
     }, [])
 
     // Memoized filtered players with debounced search
@@ -59,11 +68,19 @@ export default function Players() {
         return result
     }, [debouncedSearch, statusFilter, positionFilter, players])
 
-    // Memoized house lookup
+    // Memoized house lookup - house_id can be UUID or TEXT name
     const getHouseName = useCallback((houseId) => {
-        const house = demoData.houses.find(h => h.id === houseId)
-        return house?.name || 'Unassigned'
-    }, [])
+        if (!houseId) return 'Unassigned'
+        // First check if houseId matches a house id
+        const house = houses.find(h => h.id === houseId)
+        if (house) return house.name
+        // If not, houseId might be the house name itself (TEXT storage)
+        const houseByName = houses.find(h => h.name === houseId)
+        if (houseByName) return houseByName.name
+        // Return houseId as-is if it looks like a house name
+        if (typeof houseId === 'string' && houseId.includes('Widdersdorf')) return houseId
+        return 'Unassigned'
+    }, [houses])
 
     const openPlayerModal = useCallback((player = null) => {
         setSelectedPlayer(player)

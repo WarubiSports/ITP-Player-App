@@ -23,6 +23,7 @@ const ParentPortal = lazy(() => import('./pages/ParentPortal'))
 const GroceryOrder = lazy(() => import('./pages/GroceryOrder'))
 const OrderHistory = lazy(() => import('./pages/OrderHistory'))
 const Admin = lazy(() => import('./pages/Admin'))
+const PlayerReport = lazy(() => import('./pages/PlayerReport'))
 
 // Loading component
 function PageLoader() {
@@ -79,6 +80,7 @@ export default function App() {
                     <Route path="grocery" element={<Suspense fallback={<PageLoader />}><GroceryOrder /></Suspense>} />
                     <Route path="order-history" element={<Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>} />
                     <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
+                    <Route path="reports" element={<ProtectedRoute staffOnly><Suspense fallback={<PageLoader />}><PlayerReport /></Suspense></ProtectedRoute>} />
                 </Route>
 
                 {/* Fallback */}

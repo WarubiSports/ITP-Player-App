@@ -55,20 +55,26 @@ export function AuthProvider({ children }) {
     }
 
     const signIn = async (email, password) => {
-        // Try demo login first if Supabase is not configured
-        if (!import.meta.env.VITE_SUPABASE_URL) {
-            const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
-            if (demoUser && password === DEMO_PASSWORD) {
-                localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
-                setUser(demoUser)
-                setProfile(demoUser)
+        // Try Supabase auth first if configured
+        if (import.meta.env.VITE_SUPABASE_URL) {
+            const { error } = await supabase.auth.signInWithPassword({ email, password })
+            if (!error) {
                 return { error: null }
             }
-            return { error: { message: 'Invalid login credentials' } }
+            // If Supabase auth fails, try demo login as fallback
+            console.log('Supabase auth failed, trying demo login...')
         }
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        return { error }
+        // Try demo login (either as primary or fallback)
+        const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
+        if (demoUser && password === DEMO_PASSWORD) {
+            localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
+            setUser(demoUser)
+            setProfile(demoUser)
+            return { error: null }
+        }
+
+        return { error: { message: 'Invalid login credentials' } }
     }
 
     const signUp = async (email, password, metadata = {}) => {

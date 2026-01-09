@@ -1,56 +1,66 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { getHouses, getPlayers, getChores, createChore, updateChore, completeChore } from '../lib/data-service'
+import { getHouses, getPlayers, createChore, updateChore, completeChore } from '../lib/data-service'
+import { useRealtimeChores } from '../hooks/useRealtimeChores'
+import { useRealtimeHousePoints } from '../hooks/useRealtimeHousePoints'
+import ConnectionStatus from '../components/ui/ConnectionStatus'
 import './Housing.css'
 
 export default function Housing() {
     const { profile, isStaff } = useAuth()
-    const [houses, setHouses] = useState([])
-    const [chores, setChores] = useState([])
     const [players, setPlayers] = useState([])
     const [playerData, setPlayerData] = useState(null)
     const [selectedHouse, setSelectedHouse] = useState(null)
     const [showChoreModal, setShowChoreModal] = useState(false)
     const [selectedChore, setSelectedChore] = useState(null)
     const [filter, setFilter] = useState('pending')
-    const [loading, setLoading] = useState(true)
+    const [playersLoading, setPlayersLoading] = useState(true)
+
+    // Use realtime hooks
+    const { houses, loading: housesLoading, animatingHouse } = useRealtimeHousePoints({ showNotifications: false })
+    const { chores, loading: choresLoading, highlightedChore, refreshChores } = useRealtimeChores({
+        playerId: isStaff ? null : playerData?.id,
+        showNotifications: true
+    })
+
+    const loading = housesLoading || choresLoading || playersLoading
 
     useEffect(() => {
-        loadData()
+        const loadPlayers = async () => {
+            try {
+                setPlayersLoading(true)
+                const playersData = await getPlayers()
+                setPlayers(playersData || [])
+                const player = playersData?.find(p => p.id === profile?.id || p.user_id === profile?.id)
+                setPlayerData(player)
+            } catch (error) {
+                console.error('Error loading players:', error)
+            } finally {
+                setPlayersLoading(false)
+            }
+        }
+        loadPlayers()
     }, [profile?.id])
 
-    const loadData = async () => {
-        try {
-            setLoading(true)
-            const [housesData, playersData, choresData] = await Promise.all([
-                getHouses(),
-                getPlayers(),
-                getChores()
-            ])
-
-            setHouses(housesData || [])
-            setPlayers(playersData || [])
-            setChores(choresData || [])
-
-            // Find current player
-            const player = playersData?.find(p => p.id === profile.id || p.user_id === profile.id)
-            setPlayerData(player)
-        } catch (error) {
-            console.error('Error loading housing data:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const getHouseStats = (house) => {
-        const residents = players.filter(p => p.house_id === house.id)
-        const houseChores = chores.filter(c => c.house_id === house.id)
+        // Match by house.id OR house.name (handles both UUID and TEXT storage)
+        const residents = players.filter(p =>
+            p.house_id === house.id ||
+            p.house_id === house.name ||
+            house.id === p.house_id ||
+            house.name === p.house_id
+        )
+        const houseChores = chores.filter(c =>
+            c.house_id === house.id ||
+            c.house_id === house.name
+        )
         const completedChores = houseChores.filter(c => c.status === 'completed').length
         const pendingChores = houseChores.filter(c => c.status === 'pending').length
 
         return {
             ...house,
             residents,
+            residentCount: residents.length,
             chores: houseChores,
             completedChores,
             pendingChores,
@@ -77,7 +87,7 @@ export default function Housing() {
     const handleCompleteChore = async (choreId) => {
         try {
             await completeChore(choreId)
-            await loadData()
+            await refreshChores()
         } catch (error) {
             console.error('Error completing chore:', error)
             alert('Failed to complete chore. Please try again.')
@@ -104,7 +114,7 @@ export default function Housing() {
             } else {
                 await createChore(choreData)
             }
-            await loadData()
+            await refreshChores()
             setShowChoreModal(false)
             setSelectedChore(null)
         } catch (error) {
@@ -156,6 +166,7 @@ export default function Housing() {
                     <h1>🏠 House & Tasks</h1>
                     <p>House standings and your assigned chores</p>
                 </div>
+                <ConnectionStatus showLabel />
             </header>
 
             {/* House Leaderboard */}
@@ -197,7 +208,7 @@ export default function Housing() {
                 {housesWithStats.map((house, idx) => (
                     <div
                         key={house.id}
-                        className={`glass-card house-card rank-${idx + 1}`}
+                        className={`glass-card house-card rank-${idx + 1} ${animatingHouse === house.id ? 'points-update-animation' : ''}`}
                         onClick={() => setSelectedHouse(house)}
                     >
                         <div className="house-card-header">
@@ -261,7 +272,7 @@ export default function Housing() {
                 {/* Chores List */}
                 <div className="chores-list">
                     {filteredChores.map(chore => (
-                        <div key={chore.id} className={`glass-card chore-card ${chore.status}`}>
+                        <div key={chore.id} className={`glass-card chore-card ${chore.status} ${highlightedChore === chore.id ? 'highlight-flash' : ''}`}>
                             <div className="chore-header">
                                 <div className="chore-title-section">
                                     <h3 className="chore-title">{chore.title}</h3>

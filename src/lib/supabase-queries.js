@@ -65,34 +65,65 @@ export const profileQueries = {
 // =============================================
 
 export const playerQueries = {
-    // Get all players with house info
+    // Get all active players with room/house info
+    // House is derived from room relationship (room_id -> rooms -> house_id)
     async getAllPlayers() {
         const { data, error } = await supabase
             .from('players')
             .select(`
                 *,
-                house:houses(id, name, total_points)
+                room:rooms(id, name, house_id)
             `)
+            .eq('status', 'active')
             .order('points', { ascending: false })
 
         if (error) throw error
-        return data
+
+        // Map room.house_id to player.house_id for compatibility
+        return data?.map(player => ({
+            ...player,
+            house_id: player.room?.house_id || player.house_id || null
+        })) || []
     },
 
-    // Get player by ID
+    // Get all players including non-active (for admin views)
+    async getAllPlayersIncludingInactive() {
+        const { data, error } = await supabase
+            .from('players')
+            .select(`
+                *,
+                room:rooms(id, name, house_id)
+            `)
+            .order('status', { ascending: true })
+            .order('points', { ascending: false })
+
+        if (error) throw error
+
+        // Map room.house_id to player.house_id for compatibility
+        return data?.map(player => ({
+            ...player,
+            house_id: player.room?.house_id || player.house_id || null
+        })) || []
+    },
+
+    // Get player by ID with room/house info
     async getPlayerById(id) {
         const { data, error } = await supabase
             .from('players')
             .select(`
                 *,
-                house:houses(id, name, total_points),
-                profile:profiles(email, first_name, last_name)
+                room:rooms(id, name, house_id)
             `)
             .eq('id', id)
             .single()
 
         if (error) throw error
-        return data
+
+        // Map room.house_id to player.house_id for compatibility
+        return data ? {
+            ...data,
+            house_id: data.room?.house_id || data.house_id || null
+        } : null
     },
 
     // Get players by house
@@ -458,7 +489,12 @@ export const eventQueries = {
     },
 
     // Get events for a specific player
+    // Excludes staff-only events (trial players, admin events, etc.)
     async getPlayerEvents(playerId) {
+        // Event types that should be hidden from players (staff-only)
+        // Based on Staff App CalendarEventType: trial, prospect_trial, meeting, medical, visa
+        const staffOnlyEventTypes = ['trial', 'prospect_trial', 'meeting', 'medical', 'visa']
+
         const { data, error } = await supabase
             .from('events')
             .select(`
@@ -473,11 +509,19 @@ export const eventQueries = {
 
         if (error) throw error
 
-        // Filter to include events where player is an attendee or event has no attendees (everyone)
-        return data.filter(event =>
-            event.attendees.length === 0 || // No specific attendees (everyone event)
-            event.attendees.some(a => a.player_id === playerId) // Player is specifically invited
-        )
+        // Filter events based on type and player assignment
+        return data.filter(event => {
+            const eventType = event.event_type || event.type || ''
+            const isStaffOnly = staffOnlyEventTypes.includes(eventType)
+            const hasNoAttendees = event.attendees.length === 0
+            const playerIsAttendee = event.attendees.some(a => a.player_id === playerId)
+
+            // Hide staff-only events
+            if (isStaffOnly) return false
+
+            // Show event if player is attendee OR event has no specific attendees (everyone)
+            return playerIsAttendee || hasNoAttendees
+        })
     }
 }
 

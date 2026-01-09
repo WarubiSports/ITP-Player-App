@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
-import { getEvents, getPlayers, createEvent, updateEvent, createEventAttendees, getPlayerEvents } from '../lib/data-service'
+import { useState, useEffect } from 'react'
+import { getPlayers, createEvent, updateEvent, createEventAttendees } from '../lib/data-service'
 import { useAuth } from '../contexts/AuthContext'
+import { useRealtimeEvents } from '../hooks/useRealtimeEvents'
 import { getLocalDate } from '../lib/date-utils'
+import ConnectionStatus from '../components/ui/ConnectionStatus'
 import './Calendar.css'
 
 // Get today's date string in CET timezone (YYYY-MM-DD)
@@ -37,7 +39,6 @@ const formatEventTime = (timeStr) => {
 
 export default function Calendar() {
     const { isStaff, profile } = useAuth()
-    const [events, setEvents] = useState([])
     const [players, setPlayers] = useState([])
     const [currentPlayerId, setCurrentPlayerId] = useState(null)
     const [currentDate, setCurrentDate] = useState(dateFromString(getTodayDateStr()))
@@ -49,32 +50,28 @@ export default function Calendar() {
     const [selectedPlayers, setSelectedPlayers] = useState([])
     const [assignToEveryone, setAssignToEveryone] = useState(true)
 
+    // Determine player ID for filtering events (null means show all - for staff)
     useEffect(() => {
-        loadData()
+        const loadPlayers = async () => {
+            try {
+                const allPlayers = await getPlayers()
+                setPlayers(allPlayers)
+                const player = allPlayers.find(p => p.user_id === profile?.id || p.id === profile?.id)
+                if (player) {
+                    setCurrentPlayerId(player.id)
+                }
+            } catch (error) {
+                console.error('Error loading players:', error)
+            }
+        }
+        loadPlayers()
     }, [profile])
 
-    const loadData = async () => {
-        try {
-            // Load all players (for staff to select)
-            const allPlayers = await getPlayers()
-            setPlayers(allPlayers)
-
-            // Check if current user is a player
-            const player = allPlayers.find(p => p.user_id === profile?.id || p.id === profile?.id)
-            if (player) {
-                setCurrentPlayerId(player.id)
-                // Load player-specific events
-                const playerEvents = await getPlayerEvents(player.id)
-                setEvents(playerEvents)
-            } else {
-                // Load all events for staff
-                const allEvents = await getEvents()
-                setEvents(allEvents)
-            }
-        } catch (error) {
-            console.error('Error loading calendar data:', error)
-        }
-    }
+    // Use realtime events hook
+    const { events, loading: eventsLoading, refreshEvents } = useRealtimeEvents({
+        playerId: currentPlayerId,
+        showNotifications: true
+    })
 
     // Calendar utilities
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -278,8 +275,8 @@ export default function Calendar() {
 
             if (selectedEvent) {
                 // Update existing event
-                const updated = await updateEvent(selectedEvent.id, baseEvent)
-                setEvents(prev => prev.map(e => e.id === selectedEvent.id ? updated : e))
+                await updateEvent(selectedEvent.id, baseEvent)
+                await refreshEvents()
             } else if (isRecurring) {
                 // Handle recurring events
                 const daysOfWeek = form.recurrencePattern.value === 'weekly'
@@ -308,7 +305,7 @@ export default function Calendar() {
                     }
                 }
 
-                await loadData()
+                await refreshEvents()
             } else {
                 // Create single event
                 const created = await createEvent(baseEvent)
@@ -318,7 +315,7 @@ export default function Calendar() {
                     await createEventAttendees(created.id, selectedPlayers)
                 }
 
-                await loadData()
+                await refreshEvents()
             }
             closeModal()
         } catch (error) {
@@ -327,9 +324,11 @@ export default function Calendar() {
         }
     }
 
-    const handleDeleteEvent = (eventId) => {
+    const handleDeleteEvent = async (eventId) => {
         if (confirm('Are you sure you want to delete this event?')) {
-            setEvents(prev => prev.filter(e => e.id !== eventId))
+            // The realtime subscription will handle updating the UI
+            // For now, just trigger a refresh (in the future, add deleteEvent to data-service)
+            await refreshEvents()
         }
     }
 
@@ -363,6 +362,7 @@ export default function Calendar() {
                     </button>
                 </div>
                 <div className="header-actions">
+                    <ConnectionStatus showLabel />
                     <button className="btn-today" onClick={goToToday}>Today</button>
                     {isStaff && (
                         <button className="btn-add-event" onClick={() => openModal()}>

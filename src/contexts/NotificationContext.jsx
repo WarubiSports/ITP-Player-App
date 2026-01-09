@@ -53,6 +53,19 @@ export function NotificationProvider({ children }) {
         return addNotification(fullMessage, 'achievement', duration)
     }, [addNotification])
 
+    // Realtime notifications with source-specific icons
+    const realtime = useCallback((message, source = 'info', duration = 5000) => {
+        const icons = {
+            event: '📅',
+            points: '⭐',
+            chore: '✅',
+            wellness: '💪',
+            info: '🔔'
+        }
+        const icon = icons[source] || icons.info
+        return addNotification(`${icon} ${message}`, 'realtime', duration)
+    }, [addNotification])
+
     return (
         <NotificationContext.Provider value={{
             notifications,
@@ -62,7 +75,8 @@ export function NotificationProvider({ children }) {
             error,
             info,
             warning,
-            achievement
+            achievement,
+            realtime
         }}>
             {children}
         </NotificationContext.Provider>

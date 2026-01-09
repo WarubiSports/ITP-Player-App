@@ -4,6 +4,7 @@ import { useNotification } from '../contexts/NotificationContext'
 import { getWellnessLogs, getTrainingLoads, getInjuries, createWellnessLog, createTrainingLoad } from '../lib/data-service'
 import { getLocalDate, formatDateForDisplay } from '../lib/date-utils'
 import Confetti from '../components/celebrations/Confetti'
+import StaffWellnessMonitor from '../components/dashboard/StaffWellnessMonitor'
 import './Wellness.css'
 
 // Milestone days for streak celebrations
@@ -17,7 +18,7 @@ const parseLocalDate = (dateStr) => {
 }
 
 export default function Wellness() {
-    const { profile } = useAuth()
+    const { profile, isStaff } = useAuth()
     const { showNotification } = useNotification()
     const [wellnessLogs, setWellnessLogs] = useState([])
     const [trainingLoads, setTrainingLoads] = useState([])
@@ -227,6 +228,16 @@ export default function Wellness() {
                     + Log Training Session
                 </button>
             </div>
+
+            {/* Staff Wellness Monitor - Live feed of all player check-ins */}
+            {isStaff && (
+                <div style={{ marginTop: 'var(--space-6)' }}>
+                    <h2 style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-xl)' }}>
+                        Team Wellness Monitor
+                    </h2>
+                    <StaffWellnessMonitor maxItems={15} />
+                </div>
+            )}
 
             {/* Active Injuries */}
             {injuries.filter(i => i.status !== 'recovered').length > 0 && (

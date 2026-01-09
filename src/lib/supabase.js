@@ -11,11 +11,17 @@ export const checkIsDemoMode = () => {
     return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
 }
 
+// Check if we should use demo DATA (only when Supabase is not configured)
+// This allows demo login while still fetching real data from Supabase
+export const shouldUseDemoData = () => {
+    return !import.meta.env.VITE_SUPABASE_URL
+}
+
 // For backwards compatibility - but prefer checkIsDemoMode() for runtime checks
 export const isDemoMode = checkIsDemoMode()
 
 // Demo data version - increment this when you change demo data structure
-const DEMO_DATA_VERSION = 4
+const DEMO_DATA_VERSION = 7
 
 // Initialize demo data on first load or when version changes
 const initializeDemoData = () => {
@@ -52,29 +58,54 @@ export const demoData = {
         { id: 'admin-1', email: 'max.bisinger@warubi-sports.com', role: 'admin', first_name: 'Max', last_name: 'Bisinger' },
         { id: 'staff-1', email: 'thomas.ellinger@warubi-sports.com', role: 'staff', first_name: 'Thomas', last_name: 'Ellinger' },
         // Player user accounts (so players can log in and test features)
-        { id: 'p1', email: 'max.finkgrafe@player.com', role: 'player', first_name: 'Max', last_name: 'Finkgräfe' },
-        { id: 'p2', email: 'tim.lemperle@player.com', role: 'player', first_name: 'Tim', last_name: 'Lemperle' },
+        { id: 'p1', email: 'colin.dickinson@itp.com', role: 'player', first_name: 'Colin', last_name: 'Dickinson' },
+        { id: 'p2', email: 'jalen.robertson@itp.com', role: 'player', first_name: 'Jalen', last_name: 'Robertson' },
         // Generic demo player account
         { id: 'p1', email: 'demo.player@itp.com', role: 'player', first_name: 'Demo', last_name: 'Player' },
     ],
     players: [
-        { id: 'p1', user_id: 'p1', first_name: 'Max', last_name: 'Finkgräfe', position: 'STRIKER', house_id: 'h1', status: 'active', date_of_birth: '2005-08-15', nationality: 'Germany', points: 450 },
-        { id: 'p2', user_id: 'p2', first_name: 'Tim', last_name: 'Lemperle', position: 'WINGER', house_id: 'h3', status: 'active', date_of_birth: '2004-03-22', nationality: 'Germany', points: 380 },
-        { id: 'p3', first_name: 'Linton', last_name: 'Maina', position: 'WINGER', house_id: 'h2', status: 'training', date_of_birth: '2003-11-12', nationality: 'Kenya', points: 420 },
-        { id: 'p4', first_name: 'Florian', last_name: 'Kainz', position: 'MIDFIELDER', house_id: 'h1', status: 'rest', date_of_birth: '2002-06-24', nationality: 'Austria', points: 510 },
-        { id: 'p5', first_name: 'Jan', last_name: 'Thielmann', position: 'WINGER', house_id: 'h2', status: 'active', date_of_birth: '2003-09-07', nationality: 'Germany', points: 395 },
-        { id: 'p6', first_name: 'Dejan', last_name: 'Ljubičić', position: 'MIDFIELDER', house_id: 'h3', status: 'active', date_of_birth: '1999-01-30', nationality: 'Austria', points: 440 },
+        // Widdersdorf 1 - 7 players
+        { id: 'p1', user_id: 'p1', first_name: 'Colin', last_name: 'Dickinson', position: 'DEF/MID', house_id: 'h1', status: 'active', date_of_birth: '2006-11-18', nationality: 'USA', points: 450 },
+        { id: 'p2', user_id: 'p2', first_name: 'Jalen', last_name: 'Robertson', position: 'FWD/MID', house_id: 'h1', status: 'active', date_of_birth: '2006-03-14', nationality: 'USA', points: 420 },
+        { id: 'p3', first_name: 'Omar', last_name: 'Gagula', position: 'MID/FWD', house_id: 'h1', status: 'active', date_of_birth: '2006-07-11', nationality: 'Bosnia', points: 380 },
+        { id: 'p4', first_name: 'Marwan', last_name: 'Kouyate', position: 'CF', house_id: 'h1', status: 'active', date_of_birth: '2006-06-02', nationality: 'USA', points: 410 },
+        { id: 'p5', first_name: 'Samuel', last_name: 'Rincon', position: 'DEF/MID', house_id: 'h1', status: 'active', date_of_birth: '2006-12-24', nationality: 'USA', points: 365 },
+        { id: 'p6', first_name: 'Conor', last_name: 'Kasewurm', position: 'MID', house_id: 'h1', status: 'active', date_of_birth: '2006-04-18', nationality: 'USA', points: 340 },
+        { id: 'p7', first_name: 'Noah', last_name: 'Clarkson-Hall', position: 'GK', house_id: 'h1', status: 'active', date_of_birth: '2006-12-21', nationality: 'UK', points: 355 },
+        // Widdersdorf 2 - 7 players
+        { id: 'p8', first_name: 'AbdulRahman', last_name: 'Haruna', position: 'MID/FWD', house_id: 'h2', status: 'active', date_of_birth: '2009-03-19', nationality: 'USA', points: 320 },
+        { id: 'p9', first_name: 'Hartej', last_name: 'Parmar', position: 'MID', house_id: 'h2', status: 'active', date_of_birth: '2009-07-05', nationality: 'Canada', points: 295 },
+        { id: 'p10', first_name: 'Rylan', last_name: 'Douglas', position: 'MID', house_id: 'h2', status: 'active', date_of_birth: '2007-10-03', nationality: 'USA', points: 375 },
+        { id: 'p11', first_name: 'Ashton', last_name: 'Tryon', position: 'MID', house_id: 'h2', status: 'active', date_of_birth: '2008-03-06', nationality: 'USA', points: 345 },
+        { id: 'p12', first_name: 'William', last_name: 'Way', position: 'DEF/CB', house_id: 'h2', status: 'active', date_of_birth: '2008-03-03', nationality: 'USA', points: 360 },
+        { id: 'p13', first_name: 'Saidjamolkhon', last_name: 'Saidakbarov', position: 'MID/FWD', house_id: 'h2', status: 'active', date_of_birth: '2007-08-03', nationality: 'Uzbekistan', points: 385 },
+        { id: 'p14', first_name: 'Stefan', last_name: 'Gruskiewicz', position: 'LB', house_id: 'h2', status: 'active', date_of_birth: '2007-08-09', nationality: 'USA/Thailand', points: 350 },
+        // Widdersdorf 3 - 7 players
+        { id: 'p15', first_name: 'Samuel', last_name: 'Winkel', position: 'FWD/RW', house_id: 'h3', status: 'active', date_of_birth: '2009-03-31', nationality: 'USA/Mexico', points: 310 },
+        { id: 'p16', first_name: 'Jordan', last_name: 'Gisa Mugisha', position: 'MID', house_id: 'h3', status: 'active', date_of_birth: '2002-01-21', nationality: 'Rwanda', points: 440 },
+        { id: 'p17', first_name: 'Patrick', last_name: 'Revel', position: 'LB/CB', house_id: 'h3', status: 'active', date_of_birth: '2007-11-29', nationality: 'USA', points: 335 },
+        { id: 'p18', first_name: 'Lucas', last_name: 'Vinson', position: 'MID/FWD', house_id: 'h3', status: 'active', date_of_birth: '2008-07-25', nationality: 'USA', points: 325 },
+        { id: 'p19', first_name: 'Karan', last_name: 'Rao', position: 'DEF/LB', house_id: 'h3', status: 'active', date_of_birth: '2008-09-13', nationality: 'India', points: 300 },
+        { id: 'p20', first_name: 'Santiago', last_name: 'Quevedo', position: 'MID', house_id: 'h3', status: 'active', date_of_birth: '2007-05-04', nationality: 'Peru', points: 370 },
+        { id: 'p21', first_name: 'Julian', last_name: 'Quirk', position: 'GK', house_id: 'h3', status: 'active', date_of_birth: '2007-05-02', nationality: 'USA', points: 345 },
+        // Pending players (arriving soon)
+        { id: 'p22', first_name: 'Alexander', last_name: 'Linza', position: 'LB/DEF', house_id: null, status: 'pending', date_of_birth: '2007-01-16', nationality: 'USA', points: 0, arrival_date: '2026-01-26' },
+        { id: 'p23', first_name: 'Collin', last_name: 'Middleton', position: 'LB/DEF', house_id: null, status: 'pending', date_of_birth: '2006-01-31', nationality: 'USA', points: 0, arrival_date: '2026-01-26' },
+        { id: 'p24', first_name: 'Bhanu', last_name: 'Teja', position: 'DEF', house_id: null, status: 'pending', date_of_birth: '2009-03-17', nationality: 'India', points: 0, arrival_date: '2026-01-26' },
+        { id: 'p25', first_name: 'Nathaniel', last_name: 'Przez', position: 'MID/FWD', house_id: null, status: 'pending', date_of_birth: '2010-05-07', nationality: 'USA', points: 0, arrival_date: '2026-07-26' },
     ],
     houses: [
-        { id: 'h1', name: 'Widdersdorf 1', total_points: 945 },
-        { id: 'h2', name: 'Widdersdorf 2', total_points: 920 },
-        { id: 'h3', name: 'Widdersdorf 3', total_points: 885 },
+        { id: 'h1', name: 'Widdersdorf 1', total_points: 2720 },
+        { id: 'h2', name: 'Widdersdorf 2', total_points: 2430 },
+        { id: 'h3', name: 'Widdersdorf 3', total_points: 2425 },
     ],
     chores: [
-        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2026-01-03' },
-        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p3', status: 'pending', points: 15, deadline: '2026-01-04' },
-        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p2', status: 'pending', points: 10, deadline: '2026-01-05' },
-        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p4', status: 'completed', points: 20, deadline: '2026-01-02', completed_at: '2026-01-01' },
+        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2026-01-10' },
+        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p8', status: 'pending', points: 15, deadline: '2026-01-11' },
+        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p15', status: 'pending', points: 10, deadline: '2026-01-12' },
+        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p2', status: 'completed', points: 20, deadline: '2026-01-09', completed_at: '2026-01-08' },
+        { id: 'ch5', title: 'Bathroom Cleaning', description: 'Clean all bathrooms including toilets, showers, and mirrors', priority: 'high', house_id: 'h2', assigned_to: 'p10', status: 'pending', points: 20, deadline: '2026-01-10' },
+        { id: 'ch6', title: 'Trash & Recycling', description: 'Take out trash and organize recycling bins', priority: 'medium', house_id: 'h3', assigned_to: 'p17', status: 'pending', points: 10, deadline: '2026-01-09' },
     ],
     events: [
         // Monday - Typical ITP day
@@ -109,9 +140,11 @@ export const demoData = {
     ],
     // Phase 1: Wellness & Performance Data
     wellnessLogs: [
-        { id: 'w1', player_id: 'p1', date: '2026-01-02', sleep_hours: 8, sleep_quality: 4, energy_level: 8, muscle_soreness: 2, stress_level: 3, mood: 'good', notes: 'Feeling great after rest day', created_at: '2026-01-02T07:30:00Z' },
-        { id: 'w2', player_id: 'p1', date: '2026-01-01', sleep_hours: 7, sleep_quality: 3, energy_level: 6, muscle_soreness: 5, stress_level: 4, mood: 'tired', notes: 'Legs heavy from yesterday', created_at: '2026-01-01T07:30:00Z' },
-        { id: 'w3', player_id: 'p2', date: '2026-01-02', sleep_hours: 9, sleep_quality: 5, energy_level: 9, muscle_soreness: 1, stress_level: 2, mood: 'excellent', notes: '', created_at: '2026-01-02T07:30:00Z' },
+        { id: 'w1', player_id: 'p1', date: '2026-01-07', sleep_hours: 8, sleep_quality: 4, energy_level: 8, muscle_soreness: 2, stress_level: 3, mood: 'good', notes: 'Feeling great after rest day', created_at: '2026-01-07T07:30:00Z' },
+        { id: 'w2', player_id: 'p1', date: '2026-01-06', sleep_hours: 7, sleep_quality: 3, energy_level: 6, muscle_soreness: 5, stress_level: 4, mood: 'tired', notes: 'Legs heavy from yesterday', created_at: '2026-01-06T07:30:00Z' },
+        { id: 'w3', player_id: 'p2', date: '2026-01-07', sleep_hours: 9, sleep_quality: 5, energy_level: 9, muscle_soreness: 1, stress_level: 2, mood: 'excellent', notes: '', created_at: '2026-01-07T07:30:00Z' },
+        { id: 'w4', player_id: 'p8', date: '2026-01-07', sleep_hours: 7.5, sleep_quality: 4, energy_level: 7, muscle_soreness: 3, stress_level: 3, mood: 'good', notes: 'Ready for training', created_at: '2026-01-07T07:15:00Z' },
+        { id: 'w5', player_id: 'p15', date: '2026-01-07', sleep_hours: 8.5, sleep_quality: 5, energy_level: 8, muscle_soreness: 2, stress_level: 2, mood: 'excellent', notes: '', created_at: '2026-01-07T07:45:00Z' },
     ],
     trainingLoads: [
         { id: 'tl1', player_id: 'p1', date: '2026-01-06', session_type: 'team_training', duration: 120, rpe: 7, load_score: 840, notes: 'High intensity tactical session', created_at: '2026-01-06T11:30:00Z' },
@@ -121,7 +154,7 @@ export const demoData = {
         { id: 'tl5', player_id: 'p1', date: '2026-01-05', session_type: 'match', duration: 90, rpe: 9, load_score: 810, notes: 'GSA League vs Bayern Munich Academy', created_at: '2026-01-05T16:00:00Z' },
     ],
     injuries: [
-        { id: 'inj1', player_id: 'p3', injury_type: 'Hamstring Strain', severity: 'minor', date_occurred: '2024-12-28', expected_return: '2026-01-06', status: 'recovering', treatment_plan: 'Physio 3x/week, light jogging', notes: 'Grade 1 strain, progressing well' },
+        { id: 'inj1', player_id: 'p10', injury_type: 'Ankle Sprain', severity: 'minor', date_occurred: '2026-01-02', expected_return: '2026-01-12', status: 'recovering', treatment_plan: 'Physio 3x/week, ice and rest', notes: 'Grade 1 sprain, progressing well' },
     ],
     // Phase 1: Pathway & Recruitment Data
     collegeTargets: [
@@ -182,6 +215,110 @@ export const demoData = {
         { id: 'mw2', player_id: 'p1', date: '2026-01-01', confidence_level: 7, focus_quality: 6, anxiety_level: 4, motivation_level: 7, social_connection: 7, overall_mood: 'good', notes: '', created_at: '2026-01-01T07:30:00Z' },
         { id: 'mw3', player_id: 'p1', date: '2024-12-31', confidence_level: 6, focus_quality: 5, anxiety_level: 5, motivation_level: 6, social_connection: 6, overall_mood: 'okay', notes: 'Year-end reflection', created_at: '2024-12-31T07:30:00Z' },
         { id: 'mw4', player_id: 'p2', date: '2026-01-02', confidence_level: 9, focus_quality: 8, anxiety_level: 2, motivation_level: 9, social_connection: 9, overall_mood: 'excellent', notes: 'Great start to the year', created_at: '2026-01-02T07:30:00Z' },
+    ],
+    // Body Composition Data
+    bodyComposition: [
+        { id: 'bc1', player_id: 'p1', measurement_date: '2024-12-01', height_cm: 183, weight_kg: 75.5, body_fat_percent: 11.2, muscle_mass_kg: 35.8, bmi: 22.5, notes: 'Good athletic build', created_at: '2024-12-01T10:00:00Z' },
+        { id: 'bc2', player_id: 'p1', measurement_date: '2024-09-01', height_cm: 182, weight_kg: 73.0, body_fat_percent: 12.5, muscle_mass_kg: 33.5, bmi: 22.0, notes: 'Start of program', created_at: '2024-09-01T10:00:00Z' },
+        { id: 'bc3', player_id: 'p2', measurement_date: '2024-12-01', height_cm: 178, weight_kg: 72.0, body_fat_percent: 10.8, muscle_mass_kg: 34.2, bmi: 22.7, notes: 'Excellent composition', created_at: '2024-12-01T10:00:00Z' },
+        { id: 'bc4', player_id: 'p2', measurement_date: '2024-09-01', height_cm: 177, weight_kg: 70.5, body_fat_percent: 11.5, muscle_mass_kg: 32.8, bmi: 22.5, notes: 'Start of program', created_at: '2024-09-01T10:00:00Z' },
+    ],
+    // Player Evaluations (Technical, Tactical, Physical, Mental)
+    playerEvaluations: [
+        {
+            id: 'ev1',
+            player_id: 'p1',
+            evaluation_date: '2024-12-15',
+            evaluation_type: 'quarterly',
+            evaluator_id: 'staff-1',
+            // Technical Scores (1-10)
+            technical_first_touch: 7,
+            technical_passing: 8,
+            technical_dribbling: 6,
+            technical_shooting: 7,
+            technical_heading: 6,
+            technical_crossing: 7,
+            technical_notes: 'Strong passing vision, continues to develop 1v1 skills. First touch under pressure improving.',
+            // Tactical Scores
+            tactical_positioning: 7,
+            tactical_game_reading: 8,
+            tactical_decision_making: 7,
+            tactical_communication: 6,
+            tactical_pressing: 7,
+            tactical_notes: 'Excellent understanding of space. Needs to be more vocal with teammates.',
+            // Physical Scores
+            physical_speed: 8,
+            physical_endurance: 7,
+            physical_strength: 6,
+            physical_agility: 7,
+            physical_balance: 7,
+            physical_notes: 'Great acceleration. Building strength in gym program. Good recovery patterns.',
+            // Mental Scores
+            mental_focus: 8,
+            mental_composure: 7,
+            mental_leadership: 6,
+            mental_work_rate: 8,
+            mental_coachability: 9,
+            mental_notes: 'Highly coachable, accepts feedback well. Growing into leadership role.',
+            // Overall Assessment
+            overall_rating: 7.5,
+            development_stage: 'developing',
+            key_strengths: 'Passing range, game intelligence, work ethic, speed',
+            areas_for_improvement: 'Physical strength, 1v1 defending, vocal leadership',
+            short_term_goals: 'Improve body strength by 10%, work on defensive duels',
+            long_term_potential: 'High D1 prospect with potential for professional pathway',
+            created_at: '2024-12-15T14:00:00Z'
+        },
+        {
+            id: 'ev2',
+            player_id: 'p2',
+            evaluation_date: '2024-12-15',
+            evaluation_type: 'quarterly',
+            evaluator_id: 'staff-1',
+            technical_first_touch: 8,
+            technical_passing: 7,
+            technical_dribbling: 8,
+            technical_shooting: 8,
+            technical_heading: 5,
+            technical_crossing: 6,
+            technical_notes: 'Excellent close control and finishing ability. Developing crossing technique.',
+            tactical_positioning: 7,
+            tactical_game_reading: 7,
+            tactical_decision_making: 6,
+            tactical_communication: 7,
+            tactical_pressing: 8,
+            tactical_notes: 'Good pressing instincts. Can improve decision-making in final third.',
+            physical_speed: 9,
+            physical_endurance: 7,
+            physical_strength: 6,
+            physical_agility: 8,
+            physical_balance: 7,
+            physical_notes: 'Elite speed. Continue building core strength for body challenges.',
+            mental_focus: 7,
+            mental_composure: 7,
+            mental_leadership: 7,
+            mental_work_rate: 9,
+            mental_coachability: 8,
+            mental_notes: 'Outstanding work rate. Maintains composure under pressure.',
+            overall_rating: 7.8,
+            development_stage: 'advanced',
+            key_strengths: 'Pace, finishing, work rate, dribbling',
+            areas_for_improvement: 'Heading, decision-making in tight spaces, body strength',
+            short_term_goals: 'Improve aerial ability, refine final ball decision',
+            long_term_potential: 'Top D1 program with pathway to MLS consideration',
+            created_at: '2024-12-15T15:00:00Z'
+        },
+    ],
+    // Tryout Reports
+    tryoutReports: [
+        { id: 'tr1', player_id: 'p1', tryout_date: '2024-11-20', organization: 'FC Köln U19', tryout_type: 'internal', duration_days: 1, result: 'positive', feedback: 'Showed composure on the ball, good decision-making. Invited to train with U19 again.', next_steps: 'Follow-up session scheduled for January', created_at: '2024-11-21T10:00:00Z' },
+        { id: 'tr2', player_id: 'p2', tryout_date: '2024-10-15', organization: 'Wake Forest University', tryout_type: 'college_visit', duration_days: 3, result: 'offer', feedback: 'Impressed coaching staff with pace and finishing. Fit well with team style.', next_steps: 'Full scholarship offered, decision pending', created_at: '2024-10-18T10:00:00Z' },
+    ],
+    // Media Links for players
+    playerMedia: [
+        { id: 'pm1', player_id: 'p1', media_type: 'highlight_reel', title: 'Fall 2024 Highlights', url: 'https://veo.co/highlights/p1-fall-2024', thumbnail_url: null, created_at: '2024-12-20T10:00:00Z' },
+        { id: 'pm2', player_id: 'p1', media_type: 'match_footage', title: 'vs Bayern Munich Academy', url: 'https://veo.co/match/gsa-bayern-dec2024', thumbnail_url: null, match_date: '2024-12-18', created_at: '2024-12-19T10:00:00Z' },
+        { id: 'pm3', player_id: 'p2', media_type: 'highlight_reel', title: '2024 Season Best Goals', url: 'https://veo.co/highlights/p2-goals-2024', thumbnail_url: null, created_at: '2024-12-22T10:00:00Z' },
     ],
 }
 

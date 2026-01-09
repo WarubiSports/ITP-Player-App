@@ -15,12 +15,16 @@ const navItems = [
     { path: '/parent-portal', icon: '👨‍👩‍👧', label: 'Parent Portal' },
 ]
 
+const staffItems = [
+    { path: '/reports', icon: '📄', label: 'Player Reports' },
+]
+
 const adminItems = [
     { path: '/admin', icon: '⚙️', label: 'Admin' },
 ]
 
 export default function Sidebar() {
-    const { profile, signOut, isAdmin, isDemoMode } = useAuth()
+    const { profile, signOut, isAdmin, isStaff, isDemoMode } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
@@ -92,6 +96,23 @@ export default function Sidebar() {
                         </NavLink>
                     ))}
                 </div>
+
+                {isStaff && (
+                    <div className="nav-section">
+                        <span className="nav-section-title">Staff Tools</span>
+                        {staffItems.map(item => (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                onClick={closeSidebar}
+                            >
+                                <span className="nav-icon">{item.icon}</span>
+                                <span className="nav-label">{item.label}</span>
+                            </NavLink>
+                        ))}
+                    </div>
+                )}
 
                 {isAdmin && (
                     <div className="nav-section">
