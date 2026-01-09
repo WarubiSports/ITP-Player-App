@@ -1,5 +1,7 @@
 // Country to flag emoji mapping
 export const getCountryFlag = (country) => {
+    if (!country) return '🌍'
+
     const flags = {
         'Germany': '🇩🇪',
         'Austria': '🇦🇹',
@@ -57,6 +59,43 @@ export const getCountryFlag = (country) => {
         'Bosnia': '🇧🇦',
         'Bulgaria': '🇧🇬',
         'Slovenia': '🇸🇮',
+        // Additional countries for ITP players
+        'UK': '🇬🇧',
+        'United Kingdom': '🇬🇧',
+        'India': '🇮🇳',
+        'Peru': '🇵🇪',
+        'Rwanda': '🇷🇼',
+        'Uzbekistan': '🇺🇿',
+        'Thailand': '🇹🇭',
+        'China': '🇨🇳',
+        'Philippines': '🇵🇭',
+        'Vietnam': '🇻🇳',
+        'Indonesia': '🇮🇩',
+        'Malaysia': '🇲🇾',
+        'Singapore': '🇸🇬',
+        'Pakistan': '🇵🇰',
+        'Bangladesh': '🇧🇩',
+        'Sri Lanka': '🇱🇰',
+        'Nepal': '🇳🇵',
+        'Ecuador': '🇪🇨',
+        'Venezuela': '🇻🇪',
+        'Paraguay': '🇵🇾',
+        'Bolivia': '🇧🇴',
+        'Costa Rica': '🇨🇷',
+        'Panama': '🇵🇦',
+        'Honduras': '🇭🇳',
+        'Guatemala': '🇬🇹',
+        'Jamaica': '🇯🇲',
+        'Trinidad': '🇹🇹',
+        'Haiti': '🇭🇹',
+        'Dominican Republic': '🇩🇴',
+        'Puerto Rico': '🇵🇷',
+    }
+
+    // Handle dual nationalities (e.g., "USA/Thailand")
+    if (country.includes('/')) {
+        const countries = country.split('/')
+        return countries.map(c => flags[c.trim()] || '🌍').join('')
     }
 
     return flags[country] || '🌍'
