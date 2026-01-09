@@ -159,6 +159,11 @@ export default function GroceryOrder() {
     }
 
     const submitOrder = async () => {
+        if (!profile?.player_id) {
+            showMessage('Your account is not linked to a player profile. Contact staff for help.', 'error')
+            return
+        }
+
         if (!deliveryDate) {
             showMessage('Please select a delivery date', 'error')
             return
@@ -177,7 +182,7 @@ export default function GroceryOrder() {
         setSubmitting(true)
         try {
             await createGroceryOrder({
-                playerId: profile?.id,
+                playerId: profile?.player_id,
                 deliveryDate,
                 items: cart.map(item => ({
                     itemId: item.itemId,

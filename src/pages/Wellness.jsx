@@ -34,7 +34,7 @@ export default function Wellness() {
     }, [profile])
 
     const loadData = async () => {
-        const playerId = profile?.id || 'p1'
+        const playerId = profile?.player_id || profile?.id || 'p1'
         try {
             const [wellness, training, injury] = await Promise.all([
                 getWellnessLogs(playerId),
@@ -86,7 +86,7 @@ export default function Wellness() {
         e.preventDefault()
         const form = e.target
         const newLog = {
-            player_id: profile?.id || 'p1',
+            player_id: profile?.player_id || profile?.id || 'p1',
             date: selectedDate,
             sleep_hours: parseFloat(form.sleepHours.value),
             sleep_quality: parseInt(form.sleepQuality.value),
@@ -122,7 +122,7 @@ export default function Wellness() {
         const duration = parseInt(form.duration.value)
         const rpe = parseInt(form.rpe.value)
         const newLoad = {
-            player_id: profile?.id || 'p1',
+            player_id: profile?.player_id || profile?.id || 'p1',
             date: selectedDate,
             session_type: form.sessionType.value,
             duration,
@@ -419,12 +419,11 @@ export default function Wellness() {
                                 <div className="input-group">
                                     <label className="input-label">Session Type</label>
                                     <select name="sessionType" className="input" required>
-                                        <option value="team_training">Team Training</option>
-                                        <option value="gym_explosiveness">Gym - Explosiveness</option>
-                                        <option value="gym_hypertrophy">Gym - Hypertrophy</option>
-                                        <option value="match">GSA League Match</option>
+                                        <option value="training">Team Training</option>
+                                        <option value="gym">Gym Session</option>
+                                        <option value="match">Match</option>
                                         <option value="recovery">Recovery</option>
-                                        <option value="individual">Individual Training</option>
+                                        <option value="other">Other</option>
                                     </select>
                                 </div>
 

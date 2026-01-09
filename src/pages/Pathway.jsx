@@ -27,7 +27,7 @@ export default function Pathway() {
     const loadData = async () => {
         try {
             setLoading(true)
-            const playerId = profile?.id || 'p1'
+            const playerId = profile?.player_id || profile?.id || 'p1'
 
             const [targets, academic, performance] = await Promise.all([
                 getCollegeTargets(playerId),
@@ -61,7 +61,7 @@ export default function Pathway() {
         setSaving(true)
         try {
             const newTarget = {
-                player_id: profile?.id || 'p1',
+                player_id: profile?.player_id || profile?.id || 'p1',
                 type,
                 college_name: form.name.value,
                 name: form.name.value,
@@ -107,7 +107,7 @@ export default function Pathway() {
         setSaving(true)
         try {
             const newCourse = {
-                player_id: profile?.id || 'p1',
+                player_id: profile?.player_id || profile?.id || 'p1',
                 course_name: form.courseName.value,
                 category: form.category.value,
                 semester: form.semester.value,

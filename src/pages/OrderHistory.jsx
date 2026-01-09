@@ -24,14 +24,14 @@ export default function OrderHistory() {
     const [message, setMessage] = useState(null)
 
     useEffect(() => {
-        if (profile?.id) {
+        if (profile?.player_id || profile?.id) {
             loadOrders()
         }
-    }, [profile?.id])
+    }, [profile?.player_id, profile?.id])
 
     const loadOrders = async () => {
         try {
-            const data = await getGroceryOrders(profile?.id)
+            const data = await getGroceryOrders(profile?.player_id || profile?.id)
             setOrders(data)
         } catch (error) {
             console.error('Failed to load orders:', error)
@@ -98,7 +98,10 @@ export default function OrderHistory() {
     }
 
     const formatDate = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-GB', {
+        // Parse date string as local date (not UTC) to avoid timezone shifts
+        const [year, month, day] = dateStr.split('-').map(Number)
+        const date = new Date(year, month - 1, day)
+        return date.toLocaleDateString('en-GB', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -107,7 +110,8 @@ export default function OrderHistory() {
     }
 
     const formatShortDate = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-GB')
+        const [year, month, day] = dateStr.split('-').map(Number)
+        return new Date(year, month - 1, day).toLocaleDateString('en-GB')
     }
 
     if (loading) {

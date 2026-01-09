@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+// v2 - Added player_id to profile
 import { supabase, checkIsDemoMode, demoData } from '../lib/supabase'
 
 const AuthContext = createContext({})
@@ -46,12 +47,31 @@ export function AuthProvider({ children }) {
     }, [])
 
     const fetchProfile = async (userId) => {
-        const { data } = await supabase
+        const { data: profileData } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single()
-        setProfile(data)
+
+        // Also fetch the linked player record to get player_id
+        const { data: playerData } = await supabase
+            .from('players')
+            .select('id, first_name, last_name, photo_url')
+            .eq('user_id', userId)
+            .single()
+
+        // Merge player info into profile
+        const mergedProfile = {
+            ...profileData,
+            player_id: playerData?.id || null,
+            // Use player photo if available
+            photo_url: playerData?.photo_url || profileData?.photo_url,
+            // Use player name if profile name is missing
+            first_name: profileData?.first_name || playerData?.first_name,
+            last_name: profileData?.last_name || playerData?.last_name,
+        }
+
+        setProfile(mergedProfile)
     }
 
     const signIn = async (email, password) => {
