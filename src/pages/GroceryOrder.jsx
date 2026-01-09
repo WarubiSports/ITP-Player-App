@@ -36,11 +36,6 @@ export default function GroceryOrder() {
 
     useEffect(() => {
         loadData()
-        // Load cart from localStorage
-        const savedCart = localStorage.getItem('grocery_cart')
-        if (savedCart) {
-            setCart(JSON.parse(savedCart))
-        }
         const savedDate = localStorage.getItem('grocery_delivery_date')
         if (savedDate) {
             setDeliveryDate(savedDate)
@@ -55,6 +50,22 @@ export default function GroceryOrder() {
             ])
             setItems(itemsData)
             setDeliveryDates(dates)
+
+            // Validate and clean cart - remove items that don't exist in current grocery items
+            // This handles switching between demo mode and real data
+            const savedCart = localStorage.getItem('grocery_cart')
+            if (savedCart) {
+                const parsedCart = JSON.parse(savedCart)
+                const validItemIds = new Set(itemsData.map(i => i.id))
+                const validCart = parsedCart.filter(cartItem => validItemIds.has(cartItem.itemId))
+
+                // If cart was cleaned (had invalid items), update localStorage
+                if (validCart.length !== parsedCart.length) {
+                    localStorage.setItem('grocery_cart', JSON.stringify(validCart))
+                    console.log(`Cleaned cart: removed ${parsedCart.length - validCart.length} invalid items`)
+                }
+                setCart(validCart)
+            }
 
             // Auto-select first valid delivery date
             const firstValid = dates.find(d => !d.expired)
