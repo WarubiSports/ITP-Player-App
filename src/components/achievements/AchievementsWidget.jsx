@@ -43,7 +43,7 @@ export default function AchievementsWidget({ playerId, showAll = false, onAchiev
 
     if (loading) {
         return (
-            <div className="achievements-widget achievements-widget--loading">
+            <div className="glass-panel achievements-widget achievements-widget--loading">
                 <h3 className="achievements-widget__title">Achievements</h3>
                 <p className="achievements-widget__loading">Loading achievements...</p>
             </div>
@@ -73,7 +73,7 @@ export default function AchievementsWidget({ playerId, showAll = false, onAchiev
                 />
             )}
 
-            <div className="achievements-widget">
+            <div className="glass-panel achievements-widget">
                 <div className="achievements-widget__header">
                     <h3 className="achievements-widget__title">
                         Achievements

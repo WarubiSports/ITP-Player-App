@@ -70,6 +70,7 @@ export function NotificationProvider({ children }) {
         <NotificationContext.Provider value={{
             notifications,
             addNotification,
+            showNotification: addNotification, // Alias for backwards compatibility
             removeNotification,
             success,
             error,

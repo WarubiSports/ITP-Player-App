@@ -11,10 +11,11 @@ export const checkIsDemoMode = () => {
     return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
 }
 
-// Check if we should use demo DATA (only when Supabase is not configured)
-// This allows demo login while still fetching real data from Supabase
+// Check if we should use demo DATA
+// True when: no Supabase URL configured OR user logged in via demo login
+// Demo users have non-UUID IDs that won't work with Supabase, so we must use local storage
 export const shouldUseDemoData = () => {
-    return !import.meta.env.VITE_SUPABASE_URL
+    return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
 }
 
 // For backwards compatibility - but prefer checkIsDemoMode() for runtime checks
