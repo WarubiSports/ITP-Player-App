@@ -3,6 +3,100 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import ThemeToggle from './ThemeToggle'
 
+// Simple Password Modal
+function PasswordModal({ isOpen, onClose, onSave }) {
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
+    const [loading, setLoading] = useState(false)
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError('')
+        setSuccess('')
+
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters')
+            return
+        }
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match')
+            return
+        }
+
+        setLoading(true)
+        const result = await onSave(password)
+        setLoading(false)
+
+        if (result.error) {
+            setError(result.error.message)
+        } else {
+            setSuccess(result.message)
+            setPassword('')
+            setConfirmPassword('')
+            setTimeout(() => onClose(), 1500)
+        }
+    }
+
+    if (!isOpen) return null
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content modal-sm" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h3>Set Password</h3>
+                    <button className="modal-close" onClick={onClose}>×</button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <p className="text-sm text-muted mb-4">
+                            Create a password so you can sign in without email link
+                        </p>
+
+                        {error && <div className="alert alert-error mb-4">{error}</div>}
+                        {success && <div className="alert alert-success mb-4">{success}</div>}
+
+                        <div className="input-group mb-3">
+                            <label className="input-label">New Password</label>
+                            <input
+                                type="password"
+                                className="input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter password"
+                                minLength={6}
+                                required
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label className="input-label">Confirm Password</label>
+                            <input
+                                type="password"
+                                className="input"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Confirm password"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-ghost" onClick={onClose}>
+                            Cancel
+                        </button>
+                        <button type="submit" className="btn btn-primary" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save Password'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
 const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/players', icon: '⚽', label: 'Players' },
@@ -24,10 +118,11 @@ const adminItems = [
 ]
 
 export default function Sidebar() {
-    const { profile, signOut, isAdmin, isStaff, isDemoMode } = useAuth()
+    const { profile, signOut, updatePassword, isAdmin, isStaff, isDemoMode } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
     const [isOpen, setIsOpen] = useState(false)
+    const [showPasswordModal, setShowPasswordModal] = useState(false)
 
     const handleSignOut = async () => {
         await signOut()
@@ -145,11 +240,28 @@ export default function Sidebar() {
                         <span className="user-name">{displayName}</span>
                         <span className="user-role">{profile?.role || 'User'}</span>
                     </div>
-                    <button className="btn-icon logout-btn" onClick={handleSignOut} title="Sign out">
-                        🚪
-                    </button>
+                    <div className="user-actions">
+                        {!isDemoMode && (
+                            <button
+                                className="btn-icon"
+                                onClick={() => setShowPasswordModal(true)}
+                                title="Set password"
+                            >
+                                🔑
+                            </button>
+                        )}
+                        <button className="btn-icon logout-btn" onClick={handleSignOut} title="Sign out">
+                            🚪
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <PasswordModal
+                isOpen={showPasswordModal}
+                onClose={() => setShowPasswordModal(false)}
+                onSave={updatePassword}
+            />
         </aside>
         </>
     )

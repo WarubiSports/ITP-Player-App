@@ -12,6 +12,7 @@ import GoalsWidget from '../components/goals/GoalsWidget'
 import StreakWidget from '../components/achievements/StreakWidget'
 import AchievementsWidget from '../components/achievements/AchievementsWidget'
 import NotificationPrompt from '../components/ui/NotificationPrompt'
+import PasswordSetupPrompt from '../components/ui/PasswordSetupPrompt'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -111,6 +112,9 @@ export default function Dashboard() {
                     <span className="status-text">ONLINE</span>
                 </div>
             </header>
+
+            {/* Password Setup Prompt (for first-time magic link users) */}
+            <PasswordSetupPrompt />
 
             {/* Notification Permission Prompt (only for players) */}
             {playerData && playerData.id && <NotificationPrompt />}
