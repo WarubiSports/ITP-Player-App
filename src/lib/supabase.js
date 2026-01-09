@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co').trim()
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key').trim()
 
 // Check if Supabase is properly configured (not using placeholder)
 const isSupabaseConfigured = Boolean(
@@ -10,13 +10,6 @@ const isSupabaseConfigured = Boolean(
     !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
 )
 
-// Debug logging
-console.log('[Supabase Config]', {
-    url: supabaseUrl,
-    hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
-    hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-    isConfigured: isSupabaseConfigured
-})
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
