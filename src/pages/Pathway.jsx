@@ -1,89 +1,133 @@
 import { useState, useEffect } from 'react'
-import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import {
+    getCollegeTargets,
+    createCollegeTarget,
+    getAcademicProgress,
+    createAcademicProgress,
+    getPerformanceTests
+} from '../lib/data-service'
 import './Pathway.css'
 
 export default function Pathway() {
-    const { profile, isStaff } = useAuth()
+    const { profile } = useAuth()
     const [recruitmentOpportunities, setRecruitmentOpportunities] = useState([])
     const [academicProgress, setAcademicProgress] = useState([])
     const [performanceTests, setPerformanceTests] = useState([])
     const [filter, setFilter] = useState('all')
     const [showRecruitmentForm, setShowRecruitmentForm] = useState(false)
     const [showAcademicForm, setShowAcademicForm] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
-        const playerId = profile?.id || 'p1'
-        // Combine college targets and scout activities into unified recruitment opportunities
-        const colleges = demoData.collegeTargets?.filter(c => c.player_id === playerId).map(c => ({
-            ...c,
-            type: 'college',
-            name: c.college_name,
-            league: c.division ? `${c.division} - ${c.conference}` : c.conference
-        })) || []
-
-        // Convert any professional scouts into club opportunities
-        const clubs = demoData.scoutActivities?.filter(s =>
-            s.player_id === playerId && s.scout_type === 'professional'
-        ).map(s => ({
-            id: s.id,
-            type: 'club',
-            name: s.organization,
-            location: 'Europe',
-            interest_level: s.rating === 'very_positive' ? 'hot' : s.rating === 'positive' ? 'warm' : 'cold',
-            status: 'in_contact',
-            contact_name: s.scout_name,
-            last_contact: s.date,
-            notes: s.notes
-        })) || []
-
-        setRecruitmentOpportunities([...colleges, ...clubs])
-        setAcademicProgress(demoData.academicProgress?.filter(a => a.player_id === playerId) || [])
-        setPerformanceTests(demoData.performanceTests?.filter(p => p.player_id === playerId) || [])
+        loadData()
     }, [profile])
 
-    const handleRecruitmentSubmit = (e) => {
+    const loadData = async () => {
+        try {
+            setLoading(true)
+            const playerId = profile?.id || 'p1'
+
+            const [targets, academic, performance] = await Promise.all([
+                getCollegeTargets(playerId),
+                getAcademicProgress(playerId),
+                getPerformanceTests(playerId)
+            ])
+
+            // Map college targets to unified recruitment format
+            const opportunities = targets.map(t => ({
+                ...t,
+                type: t.type || 'college',
+                name: t.college_name || t.name,
+                league: t.division ? `${t.division}${t.conference ? ' - ' + t.conference : ''}` : t.league
+            }))
+
+            setRecruitmentOpportunities(opportunities)
+            setAcademicProgress(academic)
+            setPerformanceTests(performance)
+        } catch (error) {
+            console.error('Error loading pathway data:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleRecruitmentSubmit = async (e) => {
         e.preventDefault()
         const form = e.target
         const type = form.type.value
 
-        const newOpportunity = {
-            id: `ro${Date.now()}`,
-            player_id: profile?.id || 'p1',
-            type,
-            name: form.name.value,
-            league: form.league.value,
-            location: form.location.value,
-            interest_level: form.interestLevel.value,
-            status: form.status.value,
-            contract_offer: type === 'club' && form.contractOffer?.value ? form.contractOffer.value : null,
-            scholarship_amount: type === 'college' && form.scholarshipAmount?.value ? parseInt(form.scholarshipAmount.value) : null,
-            contact_name: form.contactName.value || null,
-            contact_email: form.contactEmail.value || null,
-            last_contact: form.lastContact.value || null,
-            notes: form.notes.value
+        setSaving(true)
+        try {
+            const newTarget = {
+                player_id: profile?.id || 'p1',
+                type,
+                college_name: form.name.value,
+                name: form.name.value,
+                division: type === 'college' ? form.league.value.split(' - ')[0] : 'Professional',
+                conference: type === 'college' ? form.league.value.split(' - ')[1] || '' : form.league.value,
+                league: form.league.value,
+                location: form.location.value,
+                interest_level: form.interestLevel.value,
+                status: form.status.value,
+                scholarship_amount: type === 'college' && form.scholarshipAmount?.value ? parseInt(form.scholarshipAmount.value) : null,
+                contract_offer: type === 'club' && form.contractOffer?.value ? form.contractOffer.value : null,
+                contact_name: form.contactName.value || null,
+                contact_email: form.contactEmail.value || null,
+                last_contact: form.lastContact.value || null,
+                notes: form.notes.value || null
+            }
+
+            const saved = await createCollegeTarget(newTarget)
+
+            // Add to local state with proper formatting
+            const formattedOpp = {
+                ...saved,
+                type,
+                name: saved.college_name || saved.name,
+                league: saved.division ? `${saved.division}${saved.conference ? ' - ' + saved.conference : ''}` : saved.league
+            }
+
+            setRecruitmentOpportunities(prev => [formattedOpp, ...prev])
+            setShowRecruitmentForm(false)
+            form.reset()
+        } catch (error) {
+            console.error('Error saving recruitment opportunity:', error)
+            alert('Failed to save. Please try again.')
+        } finally {
+            setSaving(false)
         }
-        setRecruitmentOpportunities(prev => [newOpportunity, ...prev])
-        setShowRecruitmentForm(false)
     }
 
-    const handleAcademicSubmit = (e) => {
+    const handleAcademicSubmit = async (e) => {
         e.preventDefault()
         const form = e.target
-        const newCourse = {
-            id: `ap${Date.now()}`,
-            player_id: profile?.id || 'p1',
-            course_name: form.courseName.value,
-            category: form.category.value,
-            semester: form.semester.value,
-            credits: form.credits.value ? parseFloat(form.credits.value) : null,
-            grade: form.grade.value || null,
-            status: form.status.value,
-            transferable: form.transferable.checked,
-            notes: form.notes.value || null
+
+        setSaving(true)
+        try {
+            const newCourse = {
+                player_id: profile?.id || 'p1',
+                course_name: form.courseName.value,
+                category: form.category.value,
+                semester: form.semester.value,
+                credits: form.credits.value ? parseFloat(form.credits.value) : null,
+                grade: form.grade.value || null,
+                status: form.status.value,
+                transferable: form.transferable.checked,
+                notes: form.notes.value || null
+            }
+
+            const saved = await createAcademicProgress(newCourse)
+            setAcademicProgress(prev => [saved, ...prev])
+            setShowAcademicForm(false)
+            form.reset()
+        } catch (error) {
+            console.error('Error saving academic progress:', error)
+            alert('Failed to save. Please try again.')
+        } finally {
+            setSaving(false)
         }
-        setAcademicProgress(prev => [newCourse, ...prev])
-        setShowAcademicForm(false)
     }
 
     const getInterestColor = (level) => {
@@ -104,7 +148,7 @@ export default function Pathway() {
 
     const filteredRecruitment = recruitmentOpportunities.filter(opp => {
         if (filter === 'all') return true
-        if (filter === 'colleges') return opp.type === 'college'
+        if (filter === 'colleges') return opp.type === 'college' || !opp.type
         if (filter === 'clubs') return opp.type === 'club'
         if (filter === 'offers') return opp.status === 'offer_received' || opp.status === 'signed'
         if (filter === 'hot') return opp.interest_level === 'hot'
@@ -112,7 +156,7 @@ export default function Pathway() {
     })
 
     // Calculate stats
-    const collegeCount = recruitmentOpportunities.filter(o => o.type === 'college').length
+    const collegeCount = recruitmentOpportunities.filter(o => o.type === 'college' || !o.type).length
     const clubCount = recruitmentOpportunities.filter(o => o.type === 'club').length
     const offersCount = recruitmentOpportunities.filter(o => o.status === 'offer_received' || o.status === 'signed').length
     const hotCount = recruitmentOpportunities.filter(o => o.interest_level === 'hot').length
@@ -135,6 +179,17 @@ export default function Pathway() {
         const latest = tests[tests.length - 1].result
         const improvement = ((first - latest) / first * 100).toFixed(1)
         return { first, latest, improvement }
+    }
+
+    if (loading) {
+        return (
+            <div className="pathway-page">
+                <div className="loading-state" style={{ padding: '4rem', textAlign: 'center' }}>
+                    <div className="spinner spinner-lg"></div>
+                    <p style={{ marginTop: '1rem' }}>Loading pathway data...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -220,15 +275,15 @@ export default function Pathway() {
                         <div key={opp.id} className="college-card glass-card-static">
                             <div className="college-header">
                                 <h4 className="college-name">
-                                    {opp.type === 'college' ? '🎓 ' : '⚽ '}
-                                    {opp.name}
+                                    {opp.type === 'club' ? '⚽ ' : '🎓 '}
+                                    {opp.name || opp.college_name}
                                 </h4>
                                 <div className="college-badges">
                                     <span className={`badge badge-${getInterestColor(opp.interest_level)}`}>
                                         {opp.interest_level}
                                     </span>
                                     <span className={`badge badge-${getStatusColor(opp.status)}`}>
-                                        {opp.status.replace('_', ' ')}
+                                        {opp.status?.replace('_', ' ')}
                                     </span>
                                 </div>
                             </div>
@@ -295,13 +350,18 @@ export default function Pathway() {
                                 </div>
                             </div>
                             <div className="course-details">
-                                <span>{course.category.replace('_', ' ')} • {course.semester}</span>
+                                <span>{course.category?.replace('_', ' ')} • {course.semester}</span>
                                 {course.credits && <span>{course.credits} credits</span>}
                                 {course.transferable && <span className="transferable">✓ NCAA Transferable</span>}
                             </div>
                             {course.notes && <p className="course-notes">{course.notes}</p>}
                         </div>
                     ))}
+                    {academicProgress.length === 0 && (
+                        <div className="empty-state">
+                            <p>No courses added yet. Add your first course to track academic progress!</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -340,11 +400,11 @@ export default function Pathway() {
 
             {/* Recruitment Form Modal */}
             {showRecruitmentForm && (
-                <div className="modal-overlay" onClick={() => setShowRecruitmentForm(false)}>
+                <div className="modal-overlay" onClick={() => !saving && setShowRecruitmentForm(false)}>
                     <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3 className="modal-title">Add Recruitment Opportunity</h3>
-                            <button className="modal-close" onClick={() => setShowRecruitmentForm(false)}>×</button>
+                            <button className="modal-close" onClick={() => !saving && setShowRecruitmentForm(false)} disabled={saving}>×</button>
                         </div>
                         <form onSubmit={handleRecruitmentSubmit}>
                             <div className="modal-body">
@@ -426,8 +486,10 @@ export default function Pathway() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowRecruitmentForm(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Add Opportunity</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowRecruitmentForm(false)} disabled={saving}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>
+                                    {saving ? 'Saving...' : 'Add Opportunity'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -436,11 +498,11 @@ export default function Pathway() {
 
             {/* Academic Course Form Modal */}
             {showAcademicForm && (
-                <div className="modal-overlay" onClick={() => setShowAcademicForm(false)}>
+                <div className="modal-overlay" onClick={() => !saving && setShowAcademicForm(false)}>
                     <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3 className="modal-title">Add Academic Course</h3>
-                            <button className="modal-close" onClick={() => setShowAcademicForm(false)}>×</button>
+                            <button className="modal-close" onClick={() => !saving && setShowAcademicForm(false)} disabled={saving}>×</button>
                         </div>
                         <form onSubmit={handleAcademicSubmit}>
                             <div className="modal-body">
@@ -509,8 +571,10 @@ export default function Pathway() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowAcademicForm(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Add Course</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAcademicForm(false)} disabled={saving}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>
+                                    {saving ? 'Saving...' : 'Add Course'}
+                                </button>
                             </div>
                         </form>
                     </div>
