@@ -56,9 +56,10 @@ export default function Wellness() {
 
         const sortedDates = [...new Set(logs.map(l => l.date))].sort().reverse()
         const today = getLocalDate()
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
+        // Calculate yesterday using the same timezone-aware approach
+        const yesterdayDate = new Date()
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+        const yesterdayStr = yesterdayDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
 
         // Check if most recent log is today or yesterday
         if (sortedDates[0] !== today && sortedDates[0] !== yesterdayStr) {
@@ -219,10 +220,10 @@ export default function Wellness() {
 
             {/* Quick Actions */}
             <div className="quick-actions">
-                <button className="btn btn-primary" onClick={() => setShowWellnessForm(true)}>
+                <button className="btn btn-primary" onClick={() => { setSelectedDate(getLocalDate()); setShowWellnessForm(true); }}>
                     + Log Wellness Check-in
                 </button>
-                <button className="btn btn-secondary" onClick={() => setShowTrainingForm(true)}>
+                <button className="btn btn-secondary" onClick={() => { setSelectedDate(getLocalDate()); setShowTrainingForm(true); }}>
                     + Log Training Session
                 </button>
             </div>

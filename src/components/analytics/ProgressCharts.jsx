@@ -5,7 +5,7 @@ import {
     getPerformanceTests,
     getAcademicProgress
 } from '../../lib/data-service'
-import { formatDateForDisplay, getDateDaysAgo } from '../../lib/date-utils'
+import { formatDateForDisplay, getDateDaysAgo, getLocalDate } from '../../lib/date-utils'
 import './ProgressCharts.css'
 
 // Helper to parse date string correctly (avoids timezone issues)
@@ -343,10 +343,11 @@ export default function ProgressCharts({ playerId }) {
             )
         }
 
-        // Separate recent (last 7 days) from archived logs
+        // Separate recent (last 7 days) from archived logs, excluding future dates
         const sevenDaysAgo = getDateDaysAgo(7)
-        const recentLogs = allLogs.filter(log => log.date >= sevenDaysAgo)
-        const archivedLogs = allLogs.filter(log => log.date < sevenDaysAgo)
+        const today = getLocalDate()
+        const recentLogs = allLogs.filter(log => log.date >= sevenDaysAgo && log.date <= today)
+        const archivedLogs = allLogs.filter(log => log.date < sevenDaysAgo && log.date <= today)
 
         // Group logs by date
         const groupByDate = (logs) => {

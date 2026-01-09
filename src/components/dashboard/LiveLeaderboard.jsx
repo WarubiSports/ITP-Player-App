@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getHouses } from '../../lib/data-service';
+
+const HOUSE_COLORS = {
+    'Widdersdorf 1': '#E30613',
+    'Widdersdorf 2': '#00E5FF',
+    'Widdersdorf 3': '#FFD700',
+};
 
 export default function LiveLeaderboard() {
-    const leaders = [
-        { name: 'Widdersdorf 1', points: 1250, color: '#E30613' },
-        { name: 'Widdersdorf 2', points: 1100, color: '#00E5FF' },
-        { name: 'Widdersdorf 3', points: 950, color: '#FFD700' },
-    ];
+    const [leaders, setLeaders] = useState([]);
+
+    useEffect(() => {
+        const loadHouses = async () => {
+            try {
+                const houses = await getHouses();
+                // Sort by points descending and add colors
+                const sorted = houses
+                    .sort((a, b) => b.total_points - a.total_points)
+                    .map(house => ({
+                        name: house.name,
+                        points: house.total_points,
+                        color: HOUSE_COLORS[house.name] || '#888888'
+                    }));
+                setLeaders(sorted);
+            } catch (error) {
+                console.error('Error loading houses:', error);
+            }
+        };
+        loadHouses();
+    }, []);
 
     return (
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
@@ -38,7 +61,7 @@ export default function LiveLeaderboard() {
                             </div>
                             <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}>
                                 <div style={{
-                                    width: `${(house.points / 1500) * 100}%`,
+                                    width: `${leaders.length > 0 ? (house.points / (leaders[0].points * 1.2)) * 100 : 0}%`,
                                     height: '100%',
                                     background: house.color,
                                     borderRadius: '2px',

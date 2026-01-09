@@ -116,9 +116,9 @@ export const demoData = {
     trainingLoads: [
         { id: 'tl1', player_id: 'p1', date: '2026-01-06', session_type: 'team_training', duration: 120, rpe: 7, load_score: 840, notes: 'High intensity tactical session', created_at: '2026-01-06T11:30:00Z' },
         { id: 'tl2', player_id: 'p1', date: '2026-01-08', session_type: 'gym_explosiveness', duration: 90, rpe: 8, load_score: 720, notes: 'Focus on speed and power', created_at: '2026-01-08T15:30:00Z' },
-        { id: 'tl3', player_id: 'p1', date: '2026-01-10', session_type: 'gym_hypertrophy', duration: 75, rpe: 7, load_score: 525, notes: 'Strength building', created_at: '2026-01-10T15:30:00Z' },
+        { id: 'tl3', player_id: 'p1', date: '2026-01-04', session_type: 'gym_hypertrophy', duration: 75, rpe: 7, load_score: 525, notes: 'Strength building', created_at: '2026-01-04T15:30:00Z' },
         { id: 'tl4', player_id: 'p2', date: '2026-01-06', session_type: 'team_training', duration: 120, rpe: 6, load_score: 720, notes: 'Technical drills', created_at: '2026-01-06T11:30:00Z' },
-        { id: 'tl5', player_id: 'p1', date: '2026-01-11', session_type: 'match', duration: 90, rpe: 9, load_score: 810, notes: 'GSA League vs Bayern Munich Academy', created_at: '2026-01-11T16:00:00Z' },
+        { id: 'tl5', player_id: 'p1', date: '2026-01-05', session_type: 'match', duration: 90, rpe: 9, load_score: 810, notes: 'GSA League vs Bayern Munich Academy', created_at: '2026-01-05T16:00:00Z' },
     ],
     injuries: [
         { id: 'inj1', player_id: 'p3', injury_type: 'Hamstring Strain', severity: 'minor', date_occurred: '2024-12-28', expected_return: '2026-01-06', status: 'recovering', treatment_plan: 'Physio 3x/week, light jogging', notes: 'Grade 1 strain, progressing well' },

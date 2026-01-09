@@ -1325,6 +1325,11 @@ export const getDeliveryDates = () => {
     const dates = []
     const today = new Date()
 
+    // Format date to YYYY-MM-DD in Berlin timezone (avoids UTC conversion issues)
+    const formatDateBerlin = (d) => {
+        return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+    }
+
     // Generate next 4 Tuesday and Friday dates
     for (let i = 0; i < 30 && dates.length < 4; i++) {
         const date = new Date(today)
@@ -1332,7 +1337,7 @@ export const getDeliveryDates = () => {
         const day = date.getDay()
 
         if (day === 2 || day === 5) { // Tuesday = 2, Friday = 5
-            const dateStr = date.toISOString().split('T')[0]
+            const dateStr = formatDateBerlin(date)
             const deadlinePassed = isDeadlinePassed(dateStr)
 
             dates.push({

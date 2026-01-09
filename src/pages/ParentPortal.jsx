@@ -11,7 +11,41 @@ import {
     getScoutActivities,
     getPerformanceTests
 } from '../lib/data-service'
+import { getLocalDate } from '../lib/date-utils'
 import './ParentPortal.css'
+
+// Calculate week range based on selected week type
+const getWeekRange = (weekType) => {
+    const today = new Date()
+    // Get today in CET
+    const cetDateStr = getLocalDate('Europe/Berlin')
+    const [year, month, day] = cetDateStr.split('-').map(Number)
+    const cetToday = new Date(year, month - 1, day)
+
+    // Get the Monday of the current week
+    const dayOfWeek = cetToday.getDay()
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const monday = new Date(cetToday)
+    monday.setDate(monday.getDate() - daysToMonday)
+
+    // Adjust based on selected week
+    if (weekType === 'last') {
+        monday.setDate(monday.getDate() - 7)
+    } else if (weekType === '2weeks') {
+        monday.setDate(monday.getDate() - 14)
+    }
+
+    // Get Sunday of that week
+    const sunday = new Date(monday)
+    sunday.setDate(sunday.getDate() + 6)
+
+    // Format the dates
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    }
+
+    return `Week of ${formatDate(monday)} - ${formatDate(sunday)}`
+}
 
 export default function ParentPortal() {
     const { profile } = useAuth()
@@ -117,7 +151,7 @@ export default function ParentPortal() {
         const offers = colleges.filter(c => c.status === 'offer_received')
 
         return {
-            period: 'Week of Dec 29, 2024 - Jan 5, 2025',
+            period: getWeekRange(selectedWeek),
             wellness: {
                 avgScore: avgWellness,
                 avgSleep,

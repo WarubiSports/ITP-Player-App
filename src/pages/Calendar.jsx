@@ -4,11 +4,21 @@ import { useAuth } from '../contexts/AuthContext'
 import { getLocalDate } from '../lib/date-utils'
 import './Calendar.css'
 
-// Get current date in CET timezone
-const getTodayInCET = () => {
-    const cetDateStr = getLocalDate('Europe/Berlin')
-    const [year, month, day] = cetDateStr.split('-').map(Number)
+// Get today's date string in CET timezone (YYYY-MM-DD)
+const getTodayDateStr = () => getLocalDate('Europe/Berlin')
+
+// Create a Date object from YYYY-MM-DD string (for calendar display only)
+const dateFromString = (dateStr) => {
+    const [year, month, day] = dateStr.split('-').map(Number)
     return new Date(year, month - 1, day)
+}
+
+// Format a Date object to YYYY-MM-DD string (without timezone conversion)
+const formatDateStr = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
 }
 
 // Format time for display - handles both ISO strings and simple time strings
@@ -30,8 +40,8 @@ export default function Calendar() {
     const [events, setEvents] = useState([])
     const [players, setPlayers] = useState([])
     const [currentPlayerId, setCurrentPlayerId] = useState(null)
-    const [currentDate, setCurrentDate] = useState(getTodayInCET())
-    const [selectedDate, setSelectedDate] = useState(getTodayInCET())
+    const [currentDate, setCurrentDate] = useState(dateFromString(getTodayDateStr()))
+    const [selectedDate, setSelectedDate] = useState(dateFromString(getTodayDateStr()))
     const [showModal, setShowModal] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [showRecurring, setShowRecurring] = useState(false)
@@ -127,7 +137,7 @@ export default function Calendar() {
 
     // Event utilities
     const getEventsForDate = (date) => {
-        const dateStr = date.toISOString().split('T')[0]
+        const dateStr = formatDateStr(date)
         return events.filter(e => e.date === dateStr)
     }
 
@@ -162,8 +172,7 @@ export default function Calendar() {
     }
 
     const isToday = (date) => {
-        const today = getTodayInCET()
-        return date.toDateString() === today.toDateString()
+        return formatDateStr(date) === getTodayDateStr()
     }
 
     const isSelected = (date) => {
@@ -180,7 +189,7 @@ export default function Calendar() {
     }
 
     const goToToday = () => {
-        const today = getTodayInCET()
+        const today = dateFromString(getTodayDateStr())
         setCurrentDate(today)
         setSelectedDate(today)
     }
@@ -507,7 +516,7 @@ export default function Calendar() {
                                             name="date"
                                             type="date"
                                             className="input"
-                                            defaultValue={selectedEvent?.date || selectedDate.toISOString().split('T')[0]}
+                                            defaultValue={selectedEvent?.date || formatDateStr(selectedDate)}
                                             required
                                         />
                                     </div>
@@ -696,7 +705,7 @@ export default function Calendar() {
                                                 name="recurrenceEndDate"
                                                 type="date"
                                                 className="input"
-                                                min={selectedDate.toISOString().split('T')[0]}
+                                                min={formatDateStr(selectedDate)}
                                                 required={showRecurring}
                                             />
                                         </div>
