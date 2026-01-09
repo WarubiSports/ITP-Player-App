@@ -37,7 +37,7 @@ export default function NotificationPrompt() {
             <div className="notification-prompt-icon">🔔</div>
             <div className="notification-prompt-content">
                 <h4>Enable Notifications</h4>
-                <p>Get reminders for your tasks and important updates</p>
+                <p>Get reminders for training, wellness check-ins, tasks, and goals</p>
             </div>
             <div className="notification-prompt-actions">
                 <button
