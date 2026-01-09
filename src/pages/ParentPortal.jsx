@@ -477,30 +477,6 @@ export default function ParentPortal() {
                     </div>
                 )}
 
-                {/* Summary Notes */}
-                <div className="glass-card report-section">
-                    <h3 className="section-title">📝 Coach's Notes</h3>
-                    <div className="coach-notes">
-                        <p>
-                            {selectedPlayer.first_name} has shown excellent commitment this week.
-                            {report.wellness.status === 'excellent'
-                                ? ' Wellness metrics are outstanding, showing great recovery and readiness.'
-                                : ' Continue monitoring wellness to optimize performance.'}
-                        </p>
-                        <p>
-                            Training load is {report.training.status} this week.
-                            {report.training.status === 'high'
-                                ? ' We\'re monitoring closely to prevent overtraining.'
-                                : ' Progressing well with technical and tactical development.'}
-                        </p>
-                        {report.recruitment.offers > 0 && (
-                            <p>
-                                Great news on the recruitment front - {report.recruitment.offers} scholarship offer{report.recruitment.offers > 1 ? 's' : ''} received!
-                                We're helping {selectedPlayer.first_name} evaluate options and make the best decision.
-                            </p>
-                        )}
-                    </div>
-                </div>
             </div>
 
             {/* Footer */}

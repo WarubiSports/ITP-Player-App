@@ -5,60 +5,85 @@ import './Pathway.css'
 
 export default function Pathway() {
     const { profile, isStaff } = useAuth()
-    const [collegeTargets, setCollegeTargets] = useState([])
-    const [scoutActivities, setScoutActivities] = useState([])
+    const [recruitmentOpportunities, setRecruitmentOpportunities] = useState([])
     const [academicProgress, setAcademicProgress] = useState([])
     const [performanceTests, setPerformanceTests] = useState([])
     const [filter, setFilter] = useState('all')
-    const [showCollegeForm, setShowCollegeForm] = useState(false)
-    const [showScoutForm, setShowScoutForm] = useState(false)
+    const [showRecruitmentForm, setShowRecruitmentForm] = useState(false)
+    const [showAcademicForm, setShowAcademicForm] = useState(false)
 
     useEffect(() => {
         const playerId = profile?.id || 'p1'
-        setCollegeTargets(demoData.collegeTargets.filter(c => c.player_id === playerId))
-        setScoutActivities(demoData.scoutActivities.filter(s => s.player_id === playerId))
-        setAcademicProgress(demoData.academicProgress.filter(a => a.player_id === playerId))
-        setPerformanceTests(demoData.performanceTests.filter(p => p.player_id === playerId))
+        // Combine college targets and scout activities into unified recruitment opportunities
+        const colleges = demoData.collegeTargets?.filter(c => c.player_id === playerId).map(c => ({
+            ...c,
+            type: 'college',
+            name: c.college_name,
+            league: c.division ? `${c.division} - ${c.conference}` : c.conference
+        })) || []
+
+        // Convert any professional scouts into club opportunities
+        const clubs = demoData.scoutActivities?.filter(s =>
+            s.player_id === playerId && s.scout_type === 'professional'
+        ).map(s => ({
+            id: s.id,
+            type: 'club',
+            name: s.organization,
+            location: 'Europe',
+            interest_level: s.rating === 'very_positive' ? 'hot' : s.rating === 'positive' ? 'warm' : 'cold',
+            status: 'in_contact',
+            contact_name: s.scout_name,
+            last_contact: s.date,
+            notes: s.notes
+        })) || []
+
+        setRecruitmentOpportunities([...colleges, ...clubs])
+        setAcademicProgress(demoData.academicProgress?.filter(a => a.player_id === playerId) || [])
+        setPerformanceTests(demoData.performanceTests?.filter(p => p.player_id === playerId) || [])
     }, [profile])
 
-    const handleCollegeSubmit = (e) => {
+    const handleRecruitmentSubmit = (e) => {
         e.preventDefault()
         const form = e.target
-        const newTarget = {
-            id: `ct${Date.now()}`,
+        const type = form.type.value
+
+        const newOpportunity = {
+            id: `ro${Date.now()}`,
             player_id: profile?.id || 'p1',
-            college_name: form.collegeName.value,
-            division: form.division.value,
-            conference: form.conference.value,
+            type,
+            name: form.name.value,
+            league: form.league.value,
             location: form.location.value,
             interest_level: form.interestLevel.value,
             status: form.status.value,
-            scholarship_amount: form.scholarshipAmount.value ? parseInt(form.scholarshipAmount.value) : null,
-            notes: form.notes.value,
+            contract_offer: type === 'club' && form.contractOffer?.value ? form.contractOffer.value : null,
+            scholarship_amount: type === 'college' && form.scholarshipAmount?.value ? parseInt(form.scholarshipAmount.value) : null,
             contact_name: form.contactName.value || null,
             contact_email: form.contactEmail.value || null,
-            last_contact: form.lastContact.value || null
+            last_contact: form.lastContact.value || null,
+            notes: form.notes.value
         }
-        setCollegeTargets(prev => [newTarget, ...prev])
-        setShowCollegeForm(false)
+        setRecruitmentOpportunities(prev => [newOpportunity, ...prev])
+        setShowRecruitmentForm(false)
     }
 
-    const handleScoutSubmit = (e) => {
+    const handleAcademicSubmit = (e) => {
         e.preventDefault()
         const form = e.target
-        const newActivity = {
-            id: `sa${Date.now()}`,
+        const newCourse = {
+            id: `ap${Date.now()}`,
             player_id: profile?.id || 'p1',
-            scout_type: form.scoutType.value,
-            organization: form.organization.value,
-            scout_name: form.scoutName.value,
-            date: form.date.value,
-            event: form.event.value,
-            notes: form.notes.value,
-            rating: form.rating.value
+            course_name: form.courseName.value,
+            category: form.category.value,
+            semester: form.semester.value,
+            credits: form.credits.value ? parseFloat(form.credits.value) : null,
+            grade: form.grade.value || null,
+            status: form.status.value,
+            transferable: form.transferable.checked,
+            notes: form.notes.value || null
         }
-        setScoutActivities(prev => [newActivity, ...prev])
-        setShowScoutForm(false)
+        setAcademicProgress(prev => [newCourse, ...prev])
+        setShowAcademicForm(false)
     }
 
     const getInterestColor = (level) => {
@@ -71,17 +96,26 @@ export default function Pathway() {
             offer_received: 'success',
             in_contact: 'warning',
             researching: 'info',
+            signed: 'success',
             declined: 'secondary'
         }
         return colors[status] || 'secondary'
     }
 
-    const filteredColleges = collegeTargets.filter(college => {
+    const filteredRecruitment = recruitmentOpportunities.filter(opp => {
         if (filter === 'all') return true
-        if (filter === 'offers') return college.status === 'offer_received'
-        if (filter === 'hot') return college.interest_level === 'hot'
+        if (filter === 'colleges') return opp.type === 'college'
+        if (filter === 'clubs') return opp.type === 'club'
+        if (filter === 'offers') return opp.status === 'offer_received' || opp.status === 'signed'
+        if (filter === 'hot') return opp.interest_level === 'hot'
         return true
     })
+
+    // Calculate stats
+    const collegeCount = recruitmentOpportunities.filter(o => o.type === 'college').length
+    const clubCount = recruitmentOpportunities.filter(o => o.type === 'club').length
+    const offersCount = recruitmentOpportunities.filter(o => o.status === 'offer_received' || o.status === 'signed').length
+    const hotCount = recruitmentOpportunities.filter(o => o.interest_level === 'hot').length
 
     // Calculate academic stats
     const totalCredits = academicProgress
@@ -110,21 +144,21 @@ export default function Pathway() {
                 <div className="glass-card-static overview-card">
                     <div className="overview-icon">🎯</div>
                     <div className="overview-content">
-                        <span className="overview-value">{collegeTargets.length}</span>
-                        <span className="overview-label">College Targets</span>
+                        <span className="overview-value">{recruitmentOpportunities.length}</span>
+                        <span className="overview-label">Active Recruitment</span>
                         <span className="overview-detail">
-                            {collegeTargets.filter(c => c.status === 'offer_received').length} offers
+                            {collegeCount} colleges, {clubCount} clubs
                         </span>
                     </div>
                 </div>
 
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">👀</div>
+                    <div className="overview-icon">🔥</div>
                     <div className="overview-content">
-                        <span className="overview-value">{scoutActivities.length}</span>
-                        <span className="overview-label">Scout Visits</span>
+                        <span className="overview-value">{hotCount}</span>
+                        <span className="overview-label">Hot Interest</span>
                         <span className="overview-detail">
-                            {scoutActivities.filter(s => s.rating === 'very_positive').length} very positive
+                            {offersCount} offers received
                         </span>
                     </div>
                 </div>
@@ -154,129 +188,100 @@ export default function Pathway() {
 
             {/* Quick Actions */}
             <div className="quick-actions">
-                <button className="btn btn-primary" onClick={() => setShowCollegeForm(true)}>
-                    + Add College Target
+                <button className="btn btn-primary" onClick={() => setShowRecruitmentForm(true)}>
+                    + Add Recruitment Opportunity
                 </button>
-                {isStaff && (
-                    <button className="btn btn-secondary" onClick={() => setShowScoutForm(true)}>
-                        + Log Scout Activity
-                    </button>
-                )}
             </div>
 
-            {/* College Recruitment Section */}
+            {/* Active Recruitment Section */}
             <div className="glass-card pathway-section">
                 <div className="section-header">
-                    <h3 className="section-title">🎓 College Recruitment Pipeline</h3>
+                    <h3 className="section-title">⚽ Active Recruitment</h3>
                     <div className="filter-tabs">
-                        {['all', 'offers', 'hot'].map(f => (
+                        {['all', 'colleges', 'clubs', 'offers', 'hot'].map(f => (
                             <button
                                 key={f}
                                 className={`filter-tab ${filter === f ? 'active' : ''}`}
                                 onClick={() => setFilter(f)}
                             >
                                 {f.charAt(0).toUpperCase() + f.slice(1)}
-                                {f === 'all' && ` (${collegeTargets.length})`}
-                                {f === 'offers' && ` (${collegeTargets.filter(c => c.status === 'offer_received').length})`}
-                                {f === 'hot' && ` (${collegeTargets.filter(c => c.interest_level === 'hot').length})`}
+                                {f === 'all' && ` (${recruitmentOpportunities.length})`}
+                                {f === 'colleges' && ` (${collegeCount})`}
+                                {f === 'clubs' && ` (${clubCount})`}
+                                {f === 'offers' && ` (${offersCount})`}
+                                {f === 'hot' && ` (${hotCount})`}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="colleges-grid">
-                    {filteredColleges.map(college => (
-                        <div key={college.id} className="college-card glass-card-static">
+                    {filteredRecruitment.map(opp => (
+                        <div key={opp.id} className="college-card glass-card-static">
                             <div className="college-header">
-                                <h4 className="college-name">{college.college_name}</h4>
+                                <h4 className="college-name">
+                                    {opp.type === 'college' ? '🎓 ' : '⚽ '}
+                                    {opp.name}
+                                </h4>
                                 <div className="college-badges">
-                                    <span className={`badge badge-${getInterestColor(college.interest_level)}`}>
-                                        {college.interest_level}
+                                    <span className={`badge badge-${getInterestColor(opp.interest_level)}`}>
+                                        {opp.interest_level}
                                     </span>
-                                    <span className={`badge badge-${getStatusColor(college.status)}`}>
-                                        {college.status.replace('_', ' ')}
+                                    <span className={`badge badge-${getStatusColor(opp.status)}`}>
+                                        {opp.status.replace('_', ' ')}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="college-details">
-                                <p><strong>{college.division}</strong> • {college.conference}</p>
-                                <p>📍 {college.location}</p>
-                                {college.scholarship_amount && (
+                                {opp.league && <p><strong>{opp.league}</strong></p>}
+                                {opp.location && <p>📍 {opp.location}</p>}
+                                {opp.scholarship_amount && (
                                     <p className="scholarship-offer">
-                                        💰 {college.scholarship_amount}% Scholarship
+                                        💰 {opp.scholarship_amount}% Scholarship
+                                    </p>
+                                )}
+                                {opp.contract_offer && (
+                                    <p className="scholarship-offer">
+                                        📝 {opp.contract_offer}
                                     </p>
                                 )}
                             </div>
 
-                            {college.contact_name && (
+                            {opp.contact_name && (
                                 <div className="college-contact">
-                                    <p><strong>Contact:</strong> {college.contact_name}</p>
-                                    {college.contact_email && <p>{college.contact_email}</p>}
-                                    {college.last_contact && (
+                                    <p><strong>Contact:</strong> {opp.contact_name}</p>
+                                    {opp.contact_email && <p>{opp.contact_email}</p>}
+                                    {opp.last_contact && (
                                         <p className="last-contact">
-                                            Last contact: {new Date(college.last_contact).toLocaleDateString()}
+                                            Last contact: {new Date(opp.last_contact).toLocaleDateString()}
                                         </p>
                                     )}
                                 </div>
                             )}
 
-                            {college.notes && (
-                                <p className="college-notes">{college.notes}</p>
+                            {opp.notes && (
+                                <p className="college-notes">{opp.notes}</p>
                             )}
                         </div>
                     ))}
                 </div>
 
-                {filteredColleges.length === 0 && (
+                {filteredRecruitment.length === 0 && (
                     <div className="empty-state">
-                        <p>No college targets yet. Add your first target to start tracking!</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Scout Activities Timeline */}
-            <div className="glass-card pathway-section">
-                <h3 className="section-title">👀 Scout & Agent Activity Log</h3>
-                <div className="timeline">
-                    {scoutActivities.map(activity => (
-                        <div key={activity.id} className="timeline-item">
-                            <div className="timeline-marker">
-                                <span className="timeline-icon">
-                                    {activity.scout_type === 'college' ? '🎓' :
-                                     activity.scout_type === 'agent' ? '🤝' : '⚽'}
-                                </span>
-                            </div>
-                            <div className="timeline-content">
-                                <div className="timeline-header">
-                                    <h4>{activity.organization}</h4>
-                                    <span className="timeline-date">
-                                        {new Date(activity.date).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                <p className="timeline-scout">{activity.scout_name} • {activity.event}</p>
-                                <p className="timeline-notes">{activity.notes}</p>
-                                <span className={`badge badge-${
-                                    activity.rating === 'very_positive' ? 'success' :
-                                    activity.rating === 'positive' ? 'warning' : 'secondary'
-                                }`}>
-                                    {activity.rating.replace('_', ' ')}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {scoutActivities.length === 0 && (
-                    <div className="empty-state">
-                        <p>No scout activities logged yet.</p>
+                        <p>No recruitment opportunities yet. Add your first opportunity to start tracking!</p>
                     </div>
                 )}
             </div>
 
             {/* Academic Progress */}
             <div className="glass-card pathway-section">
-                <h3 className="section-title">📚 Academic Progress</h3>
+                <div className="section-header">
+                    <h3 className="section-title">📚 Academic Progress</h3>
+                    <button className="btn btn-primary" onClick={() => setShowAcademicForm(true)}>
+                        + Add Course
+                    </button>
+                </div>
                 <div className="courses-list">
                     {academicProgress.map(course => (
                         <div key={course.id} className="course-item">
@@ -333,50 +338,47 @@ export default function Pathway() {
                 </div>
             )}
 
-            {/* College Form Modal */}
-            {showCollegeForm && (
-                <div className="modal-overlay" onClick={() => setShowCollegeForm(false)}>
+            {/* Recruitment Form Modal */}
+            {showRecruitmentForm && (
+                <div className="modal-overlay" onClick={() => setShowRecruitmentForm(false)}>
                     <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3 className="modal-title">Add College Target</h3>
-                            <button className="modal-close" onClick={() => setShowCollegeForm(false)}>×</button>
+                            <h3 className="modal-title">Add Recruitment Opportunity</h3>
+                            <button className="modal-close" onClick={() => setShowRecruitmentForm(false)}>×</button>
                         </div>
-                        <form onSubmit={handleCollegeSubmit}>
+                        <form onSubmit={handleRecruitmentSubmit}>
                             <div className="modal-body">
                                 <div className="input-group">
-                                    <label className="input-label">College Name</label>
-                                    <input name="collegeName" className="input" required />
+                                    <label className="input-label">Type</label>
+                                    <select name="type" className="input" required>
+                                        <option value="college">🎓 College / University</option>
+                                        <option value="club">⚽ Professional Club</option>
+                                    </select>
+                                </div>
+
+                                <div className="input-group">
+                                    <label className="input-label">Name</label>
+                                    <input name="name" className="input" placeholder="College or Club name" required />
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
-                                        <label className="input-label">Division</label>
-                                        <select name="division" className="input" required>
-                                            <option value="D1">Division 1</option>
-                                            <option value="D2">Division 2</option>
-                                            <option value="D3">Division 3</option>
-                                            <option value="NJCAA">NJCAA</option>
-                                            <option value="NAIA">NAIA</option>
-                                        </select>
+                                        <label className="input-label">League / Division</label>
+                                        <input name="league" className="input" placeholder="e.g., D1 - Big Ten, Bundesliga" />
                                     </div>
                                     <div className="input-group">
-                                        <label className="input-label">Conference</label>
-                                        <input name="conference" className="input" placeholder="e.g., ACC, Big Ten" />
+                                        <label className="input-label">Location</label>
+                                        <input name="location" className="input" placeholder="City, Country" required />
                                     </div>
-                                </div>
-
-                                <div className="input-group">
-                                    <label className="input-label">Location</label>
-                                    <input name="location" className="input" placeholder="City, State" required />
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
                                         <label className="input-label">Interest Level</label>
                                         <select name="interestLevel" className="input" required>
-                                            <option value="cold">Cold - Researching</option>
-                                            <option value="warm">Warm - In Contact</option>
-                                            <option value="hot">Hot - Active Interest</option>
+                                            <option value="cold">Cold - Early Stage</option>
+                                            <option value="warm">Warm - In Discussion</option>
+                                            <option value="hot">Hot - Strong Interest</option>
                                         </select>
                                     </div>
                                     <div className="input-group">
@@ -385,20 +387,27 @@ export default function Pathway() {
                                             <option value="researching">Researching</option>
                                             <option value="in_contact">In Contact</option>
                                             <option value="offer_received">Offer Received</option>
+                                            <option value="signed">Signed</option>
                                             <option value="declined">Declined</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div className="input-group">
-                                    <label className="input-label">Scholarship Amount (%)</label>
-                                    <input name="scholarshipAmount" type="number" className="input" min="0" max="100" placeholder="0-100" />
+                                <div className="form-grid">
+                                    <div className="input-group">
+                                        <label className="input-label">Scholarship % (College)</label>
+                                        <input name="scholarshipAmount" type="number" className="input" min="0" max="100" placeholder="0-100" />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="input-label">Contract Details (Club)</label>
+                                        <input name="contractOffer" className="input" placeholder="e.g., 2-year contract" />
+                                    </div>
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
                                         <label className="input-label">Contact Name</label>
-                                        <input name="contactName" className="input" placeholder="Coach name" />
+                                        <input name="contactName" className="input" placeholder="Coach / Scout name" />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Contact Email</label>
@@ -413,76 +422,95 @@ export default function Pathway() {
 
                                 <div className="input-group">
                                     <label className="input-label">Notes</label>
-                                    <textarea name="notes" className="input textarea" rows="3"></textarea>
+                                    <textarea name="notes" className="input textarea" rows="3" placeholder="Meeting notes, next steps, etc."></textarea>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCollegeForm(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Add Target</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowRecruitmentForm(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Add Opportunity</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* Scout Activity Form Modal */}
-            {showScoutForm && (
-                <div className="modal-overlay" onClick={() => setShowScoutForm(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
+            {/* Academic Course Form Modal */}
+            {showAcademicForm && (
+                <div className="modal-overlay" onClick={() => setShowAcademicForm(false)}>
+                    <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3 className="modal-title">Log Scout Activity</h3>
-                            <button className="modal-close" onClick={() => setShowScoutForm(false)}>×</button>
+                            <h3 className="modal-title">Add Academic Course</h3>
+                            <button className="modal-close" onClick={() => setShowAcademicForm(false)}>×</button>
                         </div>
-                        <form onSubmit={handleScoutSubmit}>
+                        <form onSubmit={handleAcademicSubmit}>
                             <div className="modal-body">
                                 <div className="input-group">
-                                    <label className="input-label">Scout Type</label>
-                                    <select name="scoutType" className="input" required>
-                                        <option value="college">College Coach</option>
-                                        <option value="agent">Agent</option>
-                                        <option value="professional">Professional Club</option>
-                                    </select>
-                                </div>
-
-                                <div className="input-group">
-                                    <label className="input-label">Organization</label>
-                                    <input name="organization" className="input" placeholder="College/Club/Agency name" required />
-                                </div>
-
-                                <div className="input-group">
-                                    <label className="input-label">Scout/Coach Name</label>
-                                    <input name="scoutName" className="input" required />
+                                    <label className="input-label">Course Name</label>
+                                    <input name="courseName" className="input" placeholder="e.g., English Composition" required />
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
-                                        <label className="input-label">Date</label>
-                                        <input name="date" type="date" className="input" required />
+                                        <label className="input-label">Category</label>
+                                        <select name="category" className="input" required>
+                                            <option value="core_academic">Core Academic</option>
+                                            <option value="language">Language</option>
+                                            <option value="elective">Elective</option>
+                                            <option value="physical_education">Physical Education</option>
+                                            <option value="life_skills">Life Skills</option>
+                                        </select>
                                     </div>
                                     <div className="input-group">
-                                        <label className="input-label">Event</label>
-                                        <input name="event" className="input" placeholder="Match, Training, etc." required />
+                                        <label className="input-label">Semester</label>
+                                        <input name="semester" className="input" placeholder="e.g., Fall 2025" required />
+                                    </div>
+                                </div>
+
+                                <div className="form-grid">
+                                    <div className="input-group">
+                                        <label className="input-label">Credits</label>
+                                        <input name="credits" type="number" step="0.5" min="0" className="input" placeholder="e.g., 3" />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="input-label">Status</label>
+                                        <select name="status" className="input" required>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="planned">Planned</option>
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div className="input-group">
-                                    <label className="input-label">Rating</label>
-                                    <select name="rating" className="input" required>
-                                        <option value="very_positive">Very Positive</option>
-                                        <option value="positive">Positive</option>
-                                        <option value="neutral">Neutral</option>
-                                        <option value="negative">Negative</option>
+                                    <label className="input-label">Grade (if completed)</label>
+                                    <select name="grade" className="input">
+                                        <option value="">Not yet graded</option>
+                                        <option value="A">A</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B">B</option>
+                                        <option value="B-">B-</option>
+                                        <option value="C+">C+</option>
+                                        <option value="C">C</option>
+                                        <option value="C-">C-</option>
+                                        <option value="D">D</option>
+                                        <option value="F">F</option>
                                     </select>
+                                </div>
+
+                                <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <input type="checkbox" name="transferable" id="transferable" />
+                                    <label htmlFor="transferable">NCAA Transferable</label>
                                 </div>
 
                                 <div className="input-group">
                                     <label className="input-label">Notes</label>
-                                    <textarea name="notes" className="input textarea" rows="3" required></textarea>
+                                    <textarea name="notes" className="input textarea" rows="2" placeholder="Optional notes"></textarea>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowScoutForm(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Log Activity</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAcademicForm(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Add Course</button>
                             </div>
                         </form>
                     </div>

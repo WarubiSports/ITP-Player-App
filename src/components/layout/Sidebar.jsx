@@ -8,6 +8,7 @@ const navItems = [
     { path: '/players', icon: '⚽', label: 'Players' },
     { path: '/wellness', icon: '💪', label: 'Wellness' },
     { path: '/progress', icon: '📈', label: 'Progress' },
+    { path: '/pathway', icon: '🎓', label: 'Pathway' },
     { path: '/housing', icon: '🏠', label: 'House & Tasks' },
     { path: '/grocery', icon: '🛒', label: 'Grocery' },
     { path: '/calendar', icon: '📅', label: 'Calendar' },

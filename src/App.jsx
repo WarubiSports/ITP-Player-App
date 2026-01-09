@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Players = lazy(() => import('./pages/Players'))
 const Wellness = lazy(() => import('./pages/Wellness'))
 const Progress = lazy(() => import('./pages/Progress'))
+const Pathway = lazy(() => import('./pages/Pathway'))
 const Housing = lazy(() => import('./pages/Housing'))
 const Calendar = lazy(() => import('./pages/Calendar'))
 const ParentPortal = lazy(() => import('./pages/ParentPortal'))
@@ -71,6 +72,7 @@ export default function App() {
                     <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
                     <Route path="wellness" element={<Suspense fallback={<PageLoader />}><Wellness /></Suspense>} />
                     <Route path="progress" element={<Suspense fallback={<PageLoader />}><Progress /></Suspense>} />
+                    <Route path="pathway" element={<Suspense fallback={<PageLoader />}><Pathway /></Suspense>} />
                     <Route path="housing" element={<Suspense fallback={<PageLoader />}><Housing /></Suspense>} />
                     <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
                     <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
