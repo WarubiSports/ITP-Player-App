@@ -10,6 +10,7 @@ import EventNotifications from './components/events/EventNotifications'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
+import SSO from './pages/auth/SSO'
 
 // Lazy load dashboard pages (code splitting)
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -65,6 +66,7 @@ export default function App() {
                 <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
                 <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/auth/sso" element={<SSO />} />
 
                 {/* Protected Routes */}
                 <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
