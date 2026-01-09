@@ -146,6 +146,23 @@ export function AuthProvider({ children }) {
         return { error: null, message: `Login link sent to ${email}. Check your inbox!` }
     }
 
+    // Update password - for users who logged in via magic link
+    const updatePassword = async (newPassword) => {
+        if (checkIsDemoMode()) {
+            return { error: { message: 'Cannot change password in demo mode' } }
+        }
+
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword
+        })
+
+        if (error) {
+            return { error }
+        }
+
+        return { error: null, message: 'Password updated successfully!' }
+    }
+
     const value = {
         user,
         profile,
@@ -155,6 +172,7 @@ export function AuthProvider({ children }) {
         signUp,
         signOut,
         resetPassword,
+        updatePassword,
         isAdmin: profile?.role === 'admin',
         isStaff: profile?.role === 'staff' || profile?.role === 'admin',
         isDemoMode: checkIsDemoMode(),
