@@ -258,6 +258,256 @@ export const deleteChore = async (id) => {
 }
 
 // =============================================
+// CHORE TEMPLATES & AUTO-ROTATION
+// =============================================
+
+export const getChoreTemplates = async () => {
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('choreTemplates')
+    }
+    return await queries.choreQueries?.getChoreTemplates() || []
+}
+
+export const createChoreTemplate = async (template) => {
+    if (shouldUseDemoData()) {
+        const templates = getDemoDataFromStorage('choreTemplates')
+        const newTemplate = { ...template, id: generateId(), created_at: new Date().toISOString() }
+        templates.push(newTemplate)
+        saveDemoDataToStorage('choreTemplates', templates)
+        return newTemplate
+    }
+    return await queries.choreQueries?.createChoreTemplate(template)
+}
+
+export const updateChoreTemplate = async (id, updates) => {
+    if (shouldUseDemoData()) {
+        const templates = getDemoDataFromStorage('choreTemplates')
+        const index = templates.findIndex(t => t.id === id)
+        if (index !== -1) {
+            templates[index] = { ...templates[index], ...updates }
+            saveDemoDataToStorage('choreTemplates', templates)
+            return templates[index]
+        }
+        return null
+    }
+    return await queries.choreQueries?.updateChoreTemplate(id, updates)
+}
+
+export const deleteChoreTemplate = async (id) => {
+    if (shouldUseDemoData()) {
+        const templates = getDemoDataFromStorage('choreTemplates')
+        saveDemoDataToStorage('choreTemplates', templates.filter(t => t.id !== id))
+        return
+    }
+    return await queries.choreQueries?.deleteChoreTemplate(id)
+}
+
+export const getChoreRotations = async (houseId = null) => {
+    if (shouldUseDemoData()) {
+        const rotations = getDemoDataFromStorage('choreRotations')
+        return houseId ? rotations.filter(r => r.house_id === houseId) : rotations
+    }
+    return await queries.choreQueries?.getChoreRotations(houseId) || []
+}
+
+export const updateChoreRotation = async (id, updates) => {
+    if (shouldUseDemoData()) {
+        const rotations = getDemoDataFromStorage('choreRotations')
+        const index = rotations.findIndex(r => r.id === id)
+        if (index !== -1) {
+            rotations[index] = { ...rotations[index], ...updates }
+            saveDemoDataToStorage('choreRotations', rotations)
+            return rotations[index]
+        }
+        return null
+    }
+    return await queries.choreQueries?.updateChoreRotation(id, updates)
+}
+
+// Generate weekly chores from templates with rotation
+export const generateWeeklyChores = async (houseId) => {
+    const templates = await getChoreTemplates()
+    const rotations = await getChoreRotations(houseId)
+    const allPlayers = await getPlayers()
+    const players = allPlayers.filter(p =>
+        (p.house_id === houseId || p.house_id === houseId) && p.status === 'active'
+    )
+
+    if (players.length === 0) return []
+
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay()) // Sunday
+
+    const createdChores = []
+
+    for (const template of templates) {
+        // Find or create rotation for this house/template
+        let rotation = rotations.find(r => r.template_id === template.id)
+
+        if (!rotation) {
+            // Create new rotation entry
+            rotation = {
+                id: generateId(),
+                house_id: houseId,
+                template_id: template.id,
+                current_player_index: 0,
+                last_rotated: new Date().toISOString()
+            }
+            const allRotations = getDemoDataFromStorage('choreRotations')
+            allRotations.push(rotation)
+            saveDemoDataToStorage('choreRotations', allRotations)
+        }
+
+        // Calculate deadline based on day_of_week
+        const deadline = new Date(startOfWeek)
+        deadline.setDate(startOfWeek.getDate() + template.day_of_week)
+
+        // Get the assigned player based on rotation
+        const assignedPlayer = players[rotation.current_player_index % players.length]
+
+        // Create the chore
+        const chore = await createChore({
+            title: template.title,
+            description: template.description,
+            priority: template.priority,
+            house_id: houseId,
+            assigned_to: assignedPlayer?.id,
+            deadline: deadline.toISOString().split('T')[0],
+            points: template.points,
+            requires_photo: template.requires_photo,
+            template_id: template.id
+        })
+
+        createdChores.push(chore)
+
+        // Advance rotation for next week
+        await updateChoreRotation(rotation.id, {
+            current_player_index: (rotation.current_player_index + 1) % players.length,
+            last_rotated: new Date().toISOString()
+        })
+    }
+
+    return createdChores
+}
+
+// =============================================
+// CHORE PHOTO VERIFICATION
+// =============================================
+
+export const submitChorePhoto = async (choreId, photoData) => {
+    if (shouldUseDemoData()) {
+        const photos = getDemoDataFromStorage('chorePhotos')
+        const newPhoto = {
+            id: generateId(),
+            chore_id: choreId,
+            photo_data: photoData, // Base64 encoded image
+            submitted_at: new Date().toISOString(),
+            status: 'pending_approval'
+        }
+        photos.push(newPhoto)
+        saveDemoDataToStorage('chorePhotos', photos)
+
+        // Update chore status to pending_approval
+        await updateChore(choreId, {
+            status: 'pending_approval',
+            completed_at: new Date().toISOString()
+        })
+
+        return newPhoto
+    }
+    return await queries.choreQueries?.submitChorePhoto(choreId, photoData)
+}
+
+export const getChorePhoto = async (choreId) => {
+    if (shouldUseDemoData()) {
+        const photos = getDemoDataFromStorage('chorePhotos')
+        return photos.find(p => p.chore_id === choreId)
+    }
+    return await queries.choreQueries?.getChorePhoto(choreId)
+}
+
+export const getPendingApprovalChores = async () => {
+    if (shouldUseDemoData()) {
+        const chores = getDemoDataFromStorage('chores')
+        return chores.filter(c => c.status === 'pending_approval')
+    }
+    return await queries.choreQueries?.getPendingApprovalChores() || []
+}
+
+export const approveChore = async (choreId) => {
+    if (shouldUseDemoData()) {
+        // Update chore status
+        const chores = getDemoDataFromStorage('chores')
+        const index = chores.findIndex(c => c.id === choreId)
+
+        if (index !== -1) {
+            const chore = chores[index]
+            chores[index] = {
+                ...chore,
+                status: 'approved',
+                approved_at: new Date().toISOString()
+            }
+            saveDemoDataToStorage('chores', chores)
+
+            // Award points to player
+            if (chore.assigned_to) {
+                const players = getDemoDataFromStorage('players')
+                const playerIndex = players.findIndex(p => p.id === chore.assigned_to)
+                if (playerIndex !== -1) {
+                    players[playerIndex].points += chore.points
+                    saveDemoDataToStorage('players', players)
+
+                    // Update house points
+                    const houses = getDemoDataFromStorage('houses')
+                    const houseIndex = houses.findIndex(h =>
+                        h.id === chore.house_id || h.name === chore.house_id
+                    )
+                    if (houseIndex !== -1) {
+                        houses[houseIndex].total_points += chore.points
+                        saveDemoDataToStorage('houses', houses)
+                    }
+                }
+            }
+
+            // Delete the photo after approval
+            const photos = getDemoDataFromStorage('chorePhotos')
+            saveDemoDataToStorage('chorePhotos', photos.filter(p => p.chore_id !== choreId))
+
+            return chores[index]
+        }
+        return null
+    }
+    return await queries.choreQueries?.approveChore(choreId)
+}
+
+export const rejectChore = async (choreId, reason) => {
+    if (shouldUseDemoData()) {
+        // Update chore status back to pending
+        const chores = getDemoDataFromStorage('chores')
+        const index = chores.findIndex(c => c.id === choreId)
+
+        if (index !== -1) {
+            chores[index] = {
+                ...chores[index],
+                status: 'pending',
+                completed_at: null,
+                rejection_reason: reason
+            }
+            saveDemoDataToStorage('chores', chores)
+
+            // Delete the photo
+            const photos = getDemoDataFromStorage('chorePhotos')
+            saveDemoDataToStorage('chorePhotos', photos.filter(p => p.chore_id !== choreId))
+
+            return chores[index]
+        }
+        return null
+    }
+    return await queries.choreQueries?.rejectChore(choreId, reason)
+}
+
+// =============================================
 // EVENTS
 // =============================================
 

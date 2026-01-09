@@ -1,6 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { getHouses, getPlayers, createChore, updateChore, completeChore } from '../lib/data-service'
+import {
+    getHouses,
+    getPlayers,
+    createChore,
+    updateChore,
+    submitChorePhoto,
+    getChorePhoto,
+    approveChore,
+    rejectChore,
+    getChoreTemplates,
+    createChoreTemplate,
+    deleteChoreTemplate,
+    generateWeeklyChores
+} from '../lib/data-service'
 import { useRealtimeChores } from '../hooks/useRealtimeChores'
 import { useRealtimeHousePoints } from '../hooks/useRealtimeHousePoints'
 import ConnectionStatus from '../components/ui/ConnectionStatus'
@@ -15,6 +28,21 @@ export default function Housing() {
     const [selectedChore, setSelectedChore] = useState(null)
     const [filter, setFilter] = useState('pending')
     const [playersLoading, setPlayersLoading] = useState(true)
+    // Photo verification states
+    const [showPhotoModal, setShowPhotoModal] = useState(false)
+    const [photoChore, setPhotoChore] = useState(null)
+    const [photoPreview, setPhotoPreview] = useState(null)
+    const [submitting, setSubmitting] = useState(false)
+    const fileInputRef = useRef(null)
+    // Staff approval states
+    const [showApprovalModal, setShowApprovalModal] = useState(false)
+    const [approvalChore, setApprovalChore] = useState(null)
+    const [approvalPhoto, setApprovalPhoto] = useState(null)
+    const [rejectReason, setRejectReason] = useState('')
+    // Template management states
+    const [showTemplateModal, setShowTemplateModal] = useState(false)
+    const [templates, setTemplates] = useState([])
+    const [generatingChores, setGeneratingChores] = useState(false)
 
     // Use realtime hooks
     const { houses, loading: housesLoading, animatingHouse } = useRealtimeHousePoints({ showNotifications: false })
@@ -41,6 +69,21 @@ export default function Housing() {
         }
         loadPlayers()
     }, [profile?.id])
+
+    useEffect(() => {
+        if (isStaff) {
+            loadTemplates()
+        }
+    }, [isStaff])
+
+    const loadTemplates = async () => {
+        try {
+            const templatesData = await getChoreTemplates()
+            setTemplates(templatesData || [])
+        } catch (error) {
+            console.error('Error loading templates:', error)
+        }
+    }
 
     const getHouseStats = (house) => {
         // Match by house.id OR house.name (handles both UUID and TEXT storage)
@@ -80,17 +123,132 @@ export default function Housing() {
 
         // Apply status filter
         if (filter === 'pending') return chore.status === 'pending'
-        if (filter === 'completed') return chore.status === 'completed'
+        if (filter === 'approval') return chore.status === 'pending_approval'
+        if (filter === 'completed') return chore.status === 'completed' || chore.status === 'approved'
         return true
     })
 
-    const handleCompleteChore = async (choreId) => {
+    const pendingApprovalCount = chores.filter(c => c.status === 'pending_approval').length
+
+    const handleCompleteChore = async (chore) => {
+        // If chore requires photo, show photo modal
+        if (chore.requires_photo) {
+            setPhotoChore(chore)
+            setPhotoPreview(null)
+            setShowPhotoModal(true)
+            return
+        }
+
+        // Otherwise, complete directly (for non-photo chores)
         try {
-            await completeChore(choreId)
+            await updateChore(chore.id, {
+                status: 'approved',
+                completed_at: new Date().toISOString(),
+                approved_at: new Date().toISOString()
+            })
             await refreshChores()
         } catch (error) {
             console.error('Error completing chore:', error)
             alert('Failed to complete chore. Please try again.')
+        }
+    }
+
+    // Photo upload handlers
+    const handlePhotoSelect = (e) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Photo must be less than 5MB')
+                return
+            }
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    const handlePhotoSubmit = async () => {
+        if (!photoPreview || !photoChore) return
+
+        setSubmitting(true)
+        try {
+            await submitChorePhoto(photoChore.id, photoPreview)
+            await refreshChores()
+            setShowPhotoModal(false)
+            setPhotoChore(null)
+            setPhotoPreview(null)
+        } catch (error) {
+            console.error('Error submitting photo:', error)
+            alert('Failed to submit photo. Please try again.')
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    // Staff approval handlers
+    const handleViewApproval = async (chore) => {
+        setApprovalChore(chore)
+        setRejectReason('')
+        try {
+            const photo = await getChorePhoto(chore.id)
+            setApprovalPhoto(photo?.photo_data || null)
+        } catch (error) {
+            console.error('Error loading photo:', error)
+        }
+        setShowApprovalModal(true)
+    }
+
+    const handleApprove = async () => {
+        if (!approvalChore) return
+        setSubmitting(true)
+        try {
+            await approveChore(approvalChore.id)
+            await refreshChores()
+            setShowApprovalModal(false)
+            setApprovalChore(null)
+            setApprovalPhoto(null)
+        } catch (error) {
+            console.error('Error approving chore:', error)
+            alert('Failed to approve. Please try again.')
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleReject = async () => {
+        if (!approvalChore) return
+        setSubmitting(true)
+        try {
+            await rejectChore(approvalChore.id, rejectReason)
+            await refreshChores()
+            setShowApprovalModal(false)
+            setApprovalChore(null)
+            setApprovalPhoto(null)
+            setRejectReason('')
+        } catch (error) {
+            console.error('Error rejecting chore:', error)
+            alert('Failed to reject. Please try again.')
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    // Generate weekly chores for all houses
+    const handleGenerateWeeklyChores = async () => {
+        setGeneratingChores(true)
+        try {
+            for (const house of houses) {
+                await generateWeeklyChores(house.id)
+            }
+            await refreshChores()
+            alert('Weekly chores generated for all houses!')
+        } catch (error) {
+            console.error('Error generating chores:', error)
+            alert('Failed to generate chores. Please try again.')
+        } finally {
+            setGeneratingChores(false)
         }
     }
 
@@ -147,7 +305,8 @@ export default function Housing() {
     const choreStats = {
         total: chores.length,
         pending: chores.filter(c => c.status === 'pending').length,
-        completed: chores.filter(c => c.status === 'completed').length,
+        pendingApproval: chores.filter(c => c.status === 'pending_approval').length,
+        completed: chores.filter(c => c.status === 'completed' || c.status === 'approved').length,
         myPending: playerData ? chores.filter(c => c.assigned_to === playerData.id && c.status === 'pending').length : 0
     }
 
@@ -252,20 +411,46 @@ export default function Housing() {
                         {isStaff ? '📋 All Tasks' : '✅ Your Tasks'}
                     </h2>
                     <div className="filter-tabs">
-                        {['pending', 'completed', 'all'].map(f => (
+                        <button
+                            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
+                            onClick={() => setFilter('pending')}
+                        >
+                            Pending
+                        </button>
+                        {isStaff && (
                             <button
-                                key={f}
-                                className={`filter-tab ${filter === f ? 'active' : ''}`}
-                                onClick={() => setFilter(f)}
+                                className={`filter-tab ${filter === 'approval' ? 'active' : ''}`}
+                                onClick={() => setFilter('approval')}
                             >
-                                {f.charAt(0).toUpperCase() + f.slice(1)}
+                                Approval {pendingApprovalCount > 0 && <span className="approval-badge">{pendingApprovalCount}</span>}
                             </button>
-                        ))}
+                        )}
+                        <button
+                            className={`filter-tab ${filter === 'completed' ? 'active' : ''}`}
+                            onClick={() => setFilter('completed')}
+                        >
+                            Completed
+                        </button>
+                        <button
+                            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                            onClick={() => setFilter('all')}
+                        >
+                            All
+                        </button>
                     </div>
                     {isStaff && (
-                        <button className="btn btn-primary" onClick={() => { setSelectedChore(null); setShowChoreModal(true); }}>
-                            + Create Task
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleGenerateWeeklyChores}
+                                disabled={generatingChores}
+                            >
+                                {generatingChores ? 'Generating...' : '🔄 Generate Weekly'}
+                            </button>
+                            <button className="btn btn-primary" onClick={() => { setSelectedChore(null); setShowChoreModal(true); }}>
+                                + Create Task
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -317,8 +502,19 @@ export default function Housing() {
                                         </button>
                                     )}
                                     {(isStaff || (playerData && chore.assigned_to === playerData.id)) && (
-                                        <button className="btn btn-success btn-sm" onClick={() => handleCompleteChore(chore.id)}>
-                                            ✓ Mark Complete
+                                        <button className="btn btn-success btn-sm" onClick={() => handleCompleteChore(chore)}>
+                                            {chore.requires_photo ? '📷 Complete with Photo' : '✓ Mark Complete'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {chore.status === 'pending_approval' && (
+                                <div className="chore-actions">
+                                    <span className="badge badge-warning">Awaiting Approval</span>
+                                    {isStaff && (
+                                        <button className="btn btn-primary btn-sm" onClick={() => handleViewApproval(chore)}>
+                                            Review Photo
                                         </button>
                                     )}
                                 </div>
@@ -477,6 +673,126 @@ export default function Housing() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Photo Upload Modal */}
+            {showPhotoModal && photoChore && (
+                <div className="modal-overlay" onClick={() => setShowPhotoModal(false)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Complete Task: {photoChore.title}</h3>
+                            <button className="modal-close" onClick={() => setShowPhotoModal(false)}>x</button>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                                Take a photo of the completed task for verification. Staff will review and approve.
+                            </p>
+
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                capture="environment"
+                                onChange={handlePhotoSelect}
+                                style={{ display: 'none' }}
+                            />
+
+                            {photoPreview ? (
+                                <div className="photo-preview">
+                                    <img src={photoPreview} alt="Task completion" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={() => { setPhotoPreview(null); fileInputRef.current?.click(); }}
+                                        style={{ marginTop: '0.5rem' }}
+                                    >
+                                        Retake Photo
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    className="btn btn-secondary w-full"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    style={{ padding: '2rem', fontSize: '1.1rem' }}
+                                >
+                                    📷 Take Photo
+                                </button>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={() => setShowPhotoModal(false)}>
+                                Cancel
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handlePhotoSubmit}
+                                disabled={!photoPreview || submitting}
+                            >
+                                {submitting ? 'Submitting...' : 'Submit for Approval'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Staff Approval Modal */}
+            {showApprovalModal && approvalChore && (
+                <div className="modal-overlay" onClick={() => setShowApprovalModal(false)}>
+                    <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Review: {approvalChore.title}</h3>
+                            <button className="modal-close" onClick={() => setShowApprovalModal(false)}>x</button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ marginBottom: '1rem' }}>
+                                <p><strong>Assigned to:</strong> {getPlayerName(approvalChore.assigned_to)}</p>
+                                <p><strong>House:</strong> {getHouseName(approvalChore.house_id)}</p>
+                                <p><strong>Points:</strong> {approvalChore.points}</p>
+                            </div>
+
+                            {approvalPhoto ? (
+                                <div className="approval-photo">
+                                    <h4 style={{ marginBottom: '0.5rem' }}>Submitted Photo:</h4>
+                                    <img
+                                        src={approvalPhoto}
+                                        alt="Task completion proof"
+                                        style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="no-photo-notice" style={{ padding: '2rem', textAlign: 'center', background: 'var(--color-bg-secondary)', borderRadius: '8px' }}>
+                                    <p>No photo available</p>
+                                </div>
+                            )}
+
+                            <div className="input-group" style={{ marginTop: '1rem' }}>
+                                <label className="input-label">Rejection Reason (optional)</label>
+                                <textarea
+                                    className="input textarea"
+                                    rows="2"
+                                    placeholder="If rejecting, explain why..."
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button
+                                className="btn btn-error"
+                                onClick={handleReject}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Rejecting...' : 'Reject'}
+                            </button>
+                            <button
+                                className="btn btn-success"
+                                onClick={handleApprove}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Approving...' : 'Approve & Award Points'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

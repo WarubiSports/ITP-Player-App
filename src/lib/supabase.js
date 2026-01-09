@@ -21,7 +21,7 @@ export const shouldUseDemoData = () => {
 export const isDemoMode = checkIsDemoMode()
 
 // Demo data version - increment this when you change demo data structure
-const DEMO_DATA_VERSION = 7
+const DEMO_DATA_VERSION = 8
 
 // Initialize demo data on first load or when version changes
 const initializeDemoData = () => {
@@ -100,13 +100,32 @@ export const demoData = {
         { id: 'h3', name: 'Widdersdorf 3', total_points: 2425 },
     ],
     chores: [
-        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2026-01-10' },
-        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p8', status: 'pending', points: 15, deadline: '2026-01-11' },
-        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p15', status: 'pending', points: 10, deadline: '2026-01-12' },
-        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p2', status: 'completed', points: 20, deadline: '2026-01-09', completed_at: '2026-01-08' },
-        { id: 'ch5', title: 'Bathroom Cleaning', description: 'Clean all bathrooms including toilets, showers, and mirrors', priority: 'high', house_id: 'h2', assigned_to: 'p10', status: 'pending', points: 20, deadline: '2026-01-10' },
-        { id: 'ch6', title: 'Trash & Recycling', description: 'Take out trash and organize recycling bins', priority: 'medium', house_id: 'h3', assigned_to: 'p17', status: 'pending', points: 10, deadline: '2026-01-09' },
+        { id: 'ch1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', house_id: 'h1', assigned_to: 'p1', status: 'pending', points: 25, deadline: '2026-01-10', requires_photo: true },
+        { id: 'ch2', title: 'Garden Maintenance', description: 'Trim hedges and water plants in front garden', priority: 'medium', house_id: 'h2', assigned_to: 'p8', status: 'pending', points: 15, deadline: '2026-01-11', requires_photo: true },
+        { id: 'ch3', title: 'Common Room Organization', description: 'Organize books, games, and furniture in the common room', priority: 'low', house_id: 'h3', assigned_to: 'p15', status: 'pending', points: 10, deadline: '2026-01-12', requires_photo: false },
+        { id: 'ch4', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', house_id: 'h1', assigned_to: 'p2', status: 'approved', points: 20, deadline: '2026-01-09', completed_at: '2026-01-08', approved_at: '2026-01-08', requires_photo: true },
+        { id: 'ch5', title: 'Bathroom Cleaning', description: 'Clean all bathrooms including toilets, showers, and mirrors', priority: 'high', house_id: 'h2', assigned_to: 'p10', status: 'pending', points: 20, deadline: '2026-01-10', requires_photo: true },
+        { id: 'ch6', title: 'Trash & Recycling', description: 'Take out trash and organize recycling bins', priority: 'medium', house_id: 'h3', assigned_to: 'p17', status: 'pending', points: 10, deadline: '2026-01-09', requires_photo: false },
     ],
+    // Chore templates for auto-rotation
+    choreTemplates: [
+        { id: 'ct1', title: 'Kitchen Deep Clean', description: 'Deep clean kitchen including appliances, counters, and floors', priority: 'high', points: 25, requires_photo: true, frequency: 'weekly', day_of_week: 0 },
+        { id: 'ct2', title: 'Bathroom Cleaning', description: 'Clean all bathrooms including toilets, showers, and mirrors', priority: 'high', points: 20, requires_photo: true, frequency: 'weekly', day_of_week: 0 },
+        { id: 'ct3', title: 'Trash & Recycling', description: 'Take out trash and organize recycling bins', priority: 'medium', points: 10, requires_photo: false, frequency: 'weekly', day_of_week: 3 },
+        { id: 'ct4', title: 'Common Area Tidy', description: 'Vacuum and tidy the common living areas', priority: 'medium', points: 15, requires_photo: true, frequency: 'weekly', day_of_week: 5 },
+        { id: 'ct5', title: 'Laundry Room Clean', description: 'Clean washing machines, dryers, and organize supplies', priority: 'medium', points: 20, requires_photo: true, frequency: 'weekly', day_of_week: 6 },
+    ],
+    // Rotation tracking per house
+    choreRotations: [
+        { id: 'cr1', house_id: 'h1', template_id: 'ct1', current_player_index: 0, last_rotated: '2026-01-06' },
+        { id: 'cr2', house_id: 'h1', template_id: 'ct2', current_player_index: 1, last_rotated: '2026-01-06' },
+        { id: 'cr3', house_id: 'h1', template_id: 'ct3', current_player_index: 2, last_rotated: '2026-01-06' },
+        { id: 'cr4', house_id: 'h2', template_id: 'ct1', current_player_index: 0, last_rotated: '2026-01-06' },
+        { id: 'cr5', house_id: 'h2', template_id: 'ct2', current_player_index: 1, last_rotated: '2026-01-06' },
+        { id: 'cr6', house_id: 'h3', template_id: 'ct1', current_player_index: 0, last_rotated: '2026-01-06' },
+    ],
+    // Photo verifications (temporary storage until approved)
+    chorePhotos: [],
     events: [
         // Monday - Typical ITP day
         { id: 'e1', title: 'Team Training', type: 'training', date: '2026-01-06', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },

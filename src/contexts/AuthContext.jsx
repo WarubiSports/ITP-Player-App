@@ -107,11 +107,51 @@ export function AuthProvider({ children }) {
         return { error }
     }
 
+    // Magic Link sign-in - easiest for players
+    const signInWithMagicLink = async (email) => {
+        // In demo mode, simulate magic link sent
+        if (checkIsDemoMode()) {
+            // Check if email exists in demo users
+            const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
+            if (demoUser) {
+                return { error: null, message: 'Demo mode: Use password ITP2024 to login' }
+            }
+            return { error: { message: 'Email not found in demo mode' } }
+        }
+
+        // Check if email exists in players table
+        const { data: player } = await supabase
+            .from('players')
+            .select('id, email, first_name')
+            .eq('email', email.toLowerCase())
+            .single()
+
+        if (!player) {
+            return { error: { message: 'No player account found with this email. Contact staff if you need access.' } }
+        }
+
+        // Send magic link - will create auth user if doesn't exist
+        const { error } = await supabase.auth.signInWithOtp({
+            email: email.toLowerCase(),
+            options: {
+                emailRedirectTo: `${window.location.origin}/dashboard`,
+                shouldCreateUser: true,
+            }
+        })
+
+        if (error) {
+            return { error }
+        }
+
+        return { error: null, message: `Login link sent to ${email}. Check your inbox!` }
+    }
+
     const value = {
         user,
         profile,
         loading,
         signIn,
+        signInWithMagicLink,
         signUp,
         signOut,
         resetPassword,

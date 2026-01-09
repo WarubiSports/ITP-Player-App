@@ -7,13 +7,39 @@ export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
     const [loading, setLoading] = useState(false)
-    const { signIn } = useAuth()
+    const [showPassword, setShowPassword] = useState(false)
+    const { signIn, signInWithMagicLink } = useAuth()
     const navigate = useNavigate()
 
-    const handleSubmit = async (e) => {
+    // Magic Link login - primary method for players
+    const handleMagicLink = async (e) => {
+        e.preventDefault()
+        if (!email) {
+            setError('Please enter your email address')
+            return
+        }
+
+        setError('')
+        setSuccess('')
+        setLoading(true)
+
+        const { error, message } = await signInWithMagicLink(email)
+
+        if (error) {
+            setError(error.message)
+        } else {
+            setSuccess(message || 'Check your email for the login link!')
+        }
+        setLoading(false)
+    }
+
+    // Password login - for staff or fallback
+    const handlePasswordLogin = async (e) => {
         e.preventDefault()
         setError('')
+        setSuccess('')
         setLoading(true)
 
         const { error } = await signIn(email, password)
@@ -46,7 +72,13 @@ export default function Login() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="auth-form">
+                {success && (
+                    <div className="auth-success">
+                        <span>✉️</span> {success}
+                    </div>
+                )}
+
+                <form onSubmit={handleMagicLink} className="auth-form">
                     <div className="input-group">
                         <label className="input-label">Email Address</label>
                         <input
@@ -60,35 +92,75 @@ export default function Login() {
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label className="input-label">Password</label>
-                        <input
-                            type="password"
-                            className="input"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            autoComplete="current-password"
-                        />
-                    </div>
-
-                    <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
+                    <button
+                        type="submit"
+                        className="btn btn-primary btn-lg w-full"
+                        disabled={loading}
+                    >
                         {loading ? (
                             <>
                                 <div className="spinner"></div>
-                                Signing in...
+                                Sending...
                             </>
                         ) : (
-                            'Sign In'
+                            <>
+                                <span>✉️</span> Send Login Link
+                            </>
                         )}
                     </button>
+
+                    <p className="auth-hint">
+                        We'll email you a magic link for instant sign-in
+                    </p>
                 </form>
+
+                {/* Expandable password section for staff */}
+                <div className="auth-divider-line">
+                    <span>or</span>
+                </div>
+
+                <button
+                    type="button"
+                    className="btn btn-ghost w-full"
+                    onClick={() => setShowPassword(!showPassword)}
+                >
+                    {showPassword ? 'Hide' : 'Sign in with password'}
+                </button>
+
+                {showPassword && (
+                    <form onSubmit={handlePasswordLogin} className="auth-form auth-form-secondary">
+                        <div className="input-group">
+                            <label className="input-label">Password</label>
+                            <input
+                                type="password"
+                                className="input"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                autoComplete="current-password"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="btn btn-secondary btn-lg w-full"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="spinner"></div>
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
+                        </button>
+                    </form>
+                )}
 
                 <div className="auth-links">
                     <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
-                    <span className="auth-divider">•</span>
-                    <Link to="/register" className="auth-link">Create account</Link>
                 </div>
 
                 <div className="auth-footer">
