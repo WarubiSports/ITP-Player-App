@@ -4,9 +4,7 @@ import { getDemoData } from '../lib/supabase'
 import { getPlayers, getWellnessScore, getTrainingLoads } from '../lib/data-service'
 import ReadinessGauge from '../components/dashboard/ReadinessGauge'
 import NextObjective from '../components/dashboard/NextObjective'
-import LiveLeaderboard from '../components/dashboard/LiveLeaderboard'
 import SmartGuidance from '../components/dashboard/SmartGuidance'
-import Marketplace from '../components/gamification/Marketplace'
 import DailyCheckIn from '../components/performance/DailyCheckIn'
 import GoalsWidget from '../components/goals/GoalsWidget'
 import StreakWidget from '../components/achievements/StreakWidget'
@@ -16,7 +14,6 @@ import './Dashboard.css'
 
 export default function Dashboard() {
     const { profile } = useAuth();
-    const [showMarket, setShowMarket] = useState(false);
     const [showCheckIn, setShowCheckIn] = useState(false);
     const [playerData, setPlayerData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -29,7 +26,7 @@ export default function Dashboard() {
         if (profile?.id) {
             loadDashboardData();
         }
-    }, [profile?.id, showMarket, showCheckIn]); // Refresh when modals close
+    }, [profile?.id, showCheckIn]); // Refresh when modal closes
 
     // Trigger refresh of SmartGuidance when check-in closes
     const prevShowCheckIn = React.useRef(showCheckIn);
@@ -154,21 +151,10 @@ export default function Dashboard() {
                             <ReadinessGauge score={readinessScore} />
                             <NextObjective />
                         </div>
-                        <LiveLeaderboard />
                     </div>
 
-                    {/* Middle Row: Quick Actions & Stats */}
+                    {/* Stats Row */}
                     <div className="dashboard-actions-grid">
-                        {/* Wallet Widget */}
-                        <div className="glass-panel dashboard-widget" onClick={() => setShowMarket(true)}>
-                            <h3 className="widget-title">Wallet</h3>
-                            <div className="widget-value widget-value-accent">
-                                {playerData.points?.toLocaleString() || 0} <span style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>GC</span>
-                            </div>
-                            <div className="widget-change widget-change-positive">Earn more through tasks</div>
-                            <div className="widget-link">Open Store →</div>
-                        </div>
-
                         {/* Training Load */}
                         <div className="glass-panel dashboard-widget" onClick={() => setShowCheckIn(true)}>
                             <h3 className="widget-title">Training Load (7d)</h3>
@@ -203,7 +189,6 @@ export default function Dashboard() {
                         <AchievementsWidget key={`achievements-${refreshKey}`} playerId={playerData.id} />
                     </div>
 
-                    {showMarket && <Marketplace onClose={() => setShowMarket(false)} />}
                     {showCheckIn && <DailyCheckIn onClose={() => setShowCheckIn(false)} />}
                 </>
             )}
