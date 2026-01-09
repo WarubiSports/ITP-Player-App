@@ -10,6 +10,14 @@ const isSupabaseConfigured = Boolean(
     !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
 )
 
+// Debug logging
+console.log('[Supabase Config]', {
+    url: supabaseUrl,
+    hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
+    hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    isConfigured: isSupabaseConfigured
+})
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Connection health state
