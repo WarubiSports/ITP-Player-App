@@ -68,10 +68,21 @@ export default function ParentPortal() {
     const loadPlayers = async () => {
         try {
             const allPlayers = await getPlayers()
-            setPlayers(allPlayers)
-            // Auto-select first player
-            if (allPlayers.length > 0) {
-                setSelectedPlayer(allPlayers[0])
+
+            // Check if current user is a player (not staff)
+            const isPlayer = profile?.role === 'player'
+            const currentUserPlayer = allPlayers.find(p => p.id === profile?.id || p.user_id === profile?.id)
+
+            if (isPlayer && currentUserPlayer) {
+                // Players can only see their own report
+                setPlayers([currentUserPlayer])
+                setSelectedPlayer(currentUserPlayer)
+            } else {
+                // Staff can see all players
+                setPlayers(allPlayers)
+                if (allPlayers.length > 0) {
+                    setSelectedPlayer(allPlayers[0])
+                }
             }
         } catch (error) {
             console.error('Error loading players:', error)
