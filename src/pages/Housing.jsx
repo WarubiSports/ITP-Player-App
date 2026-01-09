@@ -262,8 +262,7 @@ export default function Housing() {
             priority: form.priority.value,
             house_id: form.house.value,
             assigned_to: form.assignedTo.value || null,
-            deadline: form.deadline.value || null,
-            points: parseInt(form.points.value)
+            deadline: form.deadline.value || null
         }
 
         try {
@@ -465,9 +464,6 @@ export default function Housing() {
                                         <span className={`badge badge-${getPriorityColor(chore.priority)}`}>
                                             {chore.priority}
                                         </span>
-                                        <span className="badge badge-primary">
-                                            {chore.points} pts
-                                        </span>
                                     </div>
                                 </div>
                                 <span className={`chore-status-badge ${chore.status}`}>
@@ -625,18 +621,6 @@ export default function Housing() {
                                         </select>
                                     </div>
                                     <div className="input-group">
-                                        <label className="input-label">Points *</label>
-                                        <input
-                                            name="points"
-                                            type="number"
-                                            className="input"
-                                            min="1"
-                                            max="100"
-                                            defaultValue={selectedChore?.points || 10}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="input-group">
                                         <label className="input-label">House *</label>
                                         <select name="house" className="input" defaultValue={selectedChore?.house_id} required>
                                             {houses.map(h => (
@@ -748,7 +732,6 @@ export default function Housing() {
                             <div style={{ marginBottom: '1rem' }}>
                                 <p><strong>Assigned to:</strong> {getPlayerName(approvalChore.assigned_to)}</p>
                                 <p><strong>House:</strong> {getHouseName(approvalChore.house_id)}</p>
-                                <p><strong>Points:</strong> {approvalChore.points}</p>
                             </div>
 
                             {approvalPhoto ? (
@@ -790,7 +773,7 @@ export default function Housing() {
                                 onClick={handleApprove}
                                 disabled={submitting}
                             >
-                                {submitting ? 'Approving...' : 'Approve & Award Points'}
+                                {submitting ? 'Approving...' : 'Approve'}
                             </button>
                         </div>
                     </div>

@@ -214,25 +214,6 @@ export const updateChore = async (id, updates) => {
         if (index !== -1) {
             chores[index] = { ...chores[index], ...updates, updated_at: new Date().toISOString() }
             saveDemoDataToStorage('chores', chores)
-
-            // Update player points if chore completed
-            if (updates.status === 'completed' && chores[index].assigned_to) {
-                const players = getDemoDataFromStorage('players')
-                const playerIndex = players.findIndex(p => p.id === chores[index].assigned_to)
-                if (playerIndex !== -1) {
-                    players[playerIndex].points += chores[index].points
-                    saveDemoDataToStorage('players', players)
-
-                    // Update house points
-                    const houses = getDemoDataFromStorage('houses')
-                    const houseIndex = houses.findIndex(h => h.id === players[playerIndex].house_id)
-                    if (houseIndex !== -1) {
-                        houses[houseIndex].total_points += chores[index].points
-                        saveDemoDataToStorage('houses', houses)
-                    }
-                }
-            }
-
             return chores[index]
         }
         return null
@@ -449,26 +430,6 @@ export const approveChore = async (choreId) => {
                 approved_at: new Date().toISOString()
             }
             saveDemoDataToStorage('chores', chores)
-
-            // Award points to player
-            if (chore.assigned_to) {
-                const players = getDemoDataFromStorage('players')
-                const playerIndex = players.findIndex(p => p.id === chore.assigned_to)
-                if (playerIndex !== -1) {
-                    players[playerIndex].points += chore.points
-                    saveDemoDataToStorage('players', players)
-
-                    // Update house points
-                    const houses = getDemoDataFromStorage('houses')
-                    const houseIndex = houses.findIndex(h =>
-                        h.id === chore.house_id || h.name === chore.house_id
-                    )
-                    if (houseIndex !== -1) {
-                        houses[houseIndex].total_points += chore.points
-                        saveDemoDataToStorage('houses', houses)
-                    }
-                }
-            }
 
             // Delete the photo after approval
             const photos = getDemoDataFromStorage('chorePhotos')
