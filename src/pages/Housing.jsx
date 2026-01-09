@@ -45,7 +45,7 @@ export default function Housing() {
     const [generatingChores, setGeneratingChores] = useState(false)
 
     // Use realtime hooks
-    const { houses, loading: housesLoading, animatingHouse } = useRealtimeHousePoints({ showNotifications: false })
+    const { houses, loading: housesLoading } = useRealtimeHousePoints({ showNotifications: false })
     const { chores, loading: choresLoading, highlightedChore, refreshChores } = useRealtimeChores({
         playerId: isStaff ? null : playerData?.id,
         showNotifications: true
@@ -366,16 +366,11 @@ export default function Housing() {
                 {housesWithStats.map((house, idx) => (
                     <div
                         key={house.id}
-                        className={`glass-card house-card rank-${idx + 1} ${animatingHouse === house.id ? 'points-update-animation' : ''}`}
+                        className={`glass-card house-card`}
                         onClick={() => setSelectedHouse(house)}
                     >
                         <div className="house-card-header">
-                            <div className="house-rank">{getRankIcon(idx)}</div>
                             <h3 className="house-name">{house.name}</h3>
-                            <div className="house-points">
-                                <span className="points-num">{house.total_points}</span>
-                                <span className="points-label">pts</span>
-                            </div>
                         </div>
 
                         <div className="house-stats">
@@ -539,7 +534,6 @@ export default function Housing() {
                         <div className="modal-header house-modal-header">
                             <div>
                                 <h3 className="modal-title">{selectedHouse.name}</h3>
-                                <p className="modal-subtitle">{selectedHouse.total_points} points</p>
                             </div>
                             <button className="modal-close" onClick={() => setSelectedHouse(null)}>×</button>
                         </div>
@@ -571,7 +565,6 @@ export default function Housing() {
                                                 <span className="resident-name">{resident.first_name} {resident.last_name}</span>
                                                 <span className="resident-position">{resident.position}</span>
                                             </div>
-                                            <span className="badge">{resident.points} pts</span>
                                         </div>
                                     ))}
                                 </div>
