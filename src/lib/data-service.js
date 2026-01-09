@@ -1634,27 +1634,53 @@ export const updateGroceryOrder = async (orderId, updates) => {
 
 export const getDeliveryDates = () => {
     const dates = []
-    const today = new Date()
+    const now = new Date()
 
-    // Format date to YYYY-MM-DD in Berlin timezone (avoids UTC conversion issues)
-    const formatDateBerlin = (d) => {
-        return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+    // Get current date in Berlin timezone
+    const getBerlinDate = (d) => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Berlin',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        })
+        return formatter.format(d)
     }
 
-    // Generate next 4 Tuesday and Friday dates
-    for (let i = 0; i < 30 && dates.length < 4; i++) {
-        const date = new Date(today)
-        date.setDate(today.getDate() + i)
-        const day = date.getDay()
+    // Get day of week in Berlin timezone (0=Sun, 1=Mon, ..., 6=Sat)
+    const getBerlinDayOfWeek = (d) => {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Europe/Berlin',
+            weekday: 'short'
+        })
+        const dayName = formatter.format(d)
+        const days = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+        return days[dayName]
+    }
 
-        if (day === 2 || day === 5) { // Tuesday = 2, Friday = 5
-            const dateStr = formatDateBerlin(date)
+    // Format date for display (DD/MM/YYYY) in Berlin timezone
+    const formatDisplayDate = (d) => {
+        return new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Berlin',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }).format(d)
+    }
+
+    // Generate next 4 Tuesday and Friday dates (in Berlin timezone)
+    for (let i = 0; i < 30 && dates.length < 4; i++) {
+        const date = new Date(now.getTime() + i * 24 * 60 * 60 * 1000)
+        const dayOfWeek = getBerlinDayOfWeek(date)
+
+        if (dayOfWeek === 2 || dayOfWeek === 5) { // Tuesday = 2, Friday = 5
+            const dateStr = getBerlinDate(date)
             const deadlinePassed = isDeadlinePassed(dateStr)
 
             dates.push({
                 date: dateStr,
-                dayName: day === 2 ? 'Tuesday' : 'Friday',
-                formattedDate: date.toLocaleDateString('en-GB'),
+                dayName: dayOfWeek === 2 ? 'Tuesday' : 'Friday',
+                formattedDate: formatDisplayDate(date),
                 deadlineText: formatDeadline(dateStr),
                 expired: deadlinePassed
             })
