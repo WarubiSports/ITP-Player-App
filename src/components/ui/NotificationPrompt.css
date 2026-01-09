@@ -1,0 +1,75 @@
+/* Notification Permission Prompt */
+.notification-prompt {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-prompt-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.notification-prompt-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-prompt-content h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.notification-prompt-content p {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+}
+
+.notification-prompt-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .notification-prompt {
+        flex-wrap: wrap;
+    }
+
+    .notification-prompt-content {
+        flex: 1 1 100%;
+        order: 1;
+    }
+
+    .notification-prompt-icon {
+        order: 0;
+    }
+
+    .notification-prompt-actions {
+        order: 2;
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+}

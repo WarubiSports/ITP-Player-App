@@ -11,6 +11,7 @@ import DailyCheckIn from '../components/performance/DailyCheckIn'
 import GoalsWidget from '../components/goals/GoalsWidget'
 import StreakWidget from '../components/achievements/StreakWidget'
 import AchievementsWidget from '../components/achievements/AchievementsWidget'
+import NotificationPrompt from '../components/ui/NotificationPrompt'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -110,6 +111,9 @@ export default function Dashboard() {
                     <span className="status-text">ONLINE</span>
                 </div>
             </header>
+
+            {/* Notification Permission Prompt (only for players) */}
+            {playerData && playerData.id && <NotificationPrompt />}
 
             {/* Smart Guidance - Personalized Next Steps (only for players) */}
             {playerData && playerData.id && <SmartGuidance key={refreshKey} playerId={playerData.id} />}
