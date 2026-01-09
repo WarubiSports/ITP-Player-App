@@ -57,26 +57,35 @@ export default function Pathway() {
         e.preventDefault()
         const form = e.target
         const type = form.type.value
+        const leagueValue = form.league.value || ''
 
         setSaving(true)
         try {
+            // Build notes to include type and contract info for clubs
+            let notesText = form.notes.value || ''
+            if (type === 'club') {
+                const contractInfo = form.contractOffer?.value
+                if (contractInfo) {
+                    notesText = `[Club - Contract: ${contractInfo}] ${notesText}`.trim()
+                } else {
+                    notesText = `[Club] ${notesText}`.trim()
+                }
+            }
+
+            // Only send fields that exist in the database schema
             const newTarget = {
-                player_id: profile?.player_id || profile?.id || 'p1',
-                type,
+                player_id: profile?.player_id || profile?.id,
                 college_name: form.name.value,
-                name: form.name.value,
-                division: type === 'college' ? form.league.value.split(' - ')[0] : 'Professional',
-                conference: type === 'college' ? form.league.value.split(' - ')[1] || '' : form.league.value,
-                league: form.league.value,
-                location: form.location.value,
+                division: type === 'college' ? leagueValue.split(' - ')[0] : 'Professional',
+                conference: type === 'college' ? leagueValue.split(' - ')[1] || '' : leagueValue,
+                location: form.location.value || null,
                 interest_level: form.interestLevel.value,
                 status: form.status.value,
-                scholarship_amount: type === 'college' && form.scholarshipAmount?.value ? parseInt(form.scholarshipAmount.value) : null,
-                contract_offer: type === 'club' && form.contractOffer?.value ? form.contractOffer.value : null,
+                scholarship_amount: type === 'college' && form.scholarshipAmount?.value ? parseFloat(form.scholarshipAmount.value) : null,
                 contact_name: form.contactName.value || null,
                 contact_email: form.contactEmail.value || null,
                 last_contact: form.lastContact.value || null,
-                notes: form.notes.value || null
+                notes: notesText || null
             }
 
             const saved = await createCollegeTarget(newTarget)
@@ -85,8 +94,8 @@ export default function Pathway() {
             const formattedOpp = {
                 ...saved,
                 type,
-                name: saved.college_name || saved.name,
-                league: saved.division ? `${saved.division}${saved.conference ? ' - ' + saved.conference : ''}` : saved.league
+                name: saved.college_name,
+                league: saved.division ? `${saved.division}${saved.conference ? ' - ' + saved.conference : ''}` : ''
             }
 
             setRecruitmentOpportunities(prev => [formattedOpp, ...prev])

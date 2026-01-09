@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { getDemoData } from '../lib/supabase'
-import { getPlayers, getWellnessScore, getTrainingLoads } from '../lib/data-service'
+import { getPlayers, getWellnessScore, getTrainingLoads, getWellnessStreak } from '../lib/data-service'
 import ReadinessGauge from '../components/dashboard/ReadinessGauge'
 import NextObjective from '../components/dashboard/NextObjective'
 import SmartGuidance from '../components/dashboard/SmartGuidance'
@@ -18,9 +18,52 @@ export default function Dashboard() {
     const [playerData, setPlayerData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [readinessScore, setReadinessScore] = useState(50);
+    const [previousBestScore, setPreviousBestScore] = useState(null);
     const [trainingLoad, setTrainingLoad] = useState('Medium');
     const [sleepAverage, setSleepAverage] = useState(null);
+    const [streak, setStreak] = useState({ current: 0, longest: 0, todayLogged: false });
     const [refreshKey, setRefreshKey] = useState(0);
+
+    // Get time-aware greeting
+    const getTimeGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
+    // Build smart greeting message
+    const getSmartGreeting = () => {
+        const firstName = profile?.full_name?.split(' ')[0] || 'Pilot';
+        const timeGreeting = getTimeGreeting();
+
+        // Check for personal best
+        if (previousBestScore && readinessScore > previousBestScore) {
+            return `${timeGreeting}, ${firstName}! Personal best: ${readinessScore} readiness!`;
+        }
+
+        // Streak-based messages
+        if (streak.current >= 30) {
+            return `${timeGreeting}, ${firstName}! Legendary ${streak.current}-day streak!`;
+        }
+        if (streak.current >= 14) {
+            return `${timeGreeting}, ${firstName}! On fire with ${streak.current} days!`;
+        }
+        if (streak.current >= 7) {
+            return `${timeGreeting}, ${firstName}! Great ${streak.current}-day streak!`;
+        }
+        if (streak.current >= 3) {
+            return `${timeGreeting}, ${firstName}! Building a ${streak.current}-day streak!`;
+        }
+        if (streak.current === 1 && streak.todayLogged) {
+            return `${timeGreeting}, ${firstName}! Great start today!`;
+        }
+        if (!streak.todayLogged && streak.current > 0) {
+            return `${timeGreeting}, ${firstName}! Log today to keep your streak!`;
+        }
+
+        return `${timeGreeting}, ${firstName}. Ready for action.`;
+    };
 
     useEffect(() => {
         if (profile?.id) {
@@ -59,6 +102,14 @@ export default function Dashboard() {
                 // Get wellness score (7-day average)
                 const wellnessData = await getWellnessScore(player.id);
                 if (wellnessData) {
+                    // Check for personal best
+                    const storedBest = localStorage.getItem(`best_readiness_${player.id}`);
+                    if (storedBest) {
+                        setPreviousBestScore(parseInt(storedBest));
+                    }
+                    if (wellnessData.score > (parseInt(storedBest) || 0)) {
+                        localStorage.setItem(`best_readiness_${player.id}`, wellnessData.score.toString());
+                    }
                     setReadinessScore(wellnessData.score);
                     const avgSleep = wellnessData.average.sleep_quality;
                     setSleepAverage(avgSleep.toFixed(1)); // Sleep quality on 1-5 scale
@@ -72,6 +123,12 @@ export default function Dashboard() {
                     else if (totalLoad > 2500) setTrainingLoad('High');
                     else if (totalLoad > 1500) setTrainingLoad('Medium');
                     else setTrainingLoad('Low');
+                }
+
+                // Get streak data for smart greeting
+                const streakData = await getWellnessStreak(player.id);
+                if (streakData) {
+                    setStreak(streakData);
                 }
             }
         } catch (error) {
@@ -108,7 +165,7 @@ export default function Dashboard() {
             <header className="dashboard-header">
                 <div className="dashboard-title-section">
                     <h1>MISSION CONTROL</h1>
-                    <p>Welcome back, Pilot. Systems Nominal.</p>
+                    <p className="smart-greeting">{playerData && playerData.id ? getSmartGreeting() : 'Welcome back, Pilot. Systems Nominal.'}</p>
                 </div>
                 <div className="glass-panel dashboard-status">
                     <span className="status-dot"></span>

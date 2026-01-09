@@ -537,3 +537,45 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Favorites Section */
+.grocery-favorites {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.grocery-favorites__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.grocery-favorites__title::before {
+    content: '\2B50';
+}
+
+.grocery-favorites__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.625rem;
+}
+
+.grocery-item--favorite {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(0, 217, 255, 0.05) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.grocery-item--favorite:hover {
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+@media (max-width: 640px) {
+    .grocery-favorites__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

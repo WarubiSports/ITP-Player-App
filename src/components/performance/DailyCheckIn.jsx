@@ -6,10 +6,11 @@ import { getLocalDate } from '../../lib/date-utils';
 
 export default function DailyCheckIn({ onClose }) {
     const { profile } = useAuth();
-    const { success, achievement } = useNotification();
+    const { success, error: showError, achievement } = useNotification();
     const [step, setStep] = useState(1);
     const [ratings, setRatings] = useState({ sleep: 5, soreness: 3, mood: 4 });
     const [trainingData, setTrainingData] = useState({ duration: 60, rpe: 5, trained: true });
+    const [submitting, setSubmitting] = useState(false);
 
     const handleRate = (category, value) => {
         setRatings(prev => ({ ...prev, [category]: value }));
@@ -20,6 +21,7 @@ export default function DailyCheckIn({ onClose }) {
     };
 
     const handleSubmit = async () => {
+        setSubmitting(true);
         try {
             // Get player ID
             const players = await getPlayers();
@@ -63,10 +65,11 @@ export default function DailyCheckIn({ onClose }) {
             success('Daily check-in completed and saved!');
 
             onClose();
-        } catch (error) {
-            console.error('Error saving check-in:', error);
-            success('Check-in saved locally');
-            onClose();
+        } catch (err) {
+            console.error('Error saving check-in:', err);
+            showError('Failed to save check-in. Please try again.');
+            setSubmitting(false);
+            // Don't close modal - let user retry
         }
     };
 
@@ -194,8 +197,13 @@ export default function DailyCheckIn({ onClose }) {
                             Next
                         </button>
                     ) : (
-                        <button className="btn btn-success" onClick={handleSubmit} style={{ width: '100%' }}>
-                            Complete Check-In
+                        <button
+                            className="btn btn-success"
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            style={{ width: '100%' }}
+                        >
+                            {submitting ? 'Saving...' : 'Complete Check-In'}
                         </button>
                     )}
                 </div>

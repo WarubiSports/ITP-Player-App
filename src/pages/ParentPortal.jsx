@@ -56,8 +56,10 @@ export default function ParentPortal() {
     const [reportData, setReportData] = useState(null)
 
     useEffect(() => {
-        loadPlayers()
-    }, [])
+        if (profile) {
+            loadPlayers()
+        }
+    }, [profile])
 
     useEffect(() => {
         if (selectedPlayer) {
@@ -69,20 +71,31 @@ export default function ParentPortal() {
         try {
             const allPlayers = await getPlayers()
 
-            // Check if current user is a player (not staff)
-            const isPlayer = profile?.role === 'player'
-            const currentUserPlayer = allPlayers.find(p => p.id === profile?.id || p.user_id === profile?.id)
+            // Check if current user is staff/admin
+            const isStaff = profile?.role === 'staff' || profile?.role === 'admin'
 
-            if (isPlayer && currentUserPlayer) {
-                // Players can only see their own report
-                setPlayers([currentUserPlayer])
-                setSelectedPlayer(currentUserPlayer)
-            } else {
-                // Staff can see all players
+            // Find player record matching current user
+            const currentUserPlayer = allPlayers.find(p =>
+                p.id === profile?.id ||
+                p.user_id === profile?.id ||
+                // Match by name for demo mode
+                (p.first_name === profile?.first_name && p.last_name === profile?.last_name)
+            )
+
+            if (isStaff) {
+                // Staff/admin can see all players
                 setPlayers(allPlayers)
                 if (allPlayers.length > 0) {
                     setSelectedPlayer(allPlayers[0])
                 }
+            } else if (currentUserPlayer) {
+                // Players can only see their own report
+                setPlayers([currentUserPlayer])
+                setSelectedPlayer(currentUserPlayer)
+            } else {
+                // Unknown user - show nothing (privacy first)
+                setPlayers([])
+                setSelectedPlayer(null)
             }
         } catch (error) {
             console.error('Error loading players:', error)
@@ -127,8 +140,23 @@ export default function ParentPortal() {
         }
     }
 
-    if (!selectedPlayer) {
+    if (loading) {
         return <div className="loading">Loading...</div>
+    }
+
+    if (!selectedPlayer) {
+        return (
+            <div className="parent-portal">
+                <div className="page-header">
+                    <h1>Parent Portal</h1>
+                    <p>Weekly progress reports</p>
+                </div>
+                <div className="empty-state">
+                    <p>No player profile found for your account.</p>
+                    <p>Please contact support if you believe this is an error.</p>
+                </div>
+            </div>
+        )
     }
 
     // Generate weekly report data from loaded data

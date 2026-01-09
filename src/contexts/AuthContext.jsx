@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 // v2 - Added player_id to profile
-import { supabase, checkIsDemoMode, demoData } from '../lib/supabase'
+import { supabase, checkIsDemoMode, demoData, checkConnection, isConnectionHealthy } from '../lib/supabase'
 
 const AuthContext = createContext({})
 
@@ -15,31 +15,43 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Check for demo user first
-        const demoUser = localStorage.getItem('itp_demo_user')
-        if (demoUser) {
-            const parsed = JSON.parse(demoUser)
-            setUser(parsed)
-            setProfile(parsed)
-            setLoading(false)
-            return
-        }
+        const initAuth = async () => {
+            // Check for demo user first
+            const demoUser = localStorage.getItem('itp_demo_user')
+            if (demoUser) {
+                const parsed = JSON.parse(demoUser)
+                setUser(parsed)
+                setProfile(parsed)
+                setLoading(false)
+                return
+            }
 
-        // Check for existing Supabase session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                fetchProfile(session.user.id)
+            // Check Supabase connection health first
+            await checkConnection()
+
+            // Only try Supabase if connection is healthy
+            if (isConnectionHealthy()) {
+                // Check for existing Supabase session
+                const { data: { session } } = await supabase.auth.getSession()
+                setUser(session?.user ?? null)
+                if (session?.user) {
+                    await fetchProfile(session.user.id)
+                }
             }
             setLoading(false)
-        })
+        }
 
+        initAuth()
+
+        // Only set up auth listener if Supabase might be healthy
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                fetchProfile(session.user.id)
-            } else {
-                setProfile(null)
+            if (isConnectionHealthy()) {
+                setUser(session?.user ?? null)
+                if (session?.user) {
+                    fetchProfile(session.user.id)
+                } else {
+                    setProfile(null)
+                }
             }
         })
 

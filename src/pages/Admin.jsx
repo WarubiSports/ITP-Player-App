@@ -224,6 +224,7 @@ export default function Admin() {
             ))
         } catch (error) {
             console.error('Failed to update order:', error)
+            alert('Failed to update order. Please try again.')
         }
     }
 

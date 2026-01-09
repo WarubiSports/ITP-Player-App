@@ -5,7 +5,6 @@ import ThemeToggle from './ThemeToggle'
 
 const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/players', icon: '⚽', label: 'Players' },
     { path: '/wellness', icon: '💪', label: 'Wellness' },
     { path: '/progress', icon: '📈', label: 'Progress' },
     { path: '/pathway', icon: '🎓', label: 'Pathway' },

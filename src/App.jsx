@@ -14,7 +14,6 @@ import SSO from './pages/auth/SSO'
 
 // Lazy load dashboard pages (code splitting)
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Players = lazy(() => import('./pages/Players'))
 const Wellness = lazy(() => import('./pages/Wellness'))
 const Progress = lazy(() => import('./pages/Progress'))
 const Pathway = lazy(() => import('./pages/Pathway'))
@@ -72,7 +71,6 @@ export default function App() {
                 <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                     <Route index element={<Navigate to="/dashboard" replace />} />
                     <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-                    <Route path="players" element={<Suspense fallback={<PageLoader />}><Players /></Suspense>} />
                     <Route path="wellness" element={<Suspense fallback={<PageLoader />}><Wellness /></Suspense>} />
                     <Route path="progress" element={<Suspense fallback={<PageLoader />}><Progress /></Suspense>} />
                     <Route path="pathway" element={<Suspense fallback={<PageLoader />}><Pathway /></Suspense>} />

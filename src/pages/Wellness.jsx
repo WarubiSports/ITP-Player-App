@@ -28,6 +28,7 @@ export default function Wellness() {
     const [selectedDate, setSelectedDate] = useState(getLocalDate())
     const [loading, setLoading] = useState(true)
     const [showConfetti, setShowConfetti] = useState(false)
+    const [prefillValues, setPrefillValues] = useState(null)
 
     useEffect(() => {
         loadData()
@@ -49,6 +50,33 @@ export default function Wellness() {
         } finally {
             setLoading(false)
         }
+    }
+
+    // Get yesterday's wellness log for pre-filling the form
+    const getYesterdayLog = () => {
+        const yesterdayDate = new Date()
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+        const yesterdayStr = yesterdayDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+        return wellnessLogs.find(log => log.date === yesterdayStr)
+    }
+
+    // Open wellness form with pre-filled values from yesterday
+    const openWellnessForm = () => {
+        setSelectedDate(getLocalDate())
+        const yesterdayLog = getYesterdayLog()
+        if (yesterdayLog) {
+            setPrefillValues({
+                sleepHours: yesterdayLog.sleep_hours,
+                sleepQuality: yesterdayLog.sleep_quality,
+                energyLevel: yesterdayLog.energy_level,
+                muscleSoreness: yesterdayLog.muscle_soreness,
+                stressLevel: yesterdayLog.stress_level,
+                mood: yesterdayLog.mood
+            })
+        } else {
+            setPrefillValues(null)
+        }
+        setShowWellnessForm(true)
     }
 
     // Calculate consecutive days streak from logs
@@ -135,6 +163,7 @@ export default function Wellness() {
             setShowTrainingForm(false)
         } catch (error) {
             console.error('Error saving training load:', error)
+            showNotification('Failed to save training load', 'error')
         }
     }
 
@@ -221,7 +250,7 @@ export default function Wellness() {
 
             {/* Quick Actions */}
             <div className="quick-actions">
-                <button className="btn btn-primary" onClick={() => { setSelectedDate(getLocalDate()); setShowWellnessForm(true); }}>
+                <button className="btn btn-primary" onClick={openWellnessForm}>
                     + Log Wellness Check-in
                 </button>
                 <button className="btn btn-secondary" onClick={() => { setSelectedDate(getLocalDate()); setShowTrainingForm(true); }}>
@@ -331,6 +360,12 @@ export default function Wellness() {
                         </div>
                         <form onSubmit={handleWellnessSubmit}>
                             <div className="modal-body">
+                                {prefillValues && (
+                                    <div className="prefill-indicator">
+                                        <span className="prefill-badge">Yesterday's values pre-filled</span>
+                                        <span className="prefill-hint">Adjust as needed for today</span>
+                                    </div>
+                                )}
                                 <div className="input-group">
                                     <label className="input-label">Date</label>
                                     <input
@@ -345,33 +380,33 @@ export default function Wellness() {
                                 <div className="form-grid">
                                     <div className="input-group">
                                         <label className="input-label">Sleep Hours</label>
-                                        <input name="sleepHours" type="number" className="input" min="0" max="12" step="0.5" defaultValue="8" required />
+                                        <input name="sleepHours" type="number" className="input" min="0" max="12" step="0.5" defaultValue={prefillValues?.sleepHours ?? 8} required />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Sleep Quality (1-5)</label>
-                                        <input name="sleepQuality" type="number" className="input" min="1" max="5" defaultValue="4" required />
+                                        <input name="sleepQuality" type="number" className="input" min="1" max="5" defaultValue={prefillValues?.sleepQuality ?? 4} required />
                                     </div>
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
                                         <label className="input-label">Energy Level (1-10)</label>
-                                        <input name="energyLevel" type="number" className="input" min="1" max="10" defaultValue="7" required />
+                                        <input name="energyLevel" type="number" className="input" min="1" max="10" defaultValue={prefillValues?.energyLevel ?? 7} required />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Muscle Soreness (1-10)</label>
-                                        <input name="muscleSoreness" type="number" className="input" min="1" max="10" defaultValue="3" required />
+                                        <input name="muscleSoreness" type="number" className="input" min="1" max="10" defaultValue={prefillValues?.muscleSoreness ?? 3} required />
                                     </div>
                                 </div>
 
                                 <div className="form-grid">
                                     <div className="input-group">
                                         <label className="input-label">Stress Level (1-10)</label>
-                                        <input name="stressLevel" type="number" className="input" min="1" max="10" defaultValue="3" required />
+                                        <input name="stressLevel" type="number" className="input" min="1" max="10" defaultValue={prefillValues?.stressLevel ?? 3} required />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Mood</label>
-                                        <select name="mood" className="input" required>
+                                        <select name="mood" className="input" defaultValue={prefillValues?.mood ?? 'good'} required>
                                             <option value="excellent">Excellent</option>
                                             <option value="good">Good</option>
                                             <option value="okay">Okay</option>

@@ -48,8 +48,11 @@ export default function StreakWidget({ playerId, onStreakChange }) {
 
     const status = getStatus()
 
+    // Check if player just hit a milestone (exact match)
+    const isMilestoneHit = current === 7 || current === 14 || current === 30
+
     return (
-        <div className={`glass-panel streak-widget streak-widget--${status.class} ${todayLogged ? 'streak-widget--logged' : ''}`}>
+        <div className={`glass-panel streak-widget streak-widget--${status.class} ${todayLogged ? 'streak-widget--logged' : ''} ${isMilestoneHit ? 'streak-widget--milestone-hit' : ''}`}>
             <div className="streak-widget__main">
                 <div className="streak-widget__icon-wrapper">
                     <span className="streak-widget__icon">{current > 0 ? '🔥' : '💤'}</span>

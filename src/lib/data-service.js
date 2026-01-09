@@ -26,7 +26,13 @@ const generateId = () => `${Date.now()}-${Math.random().toString(36).substring(2
 // =============================================
 
 export const getPlayers = async () => {
-    // Always try Supabase first, fallback to demo data on error
+    // Use demo data if demo user is logged in (demo users have non-UUID IDs)
+    if (shouldUseDemoData()) {
+        const allPlayers = getDemoDataFromStorage('players')
+        return allPlayers.filter(p => p.status === 'active')
+    }
+
+    // Try Supabase for real users
     try {
         const players = await queries.playerQueries.getAllPlayers()
         if (players && players.length > 0) {
@@ -476,7 +482,7 @@ export const getEvents = async () => {
     // Always try Supabase first, fallback to demo data on error
     try {
         const events = await queries.eventQueries.getAllEvents()
-        if (events) {
+        if (events && events.length > 0) {
             return events
         }
     } catch (error) {
@@ -1237,23 +1243,80 @@ export const checkAndUnlockAchievements = async (playerId) => {
     const playerAchievements = await getPlayerAchievements(playerId)
     const unlockedIds = new Set(playerAchievements.map(pa => pa.achievement_id))
 
-    // Get streak data
+    // Get data for achievement checks
     const streak = await getWellnessStreak(playerId)
+    const wellnessLogs = await getWellnessLogs(playerId)
+    const playerGoals = await getPlayerGoals(playerId)
+    const groceryOrders = await getGroceryOrders(playerId)
+    const wellnessScore = await getWellnessScore(playerId)
 
-    // Check wellness streak achievements
+    // Check each achievement
     for (const achievement of allAchievements) {
         if (unlockedIds.has(achievement.id)) continue
 
         let shouldUnlock = false
 
         switch (achievement.code) {
+            // Streak achievements
             case 'wellness_streak_7':
                 shouldUnlock = streak.current >= 7 || streak.longest >= 7
+                break
+            case 'wellness_streak_14':
+                shouldUnlock = streak.current >= 14 || streak.longest >= 14
                 break
             case 'wellness_streak_30':
                 shouldUnlock = streak.current >= 30 || streak.longest >= 30
                 break
-            // Add more achievement checks here as needed
+
+            // First-time achievements
+            case 'first_wellness_log':
+                shouldUnlock = wellnessLogs.length >= 1
+                break
+            case 'first_goal_completed':
+                shouldUnlock = playerGoals.some(g => g.status === 'completed')
+                break
+
+            // Consistency achievements
+            case 'grocery_pro':
+                shouldUnlock = groceryOrders.length >= 5
+                break
+            case 'team_player':
+                // Check if player has completed 10+ chores (would need chore data)
+                // For now, check if they have high house engagement
+                break
+
+            // Performance achievements
+            case 'readiness_peak':
+                shouldUnlock = wellnessScore && wellnessScore.score >= 90
+                break
+
+            // Resilience achievements
+            case 'comeback_kid':
+                // Awarded when player breaks a streak (longest > current) but starts a new one
+                shouldUnlock = streak.longest > 0 && streak.current >= 3 && streak.longest > streak.current
+                break
+
+            // Recovery achievements
+            case 'recovery_master':
+                // Check last 7 wellness logs for 8+ hours sleep
+                if (wellnessLogs.length >= 7) {
+                    const last7 = wellnessLogs.slice(0, 7)
+                    shouldUnlock = last7.every(log => log.sleep_hours >= 8)
+                }
+                break
+
+            // Early riser
+            case 'early_riser':
+                // Check for 5 logs created before 7 AM
+                if (wellnessLogs.length >= 5) {
+                    const earlyLogs = wellnessLogs.filter(log => {
+                        const hour = new Date(log.created_at).getHours()
+                        return hour < 7
+                    })
+                    shouldUnlock = earlyLogs.length >= 5
+                }
+                break
+
             default:
                 break
         }

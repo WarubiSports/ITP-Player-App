@@ -5,6 +5,7 @@ import {
     getGroceryItems,
     createGroceryOrder,
     getDeliveryDates,
+    getGroceryOrders,
     GROCERY_BUDGET
 } from '../lib/data-service'
 import './GroceryOrder.css'
@@ -33,23 +34,46 @@ export default function GroceryOrder() {
     const [deliveryDates, setDeliveryDates] = useState([])
     const [submitting, setSubmitting] = useState(false)
     const [message, setMessage] = useState(null)
+    const [favorites, setFavorites] = useState([])
 
     useEffect(() => {
         loadData()
-        const savedDate = localStorage.getItem('grocery_delivery_date')
-        if (savedDate) {
-            setDeliveryDate(savedDate)
-        }
     }, [])
 
     const loadData = async () => {
         try {
-            const [itemsData, dates] = await Promise.all([
+            const playerId = profile?.player_id || profile?.id
+            const [itemsData, dates, pastOrders] = await Promise.all([
                 getGroceryItems(),
-                Promise.resolve(getDeliveryDates())
+                Promise.resolve(getDeliveryDates()),
+                playerId ? getGroceryOrders(playerId) : Promise.resolve([])
             ])
             setItems(itemsData)
             setDeliveryDates(dates)
+
+            // Analyze last 5 orders for frequently ordered items
+            if (pastOrders.length > 0 && itemsData.length > 0) {
+                const itemCounts = {}
+                const recentOrders = pastOrders.slice(0, 5)
+                recentOrders.forEach(order => {
+                    order.items?.forEach(item => {
+                        const itemId = item.grocery_item_id || item.itemId
+                        itemCounts[itemId] = (itemCounts[itemId] || 0) + item.quantity
+                    })
+                })
+
+                // Get top 6 most ordered items
+                const topItemIds = Object.entries(itemCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 6)
+                    .map(([id]) => id)
+
+                const favoriteItems = topItemIds
+                    .map(id => itemsData.find(i => i.id === id || i.id === parseInt(id)))
+                    .filter(Boolean)
+
+                setFavorites(favoriteItems)
+            }
 
             // Validate and clean cart - remove items that don't exist in current grocery items
             // This handles switching between demo mode and real data
@@ -67,10 +91,14 @@ export default function GroceryOrder() {
                 setCart(validCart)
             }
 
-            // Auto-select first valid delivery date
+            // Auto-select first valid delivery date (always select if not already chosen)
+            const savedDate = localStorage.getItem('grocery_delivery_date')
             const firstValid = dates.find(d => !d.expired)
-            if (firstValid && !localStorage.getItem('grocery_delivery_date')) {
+            if (savedDate && dates.find(d => d.date === savedDate && !d.expired)) {
+                setDeliveryDate(savedDate)
+            } else if (firstValid) {
                 setDeliveryDate(firstValid.date)
+                localStorage.setItem('grocery_delivery_date', firstValid.date)
             }
         } catch (error) {
             console.error('Failed to load grocery items:', error)
@@ -257,6 +285,49 @@ export default function GroceryOrder() {
                             className="grocery-search__input"
                         />
                     </div>
+
+                    {/* Favorites Section */}
+                    {favorites.length > 0 && selectedCategory === 'all' && !searchTerm && (
+                        <div className="grocery-favorites">
+                            <h3 className="grocery-favorites__title">Your Favorites</h3>
+                            <div className="grocery-favorites__grid">
+                                {favorites.map(item => {
+                                    const quantity = getItemQuantity(item.id)
+                                    const isHousehold = item.category === 'household'
+                                    return (
+                                        <div
+                                            key={`fav-${item.id}`}
+                                            className={`grocery-item grocery-item--favorite ${quantity > 0 ? 'grocery-item--in-cart' : ''}`}
+                                        >
+                                            <div className="grocery-item__info">
+                                                <span className="grocery-item__name">{item.name}</span>
+                                                <span className="grocery-item__category">{item.category}</span>
+                                            </div>
+                                            <div className="grocery-item__price">
+                                                {isHousehold ? 'Free' : `€${item.price.toFixed(2)}`}
+                                            </div>
+                                            <div className="grocery-item__controls">
+                                                <button
+                                                    className="qty-btn qty-btn--minus"
+                                                    onClick={() => removeFromCart(item.id)}
+                                                    disabled={quantity === 0}
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="qty-display">{quantity}</span>
+                                                <button
+                                                    className="qty-btn qty-btn--plus"
+                                                    onClick={() => addToCart(item)}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grocery-items">
                         {filteredItems.length === 0 ? (

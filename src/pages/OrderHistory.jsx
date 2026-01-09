@@ -110,8 +110,11 @@ export default function OrderHistory() {
     }
 
     const formatShortDate = (dateStr) => {
-        const [year, month, day] = dateStr.split('-').map(Number)
-        return new Date(year, month - 1, day).toLocaleDateString('en-GB')
+        if (!dateStr) return 'N/A'
+        // Handle both ISO timestamps and YYYY-MM-DD formats
+        const date = new Date(dateStr)
+        if (isNaN(date.getTime())) return 'N/A'
+        return date.toLocaleDateString('en-GB')
     }
 
     if (loading) {

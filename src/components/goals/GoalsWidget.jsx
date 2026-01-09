@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
 import { getPlayerGoals, createGoal, updateGoal } from '../../lib/data-service'
+import { useConfetti } from '../celebrations/Confetti'
+import { useNotification } from '../../contexts/NotificationContext'
 import './GoalsWidget.css'
 
 export default function GoalsWidget({ playerId, compact = false }) {
     const [goals, setGoals] = useState([])
     const [showAddForm, setShowAddForm] = useState(false)
     const [loading, setLoading] = useState(true)
+    const { showConfetti, triggerConfetti, ConfettiComponent } = useConfetti()
+    const notification = useNotification()
 
     useEffect(() => {
         if (playerId) {
@@ -64,6 +68,7 @@ export default function GoalsWidget({ playerId, compact = false }) {
     const handleUpdateProgress = async (goalId, currentValue) => {
         try {
             const goal = goals.find(g => g.id === goalId)
+            const wasCompleted = goal.status === 'completed'
             const isCompleted = currentValue >= goal.target_value
 
             const updated = await updateGoal(goalId, {
@@ -73,6 +78,12 @@ export default function GoalsWidget({ playerId, compact = false }) {
             })
 
             setGoals(prev => prev.map(g => g.id === goalId ? updated : g))
+
+            // Celebrate goal completion!
+            if (isCompleted && !wasCompleted) {
+                triggerConfetti()
+                notification?.achievement?.('Goal Achieved!', goal.title, '🎯')
+            }
         } catch (error) {
             console.error('Error updating goal:', error)
         }
@@ -154,6 +165,7 @@ export default function GoalsWidget({ playerId, compact = false }) {
 
     return (
         <div className="goals-widget">
+            <ConfettiComponent />
             <div className="goals-widget-header">
                 <div>
                     <h3>🎯 My Goals</h3>

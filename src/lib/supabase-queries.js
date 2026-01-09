@@ -1437,7 +1437,8 @@ export const groceryQueries = {
                 player_id: playerId,
                 delivery_date: deliveryDate,
                 total_amount: totalAmount,
-                status: 'pending'
+                status: 'pending',
+                submitted_at: new Date().toISOString()
             }])
             .select()
             .single()

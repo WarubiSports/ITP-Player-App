@@ -3,19 +3,78 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
 
+// Check if Supabase is properly configured (not using placeholder)
+const isSupabaseConfigured = Boolean(
+    import.meta.env.VITE_SUPABASE_URL &&
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
+)
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Connection health state
+let connectionHealthy = null // null = untested, true = healthy, false = unhealthy
+let lastHealthCheck = 0
+const HEALTH_CHECK_INTERVAL = 60000 // Re-check every 60 seconds
+
+// Test Supabase connection health with timeout
+export const checkConnection = async () => {
+    // Skip if not configured
+    if (!isSupabaseConfigured) {
+        connectionHealthy = false
+        return false
+    }
+
+    // Use cached result if recent
+    const now = Date.now()
+    if (connectionHealthy !== null && (now - lastHealthCheck) < HEALTH_CHECK_INTERVAL) {
+        return connectionHealthy
+    }
+
+    try {
+        // Simple health check with 5 second timeout
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        )
+        const queryPromise = supabase.from('houses').select('id').limit(1)
+
+        const { error } = await Promise.race([queryPromise, timeoutPromise])
+        connectionHealthy = !error
+        lastHealthCheck = now
+
+        if (!connectionHealthy) {
+            console.log('Supabase connection unhealthy, using demo mode')
+        }
+
+        return connectionHealthy
+    } catch (error) {
+        connectionHealthy = false
+        lastHealthCheck = now
+        console.log('Supabase connection failed or timed out, using demo mode')
+        return false
+    }
+}
+
+// Get connection status (sync)
+export const isConnectionHealthy = () => {
+    return connectionHealthy === true
+}
+
 // Demo mode check - evaluated at runtime each time it's accessed
-// True when: no Supabase URL configured OR user logged in via demo login
+// True when: no Supabase URL configured OR user logged in via demo login OR connection unhealthy
 export const checkIsDemoMode = () => {
-    return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
+    return !isSupabaseConfigured ||
+           localStorage.getItem('itp_demo_user') !== null ||
+           connectionHealthy === false
 }
 
 // Check if we should use demo DATA
-// True when: no Supabase URL configured OR user logged in via demo login
+// True when: no Supabase URL configured OR user logged in via demo login OR connection unhealthy
 // Demo users have non-UUID IDs that won't work with Supabase, so we must use local storage
 export const shouldUseDemoData = () => {
-    return !import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('itp_demo_user') !== null
+    return !isSupabaseConfigured ||
+           localStorage.getItem('itp_demo_user') !== null ||
+           connectionHealthy === false
 }
 
 // For backwards compatibility - but prefer checkIsDemoMode() for runtime checks
@@ -223,6 +282,12 @@ export const demoData = {
         { id: 'ach8', code: 'early_riser', name: 'Early Bird', description: 'Logged wellness before 7 AM for 5 consecutive days', category: 'consistency', icon: '🌅', rarity: 'rare', points_value: 100 },
         { id: 'ach9', code: 'recovery_master', name: 'Recovery Master', description: 'Maintained 8+ hours sleep for 7 days', category: 'wellness', icon: '😴', rarity: 'common', points_value: 75 },
         { id: 'ach10', code: 'mental_resilience', name: 'Mental Fortress', description: 'Logged high confidence (8+) for 5 consecutive days', category: 'wellness', icon: '🧠', rarity: 'rare', points_value: 150 },
+        { id: 'ach11', code: 'first_wellness_log', name: 'Journey Begins', description: 'Logged your first wellness check-in', category: 'consistency', icon: '🌱', rarity: 'common', points_value: 25 },
+        { id: 'ach12', code: 'first_goal_completed', name: 'Goal Getter', description: 'Completed your first goal', category: 'achievement', icon: '🎯', rarity: 'common', points_value: 50 },
+        { id: 'ach13', code: 'grocery_pro', name: 'Grocery Pro', description: 'Placed 5 grocery orders', category: 'consistency', icon: '🛒', rarity: 'common', points_value: 50 },
+        { id: 'ach14', code: 'readiness_peak', name: 'Peak Performance', description: 'Achieved 90+ readiness score', category: 'wellness', icon: '🏆', rarity: 'rare', points_value: 150 },
+        { id: 'ach15', code: 'comeback_kid', name: 'Comeback Kid', description: 'Restarted a wellness streak after breaking it', category: 'resilience', icon: '🔄', rarity: 'common', points_value: 75 },
+        { id: 'ach16', code: 'wellness_streak_14', name: '14-Day Dedication', description: 'Logged wellness for 14 consecutive days', category: 'consistency', icon: '🔥', rarity: 'rare', points_value: 100 },
     ],
     playerAchievements: [
         { id: 'pa1', player_id: 'p1', achievement_id: 'ach1', unlocked_at: '2024-12-25T08:00:00Z' },
