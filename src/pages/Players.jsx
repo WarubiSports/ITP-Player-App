@@ -245,23 +245,24 @@ export default function Players() {
                                 <button
                                     className="btn btn-primary btn-sm"
                                     onClick={() => openPerfTestModal(player)}
-                                    style={{ width: '100%', marginBottom: 'var(--space-2)' }}
                                 >
                                     📊 Log Performance Test
                                 </button>
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    onClick={() => openPlayerModal(player)}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="btn btn-ghost btn-sm"
-                                    style={{ color: 'var(--color-error)' }}
-                                    onClick={() => handleDeletePlayer(player.id)}
-                                >
-                                    Remove
-                                </button>
+                                <div className="player-card-actions-row">
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={() => openPlayerModal(player)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        style={{ color: 'var(--color-error)' }}
+                                        onClick={() => handleDeletePlayer(player.id)}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

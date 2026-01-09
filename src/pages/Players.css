@@ -151,10 +151,20 @@
 
 .player-card-actions {
     display: flex;
+    flex-direction: column;
     gap: var(--space-2);
-    justify-content: flex-end;
     padding-top: var(--space-3);
     border-top: 1px solid var(--glass-border);
+}
+
+.player-card-actions .btn-primary {
+    width: 100%;
+}
+
+.player-card-actions-row {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
 }
 
 /* Form Grid */
