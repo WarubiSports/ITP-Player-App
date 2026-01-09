@@ -138,9 +138,17 @@ export default function Sidebar() {
                     <div className="demo-badge-small">Demo Mode</div>
                 )}
                 <div className="user-card">
-                    <div className="avatar">
-                        {getInitials(displayName)}
-                    </div>
+                    {profile?.photo_url ? (
+                        <img
+                            src={profile.photo_url}
+                            alt={displayName}
+                            className="avatar avatar-img"
+                        />
+                    ) : (
+                        <div className="avatar">
+                            {getInitials(displayName)}
+                        </div>
+                    )}
                     <div className="user-info">
                         <span className="user-name">{displayName}</span>
                         <span className="user-role">{profile?.role || 'User'}</span>

@@ -457,6 +457,11 @@ img, svg {
   font-size: var(--font-size-xs);
 }
 
+.avatar-img {
+  object-fit: cover;
+  border-radius: var(--radius-full);
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

@@ -236,9 +236,17 @@ export default function Players() {
                 {filteredPlayers.map(player => (
                     <div key={player.id} className="glass-card player-card">
                         <div className="player-card-header">
-                            <div className="avatar player-avatar">
-                                {player.first_name[0]}{player.last_name[0]}
-                            </div>
+                            {player.photo_url ? (
+                                <img
+                                    src={player.photo_url}
+                                    alt={`${player.first_name} ${player.last_name}`}
+                                    className="avatar player-avatar player-avatar-img"
+                                />
+                            ) : (
+                                <div className="avatar player-avatar">
+                                    {player.first_name[0]}{player.last_name[0]}
+                                </div>
+                            )}
                             <span className={`badge status-${player.status}`}>
                                 {player.status}
                             </span>

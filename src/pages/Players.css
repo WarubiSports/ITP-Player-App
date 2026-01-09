@@ -98,6 +98,11 @@
     font-size: var(--font-size-xl);
 }
 
+.player-avatar-img {
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 .player-card-body {
     flex: 1;
 }
