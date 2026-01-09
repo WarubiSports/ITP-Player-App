@@ -48,7 +48,14 @@ export default function Dashboard() {
             setLoading(true);
             // Get player data
             const players = await getPlayers();
-            const player = players.find(p => p.id === profile.id || p.user_id === profile.id);
+            let player = players.find(p => p.id === profile.id || p.user_id === profile.id);
+
+            // If player not found and user has player role, try demo data fallback
+            if (!player && profile.role === 'player') {
+                const data = getDemoData();
+                player = data.players.find(p => p.id === profile.id || p.user_id === profile.id);
+            }
+
             setPlayerData(player || false); // false means not a player, null means loading
 
             if (player && player.id) {
