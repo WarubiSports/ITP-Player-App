@@ -1,13 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-// v2 - Added player_id to profile
-import { supabase, checkIsDemoMode, demoData, checkConnection, isConnectionHealthy } from '../lib/supabase'
+import { supabase, checkConnection } from '../lib/supabase'
 
 const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
-
-// Demo password for all demo accounts
-const DEMO_PASSWORD = 'ITP2024'
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
@@ -16,42 +12,30 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const initAuth = async () => {
-            // Check for demo user first
-            const demoUser = localStorage.getItem('itp_demo_user')
-            if (demoUser) {
-                const parsed = JSON.parse(demoUser)
-                setUser(parsed)
-                setProfile(parsed)
-                setLoading(false)
-                return
-            }
+            // Clear any old demo user data
+            localStorage.removeItem('itp_demo_user')
 
-            // Check Supabase connection health first
+            // Check Supabase connection health
             await checkConnection()
 
-            // Only try Supabase if connection is healthy
-            if (isConnectionHealthy()) {
-                // Check for existing Supabase session
-                const { data: { session } } = await supabase.auth.getSession()
-                setUser(session?.user ?? null)
-                if (session?.user) {
-                    await fetchProfile(session.user.id)
-                }
+            // Check for existing Supabase session
+            const { data: { session } } = await supabase.auth.getSession()
+            setUser(session?.user ?? null)
+            if (session?.user) {
+                await fetchProfile(session.user.id)
             }
             setLoading(false)
         }
 
         initAuth()
 
-        // Only set up auth listener if Supabase might be healthy
+        // Set up auth listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (isConnectionHealthy()) {
-                setUser(session?.user ?? null)
-                if (session?.user) {
-                    fetchProfile(session.user.id)
-                } else {
-                    setProfile(null)
-                }
+            setUser(session?.user ?? null)
+            if (session?.user) {
+                fetchProfile(session.user.id)
+            } else {
+                setProfile(null)
             }
         })
 
@@ -106,26 +90,12 @@ export function AuthProvider({ children }) {
     }
 
     const signIn = async (email, password) => {
-        // Try Supabase auth first if configured
-        if (import.meta.env.VITE_SUPABASE_URL) {
-            const { error } = await supabase.auth.signInWithPassword({ email, password })
-            if (!error) {
-                return { error: null }
-            }
-            // If Supabase auth fails, try demo login as fallback
-            console.log('Supabase auth failed, trying demo login...')
+        // Production: Only use Supabase auth
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) {
+            return { error }
         }
-
-        // Try demo login (either as primary or fallback)
-        const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
-        if (demoUser && password === DEMO_PASSWORD) {
-            localStorage.setItem('itp_demo_user', JSON.stringify(demoUser))
-            setUser(demoUser)
-            setProfile(demoUser)
-            return { error: null }
-        }
-
-        return { error: { message: 'Invalid login credentials' } }
+        return { error: null }
     }
 
     const signUp = async (email, password, metadata = {}) => {
@@ -148,10 +118,6 @@ export function AuthProvider({ children }) {
     }
 
     const resetPassword = async (email) => {
-        // In demo mode, simulate successful password reset
-        if (checkIsDemoMode()) {
-            return { error: null }
-        }
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password`,
         })
@@ -160,16 +126,6 @@ export function AuthProvider({ children }) {
 
     // Magic Link sign-in - easiest for players
     const signInWithMagicLink = async (email) => {
-        // In demo mode, simulate magic link sent
-        if (checkIsDemoMode()) {
-            // Check if email exists in demo users
-            const demoUser = demoData.users.find(u => u.email.toLowerCase() === email.toLowerCase())
-            if (demoUser) {
-                return { error: null, message: 'Demo mode: Use password ITP2024 to login' }
-            }
-            return { error: { message: 'Email not found in demo mode' } }
-        }
-
         // Check if email exists in players table
         const { data: player } = await supabase
             .from('players')
@@ -208,7 +164,7 @@ export function AuthProvider({ children }) {
         resetPassword,
         isAdmin: profile?.role === 'admin',
         isStaff: profile?.role === 'staff' || profile?.role === 'admin',
-        isDemoMode: checkIsDemoMode(),
+        isDemoMode: false,
     }
 
     return (
