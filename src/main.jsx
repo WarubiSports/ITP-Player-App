@@ -5,6 +5,7 @@ import App from './App'
 import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { RealtimeProvider } from './contexts/RealtimeContext'
+import ErrorBoundary from './components/common/ErrorBoundary'
 import './index.css'
 
 // Register service worker for push notifications and offline support
@@ -22,14 +23,16 @@ if ('serviceWorker' in navigator) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AuthProvider>
-                <RealtimeProvider>
-                    <NotificationProvider>
-                        <App />
-                    </NotificationProvider>
-                </RealtimeProvider>
-            </AuthProvider>
-        </BrowserRouter>
+        <ErrorBoundary>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <AuthProvider>
+                    <RealtimeProvider>
+                        <NotificationProvider>
+                            <App />
+                        </NotificationProvider>
+                    </RealtimeProvider>
+                </AuthProvider>
+            </BrowserRouter>
+        </ErrorBoundary>
     </React.StrictMode>
 )

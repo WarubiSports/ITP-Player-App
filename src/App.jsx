@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import NotificationContainer from './components/ui/NotificationContainer'
 import EventNotifications from './components/events/EventNotifications'
+import { lazyWithRetry } from './utils/lazyWithRetry'
 
 // Eager load auth pages (needed immediately)
 import Login from './pages/auth/Login'
@@ -12,18 +13,18 @@ import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import SSO from './pages/auth/SSO'
 
-// Lazy load dashboard pages (code splitting)
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Wellness = lazy(() => import('./pages/Wellness'))
-const Progress = lazy(() => import('./pages/Progress'))
-const Pathway = lazy(() => import('./pages/Pathway'))
-const Housing = lazy(() => import('./pages/Housing'))
-const Calendar = lazy(() => import('./pages/Calendar'))
-const ParentPortal = lazy(() => import('./pages/ParentPortal'))
-const GroceryOrder = lazy(() => import('./pages/GroceryOrder'))
-const OrderHistory = lazy(() => import('./pages/OrderHistory'))
-const Admin = lazy(() => import('./pages/Admin'))
-const PlayerReport = lazy(() => import('./pages/PlayerReport'))
+// Lazy load dashboard pages with chunk error recovery
+const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'), 'Dashboard')
+const Wellness = lazyWithRetry(() => import('./pages/Wellness'), 'Wellness')
+const Progress = lazyWithRetry(() => import('./pages/Progress'), 'Progress')
+const Pathway = lazyWithRetry(() => import('./pages/Pathway'), 'Pathway')
+const Housing = lazyWithRetry(() => import('./pages/Housing'), 'Housing')
+const Calendar = lazyWithRetry(() => import('./pages/Calendar'), 'Calendar')
+const ParentPortal = lazyWithRetry(() => import('./pages/ParentPortal'), 'ParentPortal')
+const GroceryOrder = lazyWithRetry(() => import('./pages/GroceryOrder'), 'GroceryOrder')
+const OrderHistory = lazyWithRetry(() => import('./pages/OrderHistory'), 'OrderHistory')
+const Admin = lazyWithRetry(() => import('./pages/Admin'), 'Admin')
+const PlayerReport = lazyWithRetry(() => import('./pages/PlayerReport'), 'PlayerReport')
 
 // Loading component
 function PageLoader() {

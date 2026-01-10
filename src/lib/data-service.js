@@ -125,7 +125,12 @@ export const deleteUser = async (id) => {
 // =============================================
 
 export const getHouses = async () => {
-    // Always try Supabase first, fallback to demo data on error
+    // Use demo data if demo user is logged in (to match player data source)
+    if (shouldUseDemoData()) {
+        return getDemoDataFromStorage('houses')
+    }
+
+    // Try Supabase for real users
     try {
         const houses = await queries.houseQueries.getAllHouses()
         // If houses exist in DB, return them
