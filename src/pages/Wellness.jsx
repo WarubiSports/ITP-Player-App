@@ -161,6 +161,7 @@ export default function Wellness() {
             const savedLoad = await createTrainingLoad(newLoad)
             setTrainingLoads(prev => [savedLoad, ...prev])
             setShowTrainingForm(false)
+            showNotification('Training session saved!', 'success')
         } catch (error) {
             console.error('Error saving training load:', error)
             showNotification('Failed to save training load', 'error')
