@@ -80,6 +80,7 @@ export default function App() {
                     <Route path="parent-portal" element={<Suspense fallback={<PageLoader />}><ParentPortal /></Suspense>} />
                     <Route path="grocery" element={<Suspense fallback={<PageLoader />}><GroceryOrder /></Suspense>} />
                     <Route path="order-history" element={<Suspense fallback={<PageLoader />}><OrderHistory /></Suspense>} />
+                    <Route path="my-report" element={<Suspense fallback={<PageLoader />}><PlayerReport /></Suspense>} />
                     <Route path="admin" element={<ProtectedRoute adminOnly><Suspense fallback={<PageLoader />}><Admin /></Suspense></ProtectedRoute>} />
                     <Route path="reports" element={<ProtectedRoute staffOnly><Suspense fallback={<PageLoader />}><PlayerReport /></Suspense></ProtectedRoute>} />
                 </Route>

@@ -39,7 +39,11 @@ export default function PlayerReport() {
         try {
             const allPlayers = await getPlayers()
             setPlayers(allPlayers.filter(p => p.status === 'active'))
-            if (allPlayers.length > 0) {
+
+            // If user is a player, auto-select their own report
+            if (!isStaff && profile?.player_id) {
+                setSelectedPlayerId(profile.player_id)
+            } else if (allPlayers.length > 0) {
                 setSelectedPlayerId(allPlayers[0].id)
             }
         } catch (error) {
@@ -201,20 +205,31 @@ export default function PlayerReport() {
         <div className="report-page">
             {/* Controls (hidden in print) */}
             <div className="report-controls no-print">
-                <div className="control-group">
-                    <label>Select Player:</label>
-                    <select
-                        value={selectedPlayerId || ''}
-                        onChange={(e) => setSelectedPlayerId(e.target.value)}
-                        className="input"
-                    >
-                        {players.map(p => (
-                            <option key={p.id} value={p.id}>
-                                {p.first_name} {p.last_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {/* Only show player selector for staff */}
+                {isStaff && (
+                    <div className="control-group">
+                        <label>Select Player:</label>
+                        <select
+                            value={selectedPlayerId || ''}
+                            onChange={(e) => setSelectedPlayerId(e.target.value)}
+                            className="input"
+                        >
+                            {players.map(p => (
+                                <option key={p.id} value={p.id}>
+                                    {p.first_name} {p.last_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+                {!isStaff && (
+                    <div className="control-group">
+                        <h2 style={{ margin: 0 }}>My Progress Report</h2>
+                        <p style={{ margin: '0.5rem 0 0 0', color: 'var(--color-text-secondary)' }}>
+                            Download or print this report to share with your parents
+                        </p>
+                    </div>
+                )}
                 <div className="control-actions">
                     <button className="btn btn-secondary" onClick={handlePrint}>
                         Print Report

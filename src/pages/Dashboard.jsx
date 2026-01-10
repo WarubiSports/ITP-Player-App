@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getDemoData } from '../lib/supabase'
 import { getPlayers, getWellnessScore, getTrainingLoads, getWellnessStreak } from '../lib/data-service'
@@ -245,6 +246,16 @@ export default function Dashboard() {
                         <GoalsWidget playerId={playerData.id} />
                         <AchievementsWidget key={`achievements-${refreshKey}`} playerId={playerData.id} />
                     </div>
+
+                    {/* Share with Parents */}
+                    <Link to="/my-report" className="share-with-parents-card glass-panel">
+                        <div className="share-icon">👨‍👩‍👦</div>
+                        <div className="share-content">
+                            <h3>Share Progress with Parents</h3>
+                            <p>Generate a PDF report to share your development, performance tests, and recruitment status</p>
+                        </div>
+                        <div className="share-arrow">→</div>
+                    </Link>
 
                     {showCheckIn && <DailyCheckIn onClose={() => setShowCheckIn(false)} />}
                 </>
