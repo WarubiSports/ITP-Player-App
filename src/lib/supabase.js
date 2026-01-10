@@ -1,14 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co').trim()
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key').trim()
+// Trim env vars to handle any whitespace/newline issues from Vercel
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const supabaseUrl = rawUrl.trim() || 'https://placeholder.supabase.co'
+const supabaseAnonKey = rawKey.trim() || 'placeholder-key'
 
 // Check if Supabase is properly configured (not using placeholder)
 const isSupabaseConfigured = Boolean(
-    import.meta.env.VITE_SUPABASE_URL &&
-    import.meta.env.VITE_SUPABASE_ANON_KEY &&
-    !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
+    supabaseUrl &&
+    supabaseAnonKey &&
+    !supabaseUrl.includes('placeholder') &&
+    supabaseUrl.startsWith('https://')
 )
+
+// Debug: Log configuration status (remove in production if too verbose)
+console.log('[Supabase] Config check:', {
+    hasUrl: !!rawUrl,
+    hasKey: !!rawKey,
+    urlLength: rawUrl.length,
+    trimmedUrlLength: supabaseUrl.length,
+    isConfigured: isSupabaseConfigured,
+    urlStart: supabaseUrl.substring(0, 30)
+})
 
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

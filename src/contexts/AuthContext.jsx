@@ -66,11 +66,30 @@ export function AuthProvider({ children }) {
             .single()
 
         // Also fetch the linked player record to get player_id
-        const { data: playerData } = await supabase
+        let { data: playerData } = await supabase
             .from('players')
-            .select('id, first_name, last_name, photo_url')
+            .select('id, first_name, last_name, photo_url, email')
             .eq('user_id', userId)
             .single()
+
+        // Fallback: if no user_id match, try matching by email and link them
+        if (!playerData && profileData?.email) {
+            const { data: playerByEmail } = await supabase
+                .from('players')
+                .select('id, first_name, last_name, photo_url, email')
+                .eq('email', profileData.email.toLowerCase())
+                .single()
+
+            if (playerByEmail) {
+                // Link this auth user to the player record
+                await supabase
+                    .from('players')
+                    .update({ user_id: userId })
+                    .eq('id', playerByEmail.id)
+
+                playerData = playerByEmail
+            }
+        }
 
         // Merge player info into profile
         const mergedProfile = {
