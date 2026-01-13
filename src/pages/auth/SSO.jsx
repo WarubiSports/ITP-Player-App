@@ -20,20 +20,25 @@ export default function SSO() {
       }
 
       try {
+        // Decode the JWT to get user ID BEFORE setting session
+        // This allows us to set the localStorage key before AuthContext's onAuthStateChange fires
+        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]))
+        const userId = tokenPayload.sub
+
+        // Mark SSO users as having dismissed password setup BEFORE setting session
+        // (They're already authenticated through the staff app)
+        if (userId) {
+          localStorage.setItem('itp_password_setup_dismissed', userId)
+        }
+
         // Set the session using the tokens from the staff app
-        const { data, error: sessionError } = await supabase.auth.setSession({
+        const { error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         })
 
         if (sessionError) {
           throw sessionError
-        }
-
-        // Mark SSO users as having a password so they skip the password setup modal
-        // (They're already authenticated through the staff app)
-        if (data?.user?.id) {
-          localStorage.setItem('itp_password_setup_dismissed', data.user.id)
         }
 
         setStatus('success')
