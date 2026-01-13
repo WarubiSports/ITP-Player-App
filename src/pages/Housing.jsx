@@ -12,11 +12,13 @@ import {
     getChoreTemplates,
     createChoreTemplate,
     deleteChoreTemplate,
-    generateWeeklyChores
+    generateWeeklyChores,
+    createRecurringChores
 } from '../lib/data-service'
 import { useRealtimeChores } from '../hooks/useRealtimeChores'
 import { useRealtimeHousePoints } from '../hooks/useRealtimeHousePoints'
 import ConnectionStatus from '../components/ui/ConnectionStatus'
+import { Home, CheckCircle, Clock, User, Users, Calendar, Percent } from 'lucide-react'
 import './Housing.css'
 
 export default function Housing() {
@@ -43,6 +45,10 @@ export default function Housing() {
     const [showTemplateModal, setShowTemplateModal] = useState(false)
     const [templates, setTemplates] = useState([])
     const [generatingChores, setGeneratingChores] = useState(false)
+    // Recurring task states
+    const [recurrence, setRecurrence] = useState('none')
+    const [recurrenceEndDate, setRecurrenceEndDate] = useState('')
+    const [creatingRecurring, setCreatingRecurring] = useState(false)
 
     // Use realtime hooks
     const { houses, loading: housesLoading } = useRealtimeHousePoints({ showNotifications: false })
@@ -268,15 +274,25 @@ export default function Housing() {
         try {
             if (selectedChore) {
                 await updateChore(selectedChore.id, choreData)
+            } else if (recurrence !== 'none' && recurrenceEndDate) {
+                // Create recurring tasks
+                setCreatingRecurring(true)
+                const count = await createRecurringChores(choreData, recurrence, recurrenceEndDate)
+                alert(`Created ${count} recurring tasks!`)
             } else {
                 await createChore(choreData)
             }
             await refreshChores()
             setShowChoreModal(false)
             setSelectedChore(null)
+            // Reset recurrence state
+            setRecurrence('none')
+            setRecurrenceEndDate('')
         } catch (error) {
             console.error('Error saving chore:', error)
             alert('Failed to save chore. Please try again.')
+        } finally {
+            setCreatingRecurring(false)
         }
     }
 
@@ -330,21 +346,27 @@ export default function Housing() {
             {/* House Leaderboard */}
             <div className="housing-overview">
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon-text">H</div>
+                    <div className="overview-icon-wrapper">
+                        <Home size={20} />
+                    </div>
                     <div className="overview-content">
                         <span className="overview-value">{houses.length}</span>
                         <span className="overview-label">Active Houses</span>
                     </div>
                 </div>
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon-text">C</div>
+                    <div className="overview-icon-wrapper">
+                        <CheckCircle size={20} />
+                    </div>
                     <div className="overview-content">
                         <span className="overview-value">{choreStats.completed}</span>
                         <span className="overview-label">Completed Today</span>
                     </div>
                 </div>
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon-text">P</div>
+                    <div className="overview-icon-wrapper">
+                        <Clock size={20} />
+                    </div>
                     <div className="overview-content">
                         <span className="overview-value">{choreStats.pending}</span>
                         <span className="overview-label">Pending Tasks</span>
@@ -352,7 +374,9 @@ export default function Housing() {
                 </div>
                 {!isStaff && (
                     <div className="glass-card-static overview-card highlight">
-                        <div className="overview-icon-text">Y</div>
+                        <div className="overview-icon-wrapper">
+                            <User size={20} />
+                        </div>
                         <div className="overview-content">
                             <span className="overview-value">{choreStats.myPending}</span>
                             <span className="overview-label">Your Tasks</span>
@@ -375,17 +399,17 @@ export default function Housing() {
 
                         <div className="house-stats">
                             <div className="house-stat">
-                                <span className="stat-icon-mini">R</span>
+                                <Users size={16} className="stat-icon-svg" />
                                 <span className="stat-value">{house.residents.length}</span>
                                 <span className="stat-label">Residents</span>
                             </div>
                             <div className="house-stat">
-                                <span className="stat-icon-mini">%</span>
+                                <CheckCircle size={16} className="stat-icon-svg" />
                                 <span className="stat-value">{house.completionRate}%</span>
                                 <span className="stat-label">Completion</span>
                             </div>
                             <div className="house-stat">
-                                <span className="stat-icon-mini">P</span>
+                                <Clock size={16} className="stat-icon-svg" />
                                 <span className="stat-value">{house.pendingChores}</span>
                                 <span className="stat-label">Pending</span>
                             </div>
@@ -640,13 +664,59 @@ export default function Housing() {
                                         />
                                     </div>
                                 </div>
+                                {/* Recurrence Options - only show for new tasks */}
+                                {!selectedChore && (
+                                    <div className="recurrence-section" style={{ marginTop: 'var(--space-4)', padding: 'var(--space-4)', background: 'var(--color-bg-secondary)', borderRadius: '8px' }}>
+                                        <h4 style={{ margin: '0 0 var(--space-3) 0', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Repeat Settings</h4>
+                                        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                                            <div className="input-group">
+                                                <label className="input-label">Repeat</label>
+                                                <select
+                                                    className="input"
+                                                    value={recurrence}
+                                                    onChange={(e) => setRecurrence(e.target.value)}
+                                                >
+                                                    <option value="none">Does not repeat</option>
+                                                    <option value="daily">Daily</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="biweekly">Every 2 weeks</option>
+                                                    <option value="monthly">Monthly</option>
+                                                </select>
+                                            </div>
+                                            {recurrence !== 'none' && (
+                                                <div className="input-group">
+                                                    <label className="input-label">Repeat Until *</label>
+                                                    <input
+                                                        type="date"
+                                                        className="input"
+                                                        value={recurrenceEndDate}
+                                                        onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                                                        required={recurrence !== 'none'}
+                                                        min={new Date().toISOString().split('T')[0]}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {recurrence !== 'none' && (
+                                            <p style={{ margin: 'var(--space-2) 0 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                                                This will create multiple tasks from the deadline until the end date.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowChoreModal(false)}>
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn btn-primary">
-                                    {selectedChore ? 'Save Changes' : 'Create Task'}
+                                <button type="submit" className="btn btn-primary" disabled={creatingRecurring}>
+                                    {creatingRecurring
+                                        ? 'Creating Tasks...'
+                                        : selectedChore
+                                            ? 'Save Changes'
+                                            : recurrence !== 'none'
+                                                ? 'Create Recurring Tasks'
+                                                : 'Create Task'}
                                 </button>
                             </div>
                         </form>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useRealtimeWellness } from '../../hooks/useRealtimeWellness'
 import ConnectionStatus from '../ui/ConnectionStatus'
+import { Moon, Zap, Activity, Brain, AlertTriangle } from 'lucide-react'
 
 const MOOD_CONFIG = {
     excellent: { indicator: 'E', color: '#22C55E', label: 'Excellent' },
@@ -63,7 +64,7 @@ export default function StaffWellnessMonitor({ maxItems = 10 }) {
 
             {logs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-tertiary)' }}>
-                    <div style={{ fontSize: '1.5rem', opacity: 0.5, marginBottom: '0.5rem' }}>—</div>
+                    <Activity size={32} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
                     <p style={{ marginTop: '0.5rem' }}>No wellness logs yet today</p>
                 </div>
             ) : (
@@ -109,23 +110,23 @@ export default function StaffWellnessMonitor({ maxItems = 10 }) {
                                     <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>
                                         {log.player ? `${log.player.first_name} ${log.player.last_name}` : getPlayerName(log.player_id)}
                                     </div>
-                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
-                                            SLP {log.sleep_hours}h
+                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                            <Moon size={12} /> {log.sleep_hours}h
                                         </span>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
-                                            NRG {log.energy_level}/10
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                            <Zap size={12} /> {log.energy_level}/10
                                         </span>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
-                                            SOR {log.muscle_soreness}/10
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                            <Activity size={12} /> {log.muscle_soreness}/10
                                         </span>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
-                                            STR {log.stress_level}/10
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                            <Brain size={12} /> {log.stress_level}/10
                                         </span>
                                     </div>
                                     {alert.concerns.length > 0 && (
                                         <div style={{ fontSize: '0.7rem', color: ALERT_COLORS[alert.level], marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <span style={{ fontWeight: '600' }}>!</span> {alert.concerns.join(', ')}
+                                            <AlertTriangle size={12} /> {alert.concerns.join(', ')}
                                         </div>
                                     )}
                                 </div>

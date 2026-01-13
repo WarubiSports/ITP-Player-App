@@ -5,6 +5,7 @@ import { getWellnessLogs, getTrainingLoads, getInjuries, createWellnessLog, crea
 import { getLocalDate, formatDateForDisplay } from '../lib/date-utils'
 import Confetti from '../components/celebrations/Confetti'
 import StaffWellnessMonitor from '../components/dashboard/StaffWellnessMonitor'
+import { Activity, BarChart3, Moon, Zap, AlertTriangle, FileText, Dumbbell } from 'lucide-react'
 import './Wellness.css'
 
 // Milestone days for streak celebrations
@@ -209,7 +210,9 @@ export default function Wellness() {
             {/* Header Stats */}
             <div className="wellness-header">
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon-text">WS</div>
+                    <div className="stat-icon-wrapper">
+                        <Activity size={24} />
+                    </div>
                     <div className="stat-content">
                         <span className={`stat-value ${readiness.color}`}>
                             {latestWellness ? getWellnessScore(latestWellness) : '--'}
@@ -220,7 +223,9 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon-text">TL</div>
+                    <div className="stat-icon-wrapper">
+                        <BarChart3 size={24} />
+                    </div>
                     <div className="stat-content">
                         <span className="stat-value">{weeklyLoad}</span>
                         <span className="stat-label">7-Day Load</span>
@@ -229,7 +234,9 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon-text">SLP</div>
+                    <div className="stat-icon-wrapper">
+                        <Moon size={24} />
+                    </div>
                     <div className="stat-content">
                         <span className="stat-value">{latestWellness?.sleep_hours || '--'}h</span>
                         <span className="stat-label">Last Night Sleep</span>
@@ -240,7 +247,9 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon-text">NRG</div>
+                    <div className="stat-icon-wrapper">
+                        <Zap size={24} />
+                    </div>
                     <div className="stat-content">
                         <span className="stat-value">{latestWellness?.energy_level || '--'}/10</span>
                         <span className="stat-label">Energy Level</span>

@@ -383,6 +383,51 @@ export const generateWeeklyChores = async (houseId) => {
     return createdChores
 }
 
+// Create recurring chores based on recurrence pattern
+export const createRecurringChores = async (choreData, recurrence, endDate) => {
+    const startDate = new Date(choreData.deadline || new Date())
+    const end = new Date(endDate)
+    const createdChores = []
+
+    // Calculate interval in days based on recurrence
+    let intervalDays
+    switch (recurrence) {
+        case 'daily':
+            intervalDays = 1
+            break
+        case 'weekly':
+            intervalDays = 7
+            break
+        case 'biweekly':
+            intervalDays = 14
+            break
+        case 'monthly':
+            intervalDays = 30
+            break
+        default:
+            intervalDays = 7
+    }
+
+    let currentDate = new Date(startDate)
+
+    while (currentDate <= end) {
+        const chore = await createChore({
+            ...choreData,
+            deadline: currentDate.toISOString().split('T')[0]
+        })
+        createdChores.push(chore)
+
+        // Advance to next occurrence
+        if (recurrence === 'monthly') {
+            currentDate.setMonth(currentDate.getMonth() + 1)
+        } else {
+            currentDate.setDate(currentDate.getDate() + intervalDays)
+        }
+    }
+
+    return createdChores.length
+}
+
 // =============================================
 // CHORE PHOTO VERIFICATION
 // =============================================
@@ -1648,8 +1693,9 @@ export const createGroceryOrder = async (order) => {
             player_id: order.playerId,
             delivery_date: order.deliveryDate,
             total_amount: totalAmount,
-            status: 'pending',
+            status: 'approved',
             submitted_at: new Date().toISOString(),
+            approved_at: new Date().toISOString(),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         }
