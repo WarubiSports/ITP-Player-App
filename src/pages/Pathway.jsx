@@ -422,7 +422,7 @@ export default function Pathway() {
                                     <label className="input-label">Type</label>
                                     <select name="type" className="input" required>
                                         <option value="college">College / University</option>
-                                        <option value="club">Professional Club</option>
+                                        <option value="club">Club</option>
                                     </select>
                                 </div>
 
