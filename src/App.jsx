@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import NotificationContainer from './components/ui/NotificationContainer'
 import EventNotifications from './components/events/EventNotifications'
+import PasswordSetupModal from './components/auth/PasswordSetupModal'
 import { lazyWithRetry } from './utils/lazyWithRetry'
 
 // Eager load auth pages (needed immediately)
@@ -41,7 +42,7 @@ function PageLoader() {
 }
 
 export default function App() {
-    const { user, loading } = useAuth()
+    const { user, loading, needsPasswordSetup } = useAuth()
 
     if (loading) {
         return (
@@ -61,6 +62,7 @@ export default function App() {
         <>
             <NotificationContainer />
             {user && <EventNotifications />}
+            {user && needsPasswordSetup && <PasswordSetupModal />}
             <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />

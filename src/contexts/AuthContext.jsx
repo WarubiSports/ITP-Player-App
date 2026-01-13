@@ -5,10 +5,14 @@ const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
 
+// Key to track if user dismissed password setup prompt
+const PASSWORD_SETUP_DISMISSED_KEY = 'itp_password_setup_dismissed'
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [profile, setProfile] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false)
 
     useEffect(() => {
         const initAuth = async () => {
@@ -30,12 +34,26 @@ export function AuthProvider({ children }) {
         initAuth()
 
         // Set up auth listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             setUser(session?.user ?? null)
             if (session?.user) {
                 fetchProfile(session.user.id)
+
+                // Check if this is a magic link login (user has no password set)
+                // Magic link users have identities with provider 'email' but no password
+                const isMagicLinkLogin = event === 'SIGNED_IN' &&
+                    session.user.app_metadata?.provider === 'email' &&
+                    !session.user.user_metadata?.has_password
+
+                // Check if user has dismissed the prompt before
+                const dismissed = localStorage.getItem(PASSWORD_SETUP_DISMISSED_KEY) === session.user.id
+
+                if (isMagicLinkLogin && !dismissed) {
+                    setNeedsPasswordSetup(true)
+                }
             } else {
                 setProfile(null)
+                setNeedsPasswordSetup(false)
             }
         })
 
@@ -153,6 +171,42 @@ export function AuthProvider({ children }) {
         return { error: null, message: `Login link sent to ${email}. Check your inbox!` }
     }
 
+    // Setup password for magic link users
+    const setupPassword = async (password) => {
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: password,
+                data: { has_password: true }
+            })
+
+            if (error) {
+                return { success: false, error: error.message }
+            }
+
+            // Don't set needsPasswordSetup to false here - let modal show success first
+            // Modal will call completePasswordSetup after showing success message
+            return { success: true }
+        } catch (err) {
+            return { success: false, error: 'Failed to set password. Please try again.' }
+        }
+    }
+
+    // Called by modal after showing success message
+    const completePasswordSetup = () => {
+        if (user?.id) {
+            localStorage.setItem(PASSWORD_SETUP_DISMISSED_KEY, user.id)
+        }
+        setNeedsPasswordSetup(false)
+    }
+
+    // Dismiss password setup prompt
+    const dismissPasswordSetup = () => {
+        if (user?.id) {
+            localStorage.setItem(PASSWORD_SETUP_DISMISSED_KEY, user.id)
+        }
+        setNeedsPasswordSetup(false)
+    }
+
     const value = {
         user,
         profile,
@@ -162,6 +216,10 @@ export function AuthProvider({ children }) {
         signUp,
         signOut,
         resetPassword,
+        setupPassword,
+        completePasswordSetup,
+        needsPasswordSetup,
+        dismissPasswordSetup,
         isAdmin: profile?.role === 'admin',
         isStaff: profile?.role === 'staff' || profile?.role === 'admin',
         isDemoMode: false,
