@@ -529,17 +529,13 @@ export const rejectChore = async (choreId, reason) => {
 // =============================================
 
 export const getEvents = async () => {
-    // Always try Supabase first, fallback to demo data on error
     try {
         const events = await queries.eventQueries.getAllEvents()
-        if (events && events.length > 0) {
-            return events
-        }
+        return events || []
     } catch (error) {
         console.error('Error fetching events from Supabase:', error)
+        return []
     }
-    // Fallback to demo data
-    return getDemoDataFromStorage('events')
 }
 
 export const createEvent = async (event) => {
@@ -607,44 +603,13 @@ export const getEventAttendees = async (eventId) => {
 }
 
 export const getPlayerEvents = async (playerId) => {
-    // Event types that should be hidden from players (staff-only)
-    // Based on Staff App CalendarEventType: trial, prospect_trial, meeting, medical, visa
-    const staffOnlyEventTypes = ['trial', 'prospect_trial', 'meeting', 'medical', 'visa']
-
-    // Always try Supabase first, fallback to demo data on error
     try {
         const events = await queries.eventQueries.getPlayerEvents(playerId)
-        if (events) {
-            return events
-        }
+        return events || []
     } catch (error) {
         console.error('Error fetching player events from Supabase:', error)
+        return []
     }
-    // Fallback to demo data
-    const events = getDemoDataFromStorage('events')
-    const attendees = getDemoDataFromStorage('eventAttendees')
-
-    // Get events where player is an attendee
-    const playerEventIds = attendees
-        .filter(a => a.player_id === playerId)
-        .map(a => a.event_id)
-
-    // Get events that have specific attendees
-    const eventsWithAttendees = [...new Set(attendees.map(a => a.event_id))]
-
-    // Filter events - exclude staff-only, show player's events or everyone events
-    return events.filter(event => {
-        const eventType = event.event_type || event.type || ''
-        const isStaffOnly = staffOnlyEventTypes.includes(eventType)
-        const hasNoAttendees = !eventsWithAttendees.includes(event.id)
-        const playerIsAttendee = playerEventIds.includes(event.id)
-
-        // Hide staff-only events
-        if (isStaffOnly) return false
-
-        // Show event if player is attendee OR event has no specific attendees (everyone)
-        return playerIsAttendee || hasNoAttendees
-    })
 }
 
 // =============================================
