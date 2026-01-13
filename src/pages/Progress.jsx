@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { getPlayers } from '../lib/data-service'
 import ProgressCharts from '../components/analytics/ProgressCharts'
+import { BarChart3, Target, Lightbulb, TrendingUp, Trophy } from 'lucide-react'
 import './Progress.css'
 
 export default function Progress() {
@@ -45,14 +46,14 @@ export default function Progress() {
         <div className="progress-page">
             <header className="page-header">
                 <div>
-                    <h1>📊 Progress & Analytics</h1>
+                    <h1><BarChart3 size={28} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Progress & Analytics</h1>
                     <p>Track your holistic development journey</p>
                 </div>
             </header>
 
             <div className="progress-intro">
                 <div className="intro-card">
-                    <div className="intro-icon">🎯</div>
+                    <div className="intro-icon"><Target size={32} /></div>
                     <div>
                         <h3>Your Development Journey</h3>
                         <p>
@@ -67,21 +68,21 @@ export default function Progress() {
 
             <div className="progress-insights">
                 <div className="insight-card">
-                    <div className="insight-icon">💡</div>
+                    <div className="insight-icon"><Lightbulb size={24} /></div>
                     <div>
                         <h4>Keep Logging Daily</h4>
                         <p>Consistent tracking helps identify patterns and optimize your performance</p>
                     </div>
                 </div>
                 <div className="insight-card">
-                    <div className="insight-icon">📈</div>
+                    <div className="insight-icon"><TrendingUp size={24} /></div>
                     <div>
                         <h4>Focus on Trends</h4>
                         <p>Don't worry about daily fluctuations - look at weekly and monthly trends</p>
                     </div>
                 </div>
                 <div className="insight-card">
-                    <div className="insight-icon">🏆</div>
+                    <div className="insight-icon"><Trophy size={24} /></div>
                     <div>
                         <h4>Celebrate Improvements</h4>
                         <p>Every small improvement adds up to big results over time</p>

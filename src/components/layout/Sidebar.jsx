@@ -2,24 +2,39 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import ThemeToggle from './ThemeToggle'
+import {
+    LayoutDashboard,
+    Heart,
+    TrendingUp,
+    GraduationCap,
+    Home,
+    ShoppingCart,
+    Calendar,
+    Users,
+    FileText,
+    Settings,
+    Menu,
+    X,
+    LogOut
+} from 'lucide-react'
 
 const navItems = [
-    { path: '/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/wellness', icon: '💪', label: 'Wellness' },
-    { path: '/progress', icon: '📈', label: 'Progress' },
-    { path: '/pathway', icon: '🎓', label: 'Pathway' },
-    { path: '/housing', icon: '🏠', label: 'House & Tasks' },
-    { path: '/grocery', icon: '🛒', label: 'Grocery' },
-    { path: '/calendar', icon: '📅', label: 'Calendar' },
-    { path: '/parent-portal', icon: '👨‍👩‍👧', label: 'Parent Portal' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/wellness', icon: Heart, label: 'Wellness' },
+    { path: '/progress', icon: TrendingUp, label: 'Progress' },
+    { path: '/pathway', icon: GraduationCap, label: 'Pathway' },
+    { path: '/housing', icon: Home, label: 'House & Tasks' },
+    { path: '/grocery', icon: ShoppingCart, label: 'Grocery' },
+    { path: '/calendar', icon: Calendar, label: 'Calendar' },
+    { path: '/parent-portal', icon: Users, label: 'Parent Portal' },
 ]
 
 const staffItems = [
-    { path: '/reports', icon: '📄', label: 'Player Reports' },
+    { path: '/reports', icon: FileText, label: 'Player Reports' },
 ]
 
 const adminItems = [
-    { path: '/admin', icon: '⚙️', label: 'Admin' },
+    { path: '/admin', icon: Settings, label: 'Admin' },
 ]
 
 export default function Sidebar() {
@@ -66,7 +81,7 @@ export default function Sidebar() {
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Toggle menu"
             >
-                <span className="menu-icon">{isOpen ? '✕' : '☰'}</span>
+                <span className="menu-icon">{isOpen ? <X size={20} /> : <Menu size={20} />}</span>
             </button>
 
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -90,7 +105,7 @@ export default function Sidebar() {
                             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                             onClick={closeSidebar}
                         >
-                            <span className="nav-icon">{item.icon}</span>
+                            <span className="nav-icon"><item.icon size={18} /></span>
                             <span className="nav-label">{item.label}</span>
                         </NavLink>
                     ))}
@@ -106,7 +121,7 @@ export default function Sidebar() {
                                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                                 onClick={closeSidebar}
                             >
-                                <span className="nav-icon">{item.icon}</span>
+                                <span className="nav-icon"><item.icon size={18} /></span>
                                 <span className="nav-label">{item.label}</span>
                             </NavLink>
                         ))}
@@ -123,7 +138,7 @@ export default function Sidebar() {
                                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                                 onClick={closeSidebar}
                             >
-                                <span className="nav-icon">{item.icon}</span>
+                                <span className="nav-icon"><item.icon size={18} /></span>
                                 <span className="nav-label">{item.label}</span>
                             </NavLink>
                         ))}
@@ -153,7 +168,7 @@ export default function Sidebar() {
                         <span className="user-role">{profile?.role || 'User'}</span>
                     </div>
                     <button className="btn-icon logout-btn" onClick={handleSignOut} title="Sign out">
-                        🚪
+                        <LogOut size={18} />
                     </button>
                 </div>
             </div>

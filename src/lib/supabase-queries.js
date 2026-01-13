@@ -1430,15 +1430,16 @@ export const groceryQueries = {
             }
         })
 
-        // Create the order
+        // Create the order (auto-approved since budget validation already happened)
         const { data: newOrder, error: orderError } = await supabase
             .from('grocery_orders')
             .insert([{
                 player_id: playerId,
                 delivery_date: deliveryDate,
                 total_amount: totalAmount,
-                status: 'pending',
-                submitted_at: new Date().toISOString()
+                status: 'approved',
+                submitted_at: new Date().toISOString(),
+                approved_at: new Date().toISOString()
             }])
             .select()
             .single()

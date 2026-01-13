@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { getPlayerGoals, createGoal, updateGoal } from '../../lib/data-service'
 import { useConfetti } from '../celebrations/Confetti'
 import { useNotification } from '../../contexts/NotificationContext'
+import { Target, Dumbbell, Zap, BookOpen, Star, MapPin, Circle, Calendar, Sparkles, Check } from 'lucide-react'
 import './GoalsWidget.css'
 
 export default function GoalsWidget({ playerId, compact = false }) {
@@ -90,14 +91,15 @@ export default function GoalsWidget({ playerId, compact = false }) {
     }
 
     const getCategoryIcon = (category) => {
-        const icons = {
-            wellness: '💪',
-            performance: '⚡',
-            academic: '📚',
-            recruitment: '🎯',
-            personal: '🌟'
+        const iconProps = { size: 16 }
+        switch (category) {
+            case 'wellness': return <Dumbbell {...iconProps} />
+            case 'performance': return <Zap {...iconProps} />
+            case 'academic': return <BookOpen {...iconProps} />
+            case 'recruitment': return <Target {...iconProps} />
+            case 'personal': return <Star {...iconProps} />
+            default: return <MapPin {...iconProps} />
         }
-        return icons[category] || '📌'
     }
 
     const getPriorityColor = (priority) => {
@@ -129,7 +131,7 @@ export default function GoalsWidget({ playerId, compact = false }) {
         return (
             <div className="goals-widget-compact">
                 <div className="goals-header">
-                    <h4>🎯 Active Goals</h4>
+                    <h4><Target size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Active Goals</h4>
                     <button className="btn-icon" onClick={() => setShowAddForm(true)}>+</button>
                 </div>
                 <div className="goals-list-compact">
@@ -168,7 +170,7 @@ export default function GoalsWidget({ playerId, compact = false }) {
             <ConfettiComponent />
             <div className="goals-widget-header">
                 <div>
-                    <h3>🎯 My Goals</h3>
+                    <h3><Target size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />My Goals</h3>
                     <p>{activeGoals.length} active • {completedGoals.length} completed</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
@@ -193,11 +195,11 @@ export default function GoalsWidget({ playerId, compact = false }) {
                             <div className="input-group">
                                 <label className="input-label">Category *</label>
                                 <select name="category" className="input" required>
-                                    <option value="wellness">💪 Wellness</option>
-                                    <option value="performance">⚡ Performance</option>
-                                    <option value="academic">📚 Academic</option>
-                                    <option value="recruitment">🎯 Recruitment</option>
-                                    <option value="personal">🌟 Personal</option>
+                                    <option value="wellness">Wellness</option>
+                                    <option value="performance">Performance</option>
+                                    <option value="academic">Academic</option>
+                                    <option value="recruitment">Recruitment</option>
+                                    <option value="personal">Personal</option>
                                 </select>
                             </div>
                         </div>
@@ -223,9 +225,9 @@ export default function GoalsWidget({ playerId, compact = false }) {
                             <div className="input-group">
                                 <label className="input-label">Priority *</label>
                                 <select name="priority" className="input" required>
-                                    <option value="high">🔴 High</option>
-                                    <option value="medium">🟡 Medium</option>
-                                    <option value="low">🟢 Low</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
                                 </select>
                             </div>
                         </div>
@@ -325,7 +327,8 @@ export default function GoalsWidget({ playerId, compact = false }) {
 
                                 {goal.target_date && (
                                     <div className="goal-deadline">
-                                        📅 Target: {new Date(goal.target_date).toLocaleDateString()}
+                                        <Calendar size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                                        Target: {new Date(goal.target_date).toLocaleDateString()}
                                     </div>
                                 )}
                             </div>
@@ -335,14 +338,14 @@ export default function GoalsWidget({ playerId, compact = false }) {
 
                 {completedGoals.length > 0 && (
                     <div className="goals-section">
-                        <h4 className="section-title">Completed Goals ✨</h4>
+                        <h4 className="section-title">Completed Goals <Sparkles size={16} style={{ marginLeft: '0.25rem', verticalAlign: 'middle' }} /></h4>
                         {completedGoals.slice(0, 5).map(goal => (
                             <div key={goal.id} className="goal-card glass-card completed">
                                 <div className="goal-header">
                                     <div className="goal-title-row">
                                         <span className="goal-category-icon">{getCategoryIcon(goal.category)}</span>
                                         <h5>{goal.title}</h5>
-                                        <span className="goal-completed-badge">✓</span>
+                                        <span className="goal-completed-badge"><Check size={14} /></span>
                                     </div>
                                 </div>
                                 <p className="goal-completed-date">
@@ -355,7 +358,7 @@ export default function GoalsWidget({ playerId, compact = false }) {
 
                 {activeGoals.length === 0 && completedGoals.length === 0 && (
                     <div className="empty-state">
-                        <div className="empty-icon">🎯</div>
+                        <div className="empty-icon"><Target size={48} /></div>
                         <h4>No Goals Yet</h4>
                         <p>Set your first goal to start tracking your progress</p>
                         <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>

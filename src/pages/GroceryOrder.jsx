@@ -89,6 +89,34 @@ export default function GroceryOrder() {
                     console.log(`Cleaned cart: removed ${parsedCart.length - validCart.length} invalid items`)
                 }
                 setCart(validCart)
+            } else if (pastOrders.length > 0 && itemsData.length > 0) {
+                // Auto-fill cart with last order items if cart is empty
+                const lastOrder = pastOrders[0]
+                if (lastOrder.items && lastOrder.items.length > 0) {
+                    const validItemIds = new Set(itemsData.map(i => i.id))
+                    const autoFilledCart = lastOrder.items
+                        .filter(orderItem => {
+                            const itemId = orderItem.grocery_item_id || orderItem.itemId
+                            return validItemIds.has(itemId) || validItemIds.has(parseInt(itemId))
+                        })
+                        .map(orderItem => {
+                            const itemId = orderItem.grocery_item_id || orderItem.itemId
+                            const groceryItem = itemsData.find(i => i.id === itemId || i.id === parseInt(itemId))
+                            return {
+                                itemId: groceryItem.id,
+                                name: groceryItem.name,
+                                price: groceryItem.price,
+                                category: groceryItem.category,
+                                quantity: orderItem.quantity
+                            }
+                        })
+
+                    if (autoFilledCart.length > 0) {
+                        setCart(autoFilledCart)
+                        localStorage.setItem('grocery_cart', JSON.stringify(autoFilledCart))
+                        console.log(`Auto-filled cart with ${autoFilledCart.length} items from last order`)
+                    }
+                }
             }
 
             // Auto-select first valid delivery date (always select if not already chosen)

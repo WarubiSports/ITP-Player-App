@@ -6,6 +6,11 @@ import {
     getAcademicProgress
 } from '../../lib/data-service'
 import { formatDateForDisplay, getDateDaysAgo, getLocalDate } from '../../lib/date-utils'
+import {
+    Moon, Zap, Dumbbell, Smile, Activity, Timer, BarChart3, Flame,
+    GraduationCap, BookOpen, CheckCircle, FileText, TrendingUp, RefreshCw,
+    Heart, FolderOpen, Folder, Frown, Meh
+} from 'lucide-react'
 import './ProgressCharts.css'
 
 // Helper to parse date string correctly (avoids timezone issues)
@@ -90,28 +95,28 @@ export default function ProgressCharts({ playerId }) {
 
                 <div className="metrics-grid">
                     <div className="metric-card">
-                        <div className="metric-icon">😴</div>
+                        <div className="metric-icon"><Moon size={20} /></div>
                         <div className="metric-label">Avg Sleep</div>
                         <div className="metric-value">
                             {(wellnessData.reduce((sum, d) => sum + d.sleep_hours, 0) / wellnessData.length).toFixed(1)}h
                         </div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">⚡</div>
+                        <div className="metric-icon"><Zap size={20} /></div>
                         <div className="metric-label">Avg Energy</div>
                         <div className="metric-value">
                             {(wellnessData.reduce((sum, d) => sum + d.energy_level, 0) / wellnessData.length).toFixed(1)}/10
                         </div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">💪</div>
+                        <div className="metric-icon"><Dumbbell size={20} /></div>
                         <div className="metric-label">Avg Soreness</div>
                         <div className="metric-value">
                             {(wellnessData.reduce((sum, d) => sum + d.muscle_soreness, 0) / wellnessData.length).toFixed(1)}/10
                         </div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">😊</div>
+                        <div className="metric-icon"><Smile size={20} /></div>
                         <div className="metric-label">Mood</div>
                         <div className="metric-value">
                             {wellnessData[0]?.mood || 'N/A'}
@@ -151,26 +156,26 @@ export default function ProgressCharts({ playerId }) {
 
                 <div className="metrics-grid">
                     <div className="metric-card">
-                        <div className="metric-icon">🏃</div>
+                        <div className="metric-icon"><Activity size={20} /></div>
                         <div className="metric-label">Total Sessions</div>
                         <div className="metric-value">{trainingData.length}</div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">⏱️</div>
+                        <div className="metric-icon"><Timer size={20} /></div>
                         <div className="metric-label">Total Minutes</div>
                         <div className="metric-value">
                             {trainingData.reduce((sum, d) => sum + d.duration, 0)}
                         </div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">📊</div>
+                        <div className="metric-icon"><BarChart3 size={20} /></div>
                         <div className="metric-label">Avg RPE</div>
                         <div className="metric-value">
                             {(trainingData.reduce((sum, d) => sum + d.rpe, 0) / trainingData.length).toFixed(1)}/10
                         </div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">💥</div>
+                        <div className="metric-icon"><Flame size={20} /></div>
                         <div className="metric-label">Total Load</div>
                         <div className="metric-value">
                             {trainingData.reduce((sum, d) => sum + d.load_score, 0).toLocaleString()}
@@ -269,22 +274,22 @@ export default function ProgressCharts({ playerId }) {
 
                 <div className="metrics-grid">
                     <div className="metric-card">
-                        <div className="metric-icon">🎓</div>
+                        <div className="metric-icon"><GraduationCap size={20} /></div>
                         <div className="metric-label">GPA</div>
                         <div className="metric-value">{gpa}</div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">📚</div>
+                        <div className="metric-icon"><BookOpen size={20} /></div>
                         <div className="metric-label">Credits Earned</div>
                         <div className="metric-value">{totalCredits.toFixed(1)}</div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">✅</div>
+                        <div className="metric-icon"><CheckCircle size={20} /></div>
                         <div className="metric-label">Completed</div>
                         <div className="metric-value">{completed.length}</div>
                     </div>
                     <div className="metric-card">
-                        <div className="metric-icon">📝</div>
+                        <div className="metric-icon"><FileText size={20} /></div>
                         <div className="metric-label">In Progress</div>
                         <div className="metric-value">{inProgress.length}</div>
                     </div>
@@ -337,7 +342,7 @@ export default function ProgressCharts({ playerId }) {
         if (allLogs.length === 0) {
             return (
                 <div className="no-data">
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📓</div>
+                    <div style={{ marginBottom: '1rem' }}><BookOpen size={48} /></div>
                     <p>No logs yet. Start your daily check-ins to build your diary!</p>
                 </div>
             )
@@ -364,14 +369,14 @@ export default function ProgressCharts({ playerId }) {
         const recentByDate = groupByDate(recentLogs)
         const archivedByDate = groupByDate(archivedLogs)
 
-        const getMoodEmoji = (mood) => {
+        const getMoodIcon = (mood) => {
             switch (mood) {
-                case 'excellent': return '😄'
-                case 'good': return '🙂'
-                case 'okay': return '😐'
-                case 'tired': return '😴'
-                case 'poor': return '😔'
-                default: return '🙂'
+                case 'excellent': return <Smile size={16} style={{ color: '#22C55E' }} />
+                case 'good': return <Smile size={16} style={{ color: '#84CC16' }} />
+                case 'okay': return <Meh size={16} style={{ color: '#F59E0B' }} />
+                case 'tired': return <Moon size={16} style={{ color: '#F97316' }} />
+                case 'poor': return <Frown size={16} style={{ color: '#EF4444' }} />
+                default: return <Smile size={16} />
             }
         }
 
@@ -403,9 +408,9 @@ export default function ProgressCharts({ playerId }) {
                                 {log.type === 'wellness' && (
                                     <>
                                         <div className="log-entry-header">
-                                            <span className="log-icon">💚</span>
+                                            <span className="log-icon"><Heart size={16} style={{ color: '#22C55E' }} /></span>
                                             <span className="log-title">Wellness Check-in</span>
-                                            <span className="log-mood">{getMoodEmoji(log.data.mood)}</span>
+                                            <span className="log-mood">{getMoodIcon(log.data.mood)}</span>
                                         </div>
                                         <div className="log-entry-body">
                                             <div className="log-stats">
@@ -436,7 +441,7 @@ export default function ProgressCharts({ playerId }) {
                                 {log.type === 'training' && (
                                     <>
                                         <div className="log-entry-header">
-                                            <span className="log-icon">⚽</span>
+                                            <span className="log-icon"><Activity size={16} /></span>
                                             <span className="log-title">Training Session</span>
                                             <span className="log-session-type">{log.data.session_type}</span>
                                         </div>
@@ -501,7 +506,7 @@ export default function ProgressCharts({ playerId }) {
                             className="archive-toggle"
                             onClick={() => setShowArchive(!showArchive)}
                         >
-                            <span className="archive-icon">{showArchive ? '📂' : '📁'}</span>
+                            <span className="archive-icon">{showArchive ? <FolderOpen size={16} /> : <Folder size={16} />}</span>
                             <span>Archive ({archivedLogs.length} entries)</span>
                             <span className="toggle-arrow">{showArchive ? '▲' : '▼'}</span>
                         </button>
@@ -528,16 +533,17 @@ export default function ProgressCharts({ playerId }) {
         <div className="progress-charts">
             <div className="progress-header">
                 <div>
-                    <h3>📈 Your Progress</h3>
+                    <h3><TrendingUp size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Your Progress</h3>
                     <p>Track your holistic development over time</p>
                 </div>
                 <button
                     className="btn btn-secondary"
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    style={{ minWidth: '100px' }}
+                    style={{ minWidth: '100px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                    {refreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
+                    <RefreshCw size={16} className={refreshing ? 'spin' : ''} />
+                    {refreshing ? 'Refreshing...' : 'Refresh'}
                 </button>
             </div>
 
@@ -546,31 +552,31 @@ export default function ProgressCharts({ playerId }) {
                     className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
                     onClick={() => setActiveTab('history')}
                 >
-                    📓 Log History
+                    <BookOpen size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />Log History
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'wellness' ? 'active' : ''}`}
                     onClick={() => setActiveTab('wellness')}
                 >
-                    💚 Wellness
+                    <Heart size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle', color: '#22C55E' }} />Wellness
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'training' ? 'active' : ''}`}
                     onClick={() => setActiveTab('training')}
                 >
-                    ⚽ Training
+                    <Activity size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />Training
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'performance' ? 'active' : ''}`}
                     onClick={() => setActiveTab('performance')}
                 >
-                    🏃 Performance
+                    <Activity size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />Performance
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'academic' ? 'active' : ''}`}
                     onClick={() => setActiveTab('academic')}
                 >
-                    🎓 Academic
+                    <GraduationCap size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />Academic
                 </button>
             </div>
 

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Lock, Star, X } from 'lucide-react'
 import './AchievementBadge.css'
 
 const RARITY_CONFIG = {
@@ -31,7 +32,7 @@ export default function AchievementBadge({
             <div className="achievement-card__icon-container">
                 <span className="achievement-card__icon">{icon}</span>
                 {!unlocked && (
-                    <div className="achievement-card__lock">🔒</div>
+                    <div className="achievement-card__lock"><Lock size={16} /></div>
                 )}
             </div>
 
@@ -56,7 +57,7 @@ export function AchievementUnlockToast({ achievement, onClose }) {
         >
             <div className="achievement-toast__content">
                 <div className="achievement-toast__header">
-                    <span className="achievement-toast__badge">⭐ UNLOCKED</span>
+                    <span className="achievement-toast__badge"><Star size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />UNLOCKED</span>
                 </div>
                 <div className="achievement-toast__body">
                     <div className="achievement-toast__icon-wrap">
@@ -68,7 +69,7 @@ export function AchievementUnlockToast({ achievement, onClose }) {
                     </div>
                 </div>
             </div>
-            <button className="achievement-toast__close" onClick={onClose}>✕</button>
+            <button className="achievement-toast__close" onClick={onClose}><X size={18} /></button>
         </div>
     )
 }

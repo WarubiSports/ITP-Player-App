@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Sun, Moon } from 'lucide-react'
 import './ThemeToggle.css'
 
 export default function ThemeToggle() {
@@ -24,7 +25,7 @@ export default function ThemeToggle() {
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
             <span className="theme-toggle-icon">
-                {theme === 'dark' ? '☀️' : '🌙'}
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </span>
             <span className="theme-toggle-label">
                 {theme === 'dark' ? 'Light' : 'Dark'}

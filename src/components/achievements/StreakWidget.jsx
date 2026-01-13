@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getWellnessStreak } from '../../lib/data-service'
+import { Flame, Moon, AlertTriangle, Check } from 'lucide-react'
 import './StreakWidget.css'
 
 export default function StreakWidget({ playerId, onStreakChange }) {
@@ -55,7 +56,7 @@ export default function StreakWidget({ playerId, onStreakChange }) {
         <div className={`glass-panel streak-widget streak-widget--${status.class} ${todayLogged ? 'streak-widget--logged' : ''} ${isMilestoneHit ? 'streak-widget--milestone-hit' : ''}`}>
             <div className="streak-widget__main">
                 <div className="streak-widget__icon-wrapper">
-                    <span className="streak-widget__icon">{current > 0 ? '🔥' : '💤'}</span>
+                    <span className="streak-widget__icon">{current > 0 ? <Flame size={28} /> : <Moon size={28} />}</span>
                 </div>
                 <div className="streak-widget__content">
                     <span className="streak-widget__label">Wellness Streak</span>
@@ -93,12 +94,14 @@ export default function StreakWidget({ playerId, onStreakChange }) {
                 )}
                 {current > 0 && !todayLogged && (
                     <span className="streak-widget__msg streak-widget__msg--warning">
-                        ⚠️ Log today to maintain your streak
+                        <AlertTriangle size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                        Log today to maintain your streak
                     </span>
                 )}
                 {todayLogged && current > 0 && (
                     <span className="streak-widget__msg streak-widget__msg--success">
-                        ✓ Today logged • Best: {longest} days
+                        <Check size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />
+                        Today logged • Best: {longest} days
                     </span>
                 )}
             </div>

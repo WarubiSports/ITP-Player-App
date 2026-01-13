@@ -1,23 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { getEvents, getChores } from '../../lib/data-service';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+    Activity,
+    Trophy,
+    Users,
+    ClipboardList,
+    Dumbbell,
+    Globe,
+    Laptop,
+    Heart,
+    PartyPopper,
+    Circle,
+    Sparkles,
+    CheckCircle,
+    MapPin
+} from 'lucide-react';
 
-const eventIcons = {
-    training: '⚽',
-    match: '🏆',
-    meeting: '👥',
-    assessment: '📋',
-    gym: '🏋️',
-    german_class: '🇩🇪',
-    online_school: '💻',
-    recovery: '🧘',
-    social: '🎉'
+const EventIcon = ({ type }) => {
+    const iconProps = { size: 24 };
+    switch (type) {
+        case 'training': return <Activity {...iconProps} />;
+        case 'match': return <Trophy {...iconProps} />;
+        case 'meeting': return <Users {...iconProps} />;
+        case 'assessment': return <ClipboardList {...iconProps} />;
+        case 'gym': return <Dumbbell {...iconProps} />;
+        case 'german_class': return <Globe {...iconProps} />;
+        case 'online_school': return <Laptop {...iconProps} />;
+        case 'recovery': return <Heart {...iconProps} />;
+        case 'social': return <PartyPopper {...iconProps} />;
+        default: return <MapPin {...iconProps} />;
+    }
 };
 
-const taskIcons = {
-    high: '🔴',
-    medium: '🟡',
-    low: '🟢'
+const PriorityIcon = ({ priority }) => {
+    const colors = { high: '#EF4444', medium: '#F59E0B', low: '#22C55E' };
+    return <Circle size={24} fill={colors[priority] || '#888'} color={colors[priority] || '#888'} />;
 };
 
 export default function NextObjective() {
@@ -110,7 +128,7 @@ export default function NextObjective() {
             <div className="glass-panel" style={{ padding: '1.5rem', flex: 1 }}>
                 <h3 style={{ margin: '0 0 1rem 0', color: 'var(--color-text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Objective</h3>
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-tertiary)' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✨</div>
+                    <div style={{ marginBottom: '0.5rem' }}><Sparkles size={48} /></div>
                     <div>All caught up!</div>
                 </div>
             </div>
@@ -118,7 +136,6 @@ export default function NextObjective() {
     }
 
     const isTask = nextItem.itemType === 'task';
-    const icon = isTask ? (taskIcons[nextItem.priority] || '✅') : (eventIcons[nextItem.type] || '📌');
     const label = isTask ? 'TASK DUE' : 'TIME TO START';
     const overdueLabel = isTask ? 'TASK OVERDUE' : 'HAPPENING NOW';
 
@@ -133,9 +150,11 @@ export default function NextObjective() {
                     borderRadius: '12px',
                     padding: '1rem',
                     color: isTask ? '#FFC107' : 'var(--color-primary)',
-                    fontSize: '1.5rem'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                 }}>
-                    {icon}
+                    {isTask ? <PriorityIcon priority={nextItem.priority} /> : <EventIcon type={nextItem.type} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextItem.title}</h2>

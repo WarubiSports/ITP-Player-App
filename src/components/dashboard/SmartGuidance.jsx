@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getNextSteps } from '../../lib/data-service'
+import { Target, Circle, Heart, CheckCircle, GraduationCap, BookOpen, MapPin, Sparkles, Lightbulb } from 'lucide-react'
 import './SmartGuidance.css'
 
 /**
@@ -51,30 +52,24 @@ export default function SmartGuidance({ playerId }) {
     }
 
     const getPriorityIcon = (priority) => {
-        switch (priority) {
-            case 'high':
-                return '🔴'
-            case 'medium':
-                return '🟡'
-            case 'low':
-                return '🟢'
-            default:
-                return '⚪'
-        }
+        const colors = { high: '#EF4444', medium: '#F59E0B', low: '#22C55E' }
+        const color = colors[priority] || '#888'
+        return <Circle size={12} fill={color} color={color} />
     }
 
     const getCategoryIcon = (category) => {
+        const iconProps = { size: 16 }
         switch (category) {
             case 'wellness':
-                return '💚'
+                return <Heart {...iconProps} style={{ color: '#22C55E' }} />
             case 'tasks':
-                return '✅'
+                return <CheckCircle {...iconProps} />
             case 'recruitment':
-                return '🎓'
+                return <GraduationCap {...iconProps} />
             case 'academics':
-                return '📚'
+                return <BookOpen {...iconProps} />
             default:
-                return '📌'
+                return <MapPin {...iconProps} />
         }
     }
 
@@ -82,7 +77,7 @@ export default function SmartGuidance({ playerId }) {
         return (
             <div className="smart-guidance">
                 <div className="smart-guidance-header">
-                    <h3>🎯 Your Next Steps</h3>
+                    <h3><Target size={18} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Your Next Steps</h3>
                     <p>Loading personalized guidance...</p>
                 </div>
             </div>
@@ -93,11 +88,11 @@ export default function SmartGuidance({ playerId }) {
         return (
             <div className="smart-guidance">
                 <div className="smart-guidance-header">
-                    <h3>🎯 Your Next Steps</h3>
+                    <h3><Target size={18} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Your Next Steps</h3>
                     <p>All caught up! Great work.</p>
                 </div>
                 <div className="all-clear">
-                    <div className="success-icon">✨</div>
+                    <div className="success-icon"><Sparkles size={48} /></div>
                     <h4>You're All Set!</h4>
                     <p>No pending tasks right now. Keep up the excellent work!</p>
                 </div>
@@ -108,7 +103,7 @@ export default function SmartGuidance({ playerId }) {
     return (
         <div className="smart-guidance">
             <div className="smart-guidance-header">
-                <h3>🎯 Your Next Steps</h3>
+                <h3><Target size={18} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Your Next Steps</h3>
                 <p>Focus on these priorities today</p>
             </div>
 
@@ -147,7 +142,7 @@ export default function SmartGuidance({ playerId }) {
             </div>
 
             <div className="guidance-footer">
-                <p>💡 Tip: Focus on high-priority items first for maximum impact</p>
+                <p><Lightbulb size={14} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Tip: Focus on high-priority items first for maximum impact</p>
             </div>
         </div>
     )

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { getPlayerAchievementsWithDetails, checkAndUnlockAchievements } from '../../lib/data-service'
 import AchievementBadge, { AchievementUnlockToast } from './AchievementBadge'
 import Confetti from '../celebrations/Confetti'
+import { Trophy, Lock } from 'lucide-react'
 import './AchievementsWidget.css'
 
 export default function AchievementsWidget({ playerId, showAll = false, onAchievementUnlock }) {
@@ -94,7 +95,7 @@ export default function AchievementsWidget({ playerId, showAll = false, onAchiev
 
                 {unlockedCount === 0 ? (
                     <div className="achievements-widget__empty">
-                        <span className="achievements-widget__empty-icon">🏆</span>
+                        <span className="achievements-widget__empty-icon"><Trophy size={32} /></span>
                         <p>No achievements yet!</p>
                         <p className="achievements-widget__empty-hint">
                             Keep logging your wellness to earn your first badge.
@@ -115,7 +116,7 @@ export default function AchievementsWidget({ playerId, showAll = false, onAchiev
                                 className="achievements-widget__more"
                                 onClick={() => setShowAllAchievements(true)}
                             >
-                                <span className="achievements-widget__more-icon">🔒</span>
+                                <span className="achievements-widget__more-icon"><Lock size={16} /></span>
                                 <span className="achievements-widget__more-text">
                                     +{achievements.filter(a => !a.unlocked).length} more to unlock
                                 </span>
