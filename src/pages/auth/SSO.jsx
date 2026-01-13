@@ -21,13 +21,19 @@ export default function SSO() {
 
       try {
         // Set the session using the tokens from the staff app
-        const { error: sessionError } = await supabase.auth.setSession({
+        const { data, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         })
 
         if (sessionError) {
           throw sessionError
+        }
+
+        // Mark SSO users as having a password so they skip the password setup modal
+        // (They're already authenticated through the staff app)
+        if (data?.user?.id) {
+          localStorage.setItem('itp_password_setup_dismissed', data.user.id)
         }
 
         setStatus('success')
