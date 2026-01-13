@@ -3,11 +3,13 @@ import { useRealtimeWellness } from '../../hooks/useRealtimeWellness'
 import ConnectionStatus from '../ui/ConnectionStatus'
 
 const MOOD_CONFIG = {
-    excellent: { emoji: '😄', color: '#22C55E', label: 'Excellent' },
-    good: { emoji: '🙂', color: '#84CC16', label: 'Good' },
-    neutral: { emoji: '😐', color: '#F59E0B', label: 'Neutral' },
-    poor: { emoji: '😕', color: '#F97316', label: 'Poor' },
-    terrible: { emoji: '😢', color: '#EF4444', label: 'Terrible' }
+    excellent: { indicator: 'E', color: '#22C55E', label: 'Excellent' },
+    good: { indicator: 'G', color: '#84CC16', label: 'Good' },
+    neutral: { indicator: 'N', color: '#F59E0B', label: 'Neutral' },
+    okay: { indicator: 'O', color: '#F59E0B', label: 'Okay' },
+    tired: { indicator: 'T', color: '#F97316', label: 'Tired' },
+    poor: { indicator: 'P', color: '#EF4444', label: 'Poor' },
+    terrible: { indicator: '!', color: '#EF4444', label: 'Terrible' }
 }
 
 const ALERT_COLORS = {
@@ -61,7 +63,7 @@ export default function StaffWellnessMonitor({ maxItems = 10 }) {
 
             {logs.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-tertiary)' }}>
-                    <span style={{ fontSize: '2rem' }}>💪</span>
+                    <div style={{ fontSize: '1.5rem', opacity: 0.5, marginBottom: '0.5rem' }}>—</div>
                     <p style={{ marginTop: '0.5rem' }}>No wellness logs yet today</p>
                 </div>
             ) : (
@@ -86,18 +88,20 @@ export default function StaffWellnessMonitor({ maxItems = 10 }) {
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                {/* Mood emoji */}
+                                {/* Mood indicator */}
                                 <div style={{
-                                    fontSize: '1.5rem',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '600',
                                     width: '40px',
                                     height: '40px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     background: `${mood.color}20`,
-                                    borderRadius: '50%'
+                                    borderRadius: '50%',
+                                    color: mood.color
                                 }}>
-                                    {mood.emoji}
+                                    {mood.indicator}
                                 </div>
 
                                 {/* Player info */}
@@ -105,23 +109,23 @@ export default function StaffWellnessMonitor({ maxItems = 10 }) {
                                     <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>
                                         {log.player ? `${log.player.first_name} ${log.player.last_name}` : getPlayerName(log.player_id)}
                                     </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
-                                            😴 {log.sleep_hours}h
+                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
+                                            SLP {log.sleep_hours}h
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
-                                            ⚡ {log.energy_level}/5
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
+                                            NRG {log.energy_level}/10
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
-                                            💪 {log.muscle_soreness}/5
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
+                                            SOR {log.muscle_soreness}/10
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
-                                            🧠 {log.stress_level}/5
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', fontFamily: 'monospace' }}>
+                                            STR {log.stress_level}/10
                                         </span>
                                     </div>
                                     {alert.concerns.length > 0 && (
-                                        <div style={{ fontSize: '0.7rem', color: ALERT_COLORS[alert.level], marginTop: '0.25rem' }}>
-                                            ⚠️ {alert.concerns.join(', ')}
+                                        <div style={{ fontSize: '0.7rem', color: ALERT_COLORS[alert.level], marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                            <span style={{ fontWeight: '600' }}>!</span> {alert.concerns.join(', ')}
                                         </div>
                                     )}
                                 </div>

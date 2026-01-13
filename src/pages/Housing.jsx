@@ -299,7 +299,7 @@ export default function Housing() {
         return colors[priority] || 'info'
     }
 
-    const getRankIcon = (index) => ['🥇', '🥈', '🥉'][index] || ''
+    const getRankIcon = (index) => ['1', '2', '3'][index] || ''
 
     const choreStats = {
         total: chores.length,
@@ -321,7 +321,7 @@ export default function Housing() {
         <div className="housing-page">
             <header className="page-header">
                 <div>
-                    <h1>🏠 House & Tasks</h1>
+                    <h1>House & Tasks</h1>
                     <p>House standings and your assigned chores</p>
                 </div>
                 <ConnectionStatus showLabel />
@@ -330,21 +330,21 @@ export default function Housing() {
             {/* House Leaderboard */}
             <div className="housing-overview">
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">🏠</div>
+                    <div className="overview-icon-text">H</div>
                     <div className="overview-content">
                         <span className="overview-value">{houses.length}</span>
                         <span className="overview-label">Active Houses</span>
                     </div>
                 </div>
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">✅</div>
+                    <div className="overview-icon-text">C</div>
                     <div className="overview-content">
                         <span className="overview-value">{choreStats.completed}</span>
                         <span className="overview-label">Completed Today</span>
                     </div>
                 </div>
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">📝</div>
+                    <div className="overview-icon-text">P</div>
                     <div className="overview-content">
                         <span className="overview-value">{choreStats.pending}</span>
                         <span className="overview-label">Pending Tasks</span>
@@ -352,7 +352,7 @@ export default function Housing() {
                 </div>
                 {!isStaff && (
                     <div className="glass-card-static overview-card highlight">
-                        <div className="overview-icon">👤</div>
+                        <div className="overview-icon-text">Y</div>
                         <div className="overview-content">
                             <span className="overview-value">{choreStats.myPending}</span>
                             <span className="overview-label">Your Tasks</span>
@@ -375,17 +375,17 @@ export default function Housing() {
 
                         <div className="house-stats">
                             <div className="house-stat">
-                                <span className="stat-icon">👥</span>
+                                <span className="stat-icon-mini">R</span>
                                 <span className="stat-value">{house.residents.length}</span>
                                 <span className="stat-label">Residents</span>
                             </div>
                             <div className="house-stat">
-                                <span className="stat-icon">✅</span>
+                                <span className="stat-icon-mini">%</span>
                                 <span className="stat-value">{house.completionRate}%</span>
                                 <span className="stat-label">Completion</span>
                             </div>
                             <div className="house-stat">
-                                <span className="stat-icon">📝</span>
+                                <span className="stat-icon-mini">P</span>
                                 <span className="stat-value">{house.pendingChores}</span>
                                 <span className="stat-label">Pending</span>
                             </div>
@@ -402,7 +402,7 @@ export default function Housing() {
             <div style={{ marginTop: 'var(--space-8)' }}>
                 <div className="glass-card-static chores-toolbar">
                     <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)' }}>
-                        {isStaff ? '📋 All Tasks' : '✅ Your Tasks'}
+                        {isStaff ? 'All Tasks' : 'Your Tasks'}
                     </h2>
                     <div className="filter-tabs">
                         <button
@@ -439,7 +439,7 @@ export default function Housing() {
                                 onClick={handleGenerateWeeklyChores}
                                 disabled={generatingChores}
                             >
-                                {generatingChores ? 'Generating...' : '🔄 Generate Weekly'}
+                                {generatingChores ? 'Generating...' : 'Generate Weekly'}
                             </button>
                             <button className="btn btn-primary" onClick={() => { setSelectedChore(null); setShowChoreModal(true); }}>
                                 + Create Task
@@ -462,7 +462,7 @@ export default function Housing() {
                                     </div>
                                 </div>
                                 <span className={`chore-status-badge ${chore.status}`}>
-                                    {chore.status === 'completed' ? '✓ Done' : '⏳ Pending'}
+                                    {chore.status === 'completed' ? 'Done' : 'Pending'}
                                 </span>
                             </div>
 
@@ -470,16 +470,16 @@ export default function Housing() {
 
                             <div className="chore-meta">
                                 <div className="meta-item">
-                                    <span className="meta-icon">🏠</span>
+                                    <span className="meta-label">House:</span>
                                     <span>{getHouseName(chore.house_id)}</span>
                                 </div>
                                 <div className="meta-item">
-                                    <span className="meta-icon">👤</span>
+                                    <span className="meta-label">Assigned:</span>
                                     <span>{getPlayerName(chore.assigned_to)}</span>
                                 </div>
                                 {chore.deadline && (
                                     <div className="meta-item">
-                                        <span className="meta-icon">📅</span>
+                                        <span className="meta-label">Due:</span>
                                         <span>{new Date(chore.deadline).toLocaleDateString()}</span>
                                     </div>
                                 )}
@@ -494,7 +494,7 @@ export default function Housing() {
                                     )}
                                     {(isStaff || (playerData && chore.assigned_to === playerData.id)) && (
                                         <button className="btn btn-success btn-sm" onClick={() => handleCompleteChore(chore)}>
-                                            {chore.requires_photo ? '📷 Complete with Photo' : '✓ Mark Complete'}
+                                            {chore.requires_photo ? 'Complete with Photo' : 'Mark Complete'}
                                         </button>
                                     )}
                                 </div>
@@ -516,7 +516,7 @@ export default function Housing() {
 
                 {filteredChores.length === 0 && (
                     <div className="empty-state">
-                        <div className="empty-icon">✅</div>
+                        <div className="empty-icon">—</div>
                         <h3>No tasks found</h3>
                         <p>
                             {filter === 'pending'
@@ -693,7 +693,7 @@ export default function Housing() {
                                     onClick={() => fileInputRef.current?.click()}
                                     style={{ padding: '2rem', fontSize: '1.1rem' }}
                                 >
-                                    📷 Take Photo
+                                    Take Photo
                                 </button>
                             )}
                         </div>

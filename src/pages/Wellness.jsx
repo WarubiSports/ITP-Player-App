@@ -209,7 +209,7 @@ export default function Wellness() {
             {/* Header Stats */}
             <div className="wellness-header">
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon">💪</div>
+                    <div className="stat-icon-text">WS</div>
                     <div className="stat-content">
                         <span className={`stat-value ${readiness.color}`}>
                             {latestWellness ? getWellnessScore(latestWellness) : '--'}
@@ -220,7 +220,7 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon">📊</div>
+                    <div className="stat-icon-text">TL</div>
                     <div className="stat-content">
                         <span className="stat-value">{weeklyLoad}</span>
                         <span className="stat-label">7-Day Load</span>
@@ -229,7 +229,7 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon">😴</div>
+                    <div className="stat-icon-text">SLP</div>
                     <div className="stat-content">
                         <span className="stat-value">{latestWellness?.sleep_hours || '--'}h</span>
                         <span className="stat-label">Last Night Sleep</span>
@@ -240,7 +240,7 @@ export default function Wellness() {
                 </div>
 
                 <div className="glass-card-static stat-card">
-                    <div className="stat-icon">⚡</div>
+                    <div className="stat-icon-text">NRG</div>
                     <div className="stat-content">
                         <span className="stat-value">{latestWellness?.energy_level || '--'}/10</span>
                         <span className="stat-label">Energy Level</span>
@@ -272,7 +272,7 @@ export default function Wellness() {
             {/* Active Injuries */}
             {injuries.filter(i => i.status !== 'recovered').length > 0 && (
                 <div className="glass-card injury-alert">
-                    <h3 className="section-title">🚨 Active Injuries</h3>
+                    <h3 className="section-title">Active Injuries</h3>
                     {injuries.filter(i => i.status !== 'recovered').map(injury => (
                         <div key={injury.id} className="injury-item">
                             <div className="injury-header">
@@ -296,7 +296,7 @@ export default function Wellness() {
             <div className="logs-container">
                 {/* Wellness Logs */}
                 <div className="glass-card logs-section">
-                    <h3 className="section-title">📝 Recent Wellness Logs</h3>
+                    <h3 className="section-title">Recent Wellness Logs</h3>
                     <div className="logs-list">
                         {wellnessLogs.slice(0, 7).map(log => (
                             <div key={log.id} className="log-item">
@@ -311,10 +311,10 @@ export default function Wellness() {
                                         </span>
                                     </div>
                                     <div className="log-metrics">
-                                        <span title="Sleep">😴 {log.sleep_hours}h (Q:{log.sleep_quality}/5)</span>
-                                        <span title="Energy">⚡ {log.energy_level}/10</span>
-                                        <span title="Soreness">💪 {log.muscle_soreness}/10</span>
-                                        <span title="Stress">😰 {log.stress_level}/10</span>
+                                        <span title="Sleep">SLP {log.sleep_hours}h (Q:{log.sleep_quality}/5)</span>
+                                        <span title="Energy">NRG {log.energy_level}/10</span>
+                                        <span title="Soreness">SOR {log.muscle_soreness}/10</span>
+                                        <span title="Stress">STR {log.stress_level}/10</span>
                                     </div>
                                     <div className="log-mood">Mood: <span className="mood-badge">{log.mood}</span></div>
                                     {log.notes && <p className="log-notes">{log.notes}</p>}
@@ -326,7 +326,7 @@ export default function Wellness() {
 
                 {/* Training Load Logs */}
                 <div className="glass-card logs-section">
-                    <h3 className="section-title">🏋️ Recent Training Sessions</h3>
+                    <h3 className="section-title">Recent Training Sessions</h3>
                     <div className="logs-list">
                         {trainingLoads.slice(0, 7).map(load => (
                             <div key={load.id} className="log-item">

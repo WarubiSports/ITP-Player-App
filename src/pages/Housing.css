@@ -22,6 +22,19 @@
     font-size: var(--font-size-2xl);
 }
 
+.overview-icon-text {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    background: var(--color-primary-glow);
+    padding: 0.75rem;
+    border-radius: 8px;
+    min-width: 40px;
+    text-align: center;
+    font-family: 'Inter', monospace;
+}
+
 .overview-content {
     display: flex;
     flex-direction: column;
@@ -114,6 +127,18 @@
 .house-stat .stat-icon {
     font-size: var(--font-size-lg);
     margin-bottom: var(--space-1);
+}
+
+.house-stat .stat-icon-mini {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-tertiary);
+    background: var(--color-bg-elevated);
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: var(--space-1);
+    font-family: 'Inter', monospace;
+    letter-spacing: 0.05em;
 }
 
 .house-stat .stat-value {
