@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { Mail, Inbox, Send, MailX, MessageSquare } from 'lucide-react'
 import './Messages.css'
 
 export default function Messages() {
@@ -73,7 +74,7 @@ export default function Messages() {
             {/* Sidebar */}
             <div className="messages-sidebar glass-card-static">
                 <button className="btn btn-primary w-full mb-4" onClick={() => setShowCompose(true)}>
-                    ✉️ Compose
+                    <Mail size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Compose
                 </button>
 
                 <nav className="messages-nav">
@@ -81,7 +82,7 @@ export default function Messages() {
                         className={`nav-btn ${filter === 'inbox' ? 'active' : ''}`}
                         onClick={() => setFilter('inbox')}
                     >
-                        <span className="nav-icon">📥</span>
+                        <span className="nav-icon"><Inbox size={16} /></span>
                         <span className="nav-label">Inbox</span>
                         {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
                     </button>
@@ -89,7 +90,7 @@ export default function Messages() {
                         className={`nav-btn ${filter === 'sent' ? 'active' : ''}`}
                         onClick={() => setFilter('sent')}
                     >
-                        <span className="nav-icon">📤</span>
+                        <span className="nav-icon"><Send size={16} /></span>
                         <span className="nav-label">Sent</span>
                     </button>
                 </nav>
@@ -127,7 +128,7 @@ export default function Messages() {
 
                     {displayMessages.length === 0 && (
                         <div className="empty-messages">
-                            <span className="empty-icon">📭</span>
+                            <span className="empty-icon"><MailX size={32} /></span>
                             <p>No messages</p>
                         </div>
                     )}
@@ -158,7 +159,7 @@ export default function Messages() {
                     </>
                 ) : (
                     <div className="no-selection">
-                        <span className="no-selection-icon">💬</span>
+                        <span className="no-selection-icon"><MessageSquare size={32} /></span>
                         <p>Select a message to view</p>
                     </div>
                 )}

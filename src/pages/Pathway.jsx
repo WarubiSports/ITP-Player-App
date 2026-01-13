@@ -7,6 +7,7 @@ import {
     createAcademicProgress,
     getPerformanceTests
 } from '../lib/data-service'
+import { Target, Flame, BookOpen, Zap, Activity, GraduationCap, MapPin, DollarSign, FileText, TrendingUp, Check } from 'lucide-react'
 import './Pathway.css'
 
 export default function Pathway() {
@@ -206,7 +207,7 @@ export default function Pathway() {
             {/* Progress Overview */}
             <div className="pathway-header">
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">🎯</div>
+                    <div className="overview-icon"><Target size={24} /></div>
                     <div className="overview-content">
                         <span className="overview-value">{recruitmentOpportunities.length}</span>
                         <span className="overview-label">Active Recruitment</span>
@@ -217,7 +218,7 @@ export default function Pathway() {
                 </div>
 
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">🔥</div>
+                    <div className="overview-icon"><Flame size={24} /></div>
                     <div className="overview-content">
                         <span className="overview-value">{hotCount}</span>
                         <span className="overview-label">Hot Interest</span>
@@ -228,7 +229,7 @@ export default function Pathway() {
                 </div>
 
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">📚</div>
+                    <div className="overview-icon"><BookOpen size={24} /></div>
                     <div className="overview-content">
                         <span className="overview-value">{totalCredits.toFixed(1)}</span>
                         <span className="overview-label">NCAA Credits</span>
@@ -239,7 +240,7 @@ export default function Pathway() {
                 </div>
 
                 <div className="glass-card-static overview-card">
-                    <div className="overview-icon">⚡</div>
+                    <div className="overview-icon"><Zap size={24} /></div>
                     <div className="overview-content">
                         <span className="overview-value">
                             {performanceTests.length > 0 ? performanceTests[0].percentile : '--'}
@@ -260,7 +261,7 @@ export default function Pathway() {
             {/* Active Recruitment Section */}
             <div className="glass-card pathway-section">
                 <div className="section-header">
-                    <h3 className="section-title">⚽ Active Recruitment</h3>
+                    <h3 className="section-title"><Activity size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Active Recruitment</h3>
                     <div className="filter-tabs">
                         {['all', 'colleges', 'clubs', 'offers', 'hot'].map(f => (
                             <button
@@ -284,7 +285,7 @@ export default function Pathway() {
                         <div key={opp.id} className="college-card glass-card-static">
                             <div className="college-header">
                                 <h4 className="college-name">
-                                    {opp.type === 'club' ? '⚽ ' : '🎓 '}
+                                    {opp.type === 'club' ? <Activity size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} /> : <GraduationCap size={16} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />}
                                     {opp.name || opp.college_name}
                                 </h4>
                                 <div className="college-badges">
@@ -299,15 +300,15 @@ export default function Pathway() {
 
                             <div className="college-details">
                                 {opp.league && <p><strong>{opp.league}</strong></p>}
-                                {opp.location && <p>📍 {opp.location}</p>}
+                                {opp.location && <p><MapPin size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />{opp.location}</p>}
                                 {opp.scholarship_amount && (
                                     <p className="scholarship-offer">
-                                        💰 {opp.scholarship_amount}% Scholarship
+                                        <DollarSign size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />{opp.scholarship_amount}% Scholarship
                                     </p>
                                 )}
                                 {opp.contract_offer && (
                                     <p className="scholarship-offer">
-                                        📝 {opp.contract_offer}
+                                        <FileText size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />{opp.contract_offer}
                                     </p>
                                 )}
                             </div>
@@ -341,7 +342,7 @@ export default function Pathway() {
             {/* Academic Progress */}
             <div className="glass-card pathway-section">
                 <div className="section-header">
-                    <h3 className="section-title">📚 Academic Progress</h3>
+                    <h3 className="section-title"><BookOpen size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Academic Progress</h3>
                     <button className="btn btn-primary" onClick={() => setShowAcademicForm(true)}>
                         + Add Course
                     </button>
@@ -361,7 +362,7 @@ export default function Pathway() {
                             <div className="course-details">
                                 <span>{course.category?.replace('_', ' ')} • {course.semester}</span>
                                 {course.credits && <span>{course.credits} credits</span>}
-                                {course.transferable && <span className="transferable">✓ NCAA Transferable</span>}
+                                {course.transferable && <span className="transferable"><Check size={14} style={{ marginRight: '0.25rem', verticalAlign: 'middle' }} />NCAA Transferable</span>}
                             </div>
                             {course.notes && <p className="course-notes">{course.notes}</p>}
                         </div>
@@ -377,7 +378,7 @@ export default function Pathway() {
             {/* Performance Trends */}
             {performanceTests.length > 0 && (
                 <div className="glass-card pathway-section">
-                    <h3 className="section-title">📈 Athletic Performance Trends</h3>
+                    <h3 className="section-title"><TrendingUp size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Athletic Performance Trends</h3>
                     <div className="performance-grid">
                         {['sprint_10m', 'sprint_30m', 'vertical_jump'].map(testType => {
                             const improvement = getPerformanceImprovement(testType)
@@ -420,8 +421,8 @@ export default function Pathway() {
                                 <div className="input-group">
                                     <label className="input-label">Type</label>
                                     <select name="type" className="input" required>
-                                        <option value="college">🎓 College / University</option>
-                                        <option value="club">⚽ Professional Club</option>
+                                        <option value="college">College / University</option>
+                                        <option value="club">Professional Club</option>
                                     </select>
                                 </div>
 

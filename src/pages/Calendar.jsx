@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents'
 import { getLocalDate } from '../lib/date-utils'
 import ConnectionStatus from '../components/ui/ConnectionStatus'
+import { Activity, Dumbbell, Trophy, Globe, Laptop, Users, BarChart3, Heart, PartyPopper, Calendar as CalendarIcon } from 'lucide-react'
 import './Calendar.css'
 
 // Get today's date string in CET timezone (YYYY-MM-DD)
@@ -139,18 +140,19 @@ export default function Calendar() {
     }
 
     const getEventTypeIcon = (type) => {
-        const icons = {
-            training: '⚽',
-            gym: '🏋️',
-            match: '🏟️',
-            german_class: '🇩🇪',
-            online_school: '💻',
-            meeting: '👥',
-            assessment: '📊',
-            social: '🎉',
-            recovery: '🧘'
+        const iconProps = { size: 16 }
+        switch (type) {
+            case 'training': return <Activity {...iconProps} />
+            case 'gym': return <Dumbbell {...iconProps} />
+            case 'match': return <Trophy {...iconProps} />
+            case 'german_class': return <Globe {...iconProps} />
+            case 'online_school': return <Laptop {...iconProps} />
+            case 'meeting': return <Users {...iconProps} />
+            case 'assessment': return <BarChart3 {...iconProps} />
+            case 'social': return <PartyPopper {...iconProps} />
+            case 'recovery': return <Heart {...iconProps} />
+            default: return <CalendarIcon {...iconProps} />
         }
-        return icons[type] || '📅'
     }
 
     const getEventTypeColor = (type) => {
@@ -498,15 +500,15 @@ export default function Calendar() {
                                 <div className="input-group">
                                     <label className="input-label">Event Type</label>
                                     <select name="type" className="input" defaultValue={selectedEvent?.type || 'training'}>
-                                        <option value="training">⚽ Team Training</option>
-                                        <option value="gym">🏋️ Gym Session</option>
-                                        <option value="match">🏟️ GSA League Match</option>
-                                        <option value="german_class">🇩🇪 German Class</option>
-                                        <option value="online_school">💻 Online School / ASU Prep</option>
-                                        <option value="meeting">👥 Meeting</option>
-                                        <option value="assessment">📊 Assessment</option>
-                                        <option value="recovery">🧘 Recovery</option>
-                                        <option value="social">🎉 Social Event</option>
+                                        <option value="training">Team Training</option>
+                                        <option value="gym">Gym Session</option>
+                                        <option value="match">GSA League Match</option>
+                                        <option value="german_class">German Class</option>
+                                        <option value="online_school">Online School / ASU Prep</option>
+                                        <option value="meeting">Meeting</option>
+                                        <option value="assessment">Assessment</option>
+                                        <option value="recovery">Recovery</option>
+                                        <option value="social">Social Event</option>
                                     </select>
                                 </div>
                                 <div className="form-row">

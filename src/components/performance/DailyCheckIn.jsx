@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createWellnessLog, createTrainingLoad, getPlayers } from '../../lib/data-service';
 import { getLocalDate } from '../../lib/date-utils';
+import { Moon, Footprints, Brain, CircleDot } from 'lucide-react';
 
 export default function DailyCheckIn({ onClose }) {
     const { profile } = useAuth();
@@ -83,7 +84,7 @@ export default function DailyCheckIn({ onClose }) {
                 <div className="modal-body" style={{ textAlign: 'center' }}>
                     {step === 1 && (
                         <>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>😴</div>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><Moon size={48} /></div>
                             <h3>How did you sleep?</h3>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
                                 {[1, 2, 3, 4, 5].map(num => (
@@ -102,7 +103,7 @@ export default function DailyCheckIn({ onClose }) {
 
                     {step === 2 && (
                         <>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🦵</div>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><Footprints size={48} /></div>
                             <h3>Muscle Soreness?</h3>
                             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>1 = Fresh, 5 = Can't Walk</p>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
@@ -122,7 +123,7 @@ export default function DailyCheckIn({ onClose }) {
 
                     {step === 3 && (
                         <>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧠</div>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><Brain size={48} /></div>
                             <h3>Mental Energy?</h3>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
                                 {[1, 2, 3, 4, 5].map(num => (
@@ -141,7 +142,7 @@ export default function DailyCheckIn({ onClose }) {
 
                     {step === 4 && (
                         <>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚽</div>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><CircleDot size={48} /></div>
                             <h3>Did you train yesterday?</h3>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
                                 <button

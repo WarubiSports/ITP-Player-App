@@ -4,6 +4,7 @@ import {
     deletePlayer,
     deleteUser
 } from '../lib/data-service'
+import { Users, Crown, Briefcase, CircleDot, ClipboardList, Settings, AlertTriangle, Check, X } from 'lucide-react'
 import './Admin.css'
 
 export default function Admin() {
@@ -141,27 +142,27 @@ export default function Admin() {
             {/* Stats */}
             <div className="admin-stats">
                 <div className="glass-card-static admin-stat">
-                    <span className="stat-icon">👥</span>
+                    <span className="stat-icon"><Users size={20} /></span>
                     <span className="stat-value">{stats.totalUsers}</span>
                     <span className="stat-label">Total Users</span>
                 </div>
                 <div className="glass-card-static admin-stat">
-                    <span className="stat-icon">👑</span>
+                    <span className="stat-icon"><Crown size={20} /></span>
                     <span className="stat-value">{stats.admins}</span>
                     <span className="stat-label">Admins</span>
                 </div>
                 <div className="glass-card-static admin-stat">
-                    <span className="stat-icon">🏷️</span>
+                    <span className="stat-icon"><Briefcase size={20} /></span>
                     <span className="stat-value">{stats.staff}</span>
                     <span className="stat-label">Staff</span>
                 </div>
                 <div className="glass-card-static admin-stat">
-                    <span className="stat-icon">⚽</span>
+                    <span className="stat-icon"><CircleDot size={20} /></span>
                     <span className="stat-value">{stats.players}</span>
                     <span className="stat-label">Players</span>
                 </div>
                 <div className="glass-card-static admin-stat pending">
-                    <span className="stat-icon">📋</span>
+                    <span className="stat-icon"><ClipboardList size={20} /></span>
                     <span className="stat-value">{stats.pendingApps}</span>
                     <span className="stat-label">Pending Apps</span>
                 </div>
@@ -173,20 +174,20 @@ export default function Admin() {
                     className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
                     onClick={() => setActiveTab('users')}
                 >
-                    👥 User Management
+                    <Users size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />User Management
                 </button>
                 <button
                     className={`admin-tab ${activeTab === 'applications' ? 'active' : ''}`}
                     onClick={() => setActiveTab('applications')}
                 >
-                    📋 Applications
+                    <ClipboardList size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Applications
                     {stats.pendingApps > 0 && <span className="tab-badge">{stats.pendingApps}</span>}
                 </button>
                 <button
                     className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`}
                     onClick={() => setActiveTab('settings')}
                 >
-                    ⚙️ Settings
+                    <Settings size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Settings
                 </button>
             </div>
 
@@ -265,26 +266,26 @@ export default function Admin() {
                                             className="btn btn-success btn-sm"
                                             onClick={() => handleApprove(app.id)}
                                         >
-                                            ✓ Approve
+                                            <Check size={14} /> Approve
                                         </button>
                                         <button
                                             className="btn btn-danger btn-sm"
                                             onClick={() => handleReject(app.id)}
                                         >
-                                            ✗ Reject
+                                            <X size={14} /> Reject
                                         </button>
                                     </div>
                                 )}
                                 {app.status !== 'pending' && (
                                     <div className={`app-status-banner ${app.status}`}>
-                                        {app.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                        {app.status === 'approved' ? <><Check size={14} /> Approved</> : <><X size={14} /> Rejected</>}
                                     </div>
                                 )}
                             </div>
                         ))}
                         {applications.length === 0 && (
                             <div className="empty-state">
-                                <div className="empty-state-icon">📋</div>
+                                <div className="empty-state-icon"><ClipboardList size={48} /></div>
                                 <h3 className="empty-state-title">No applications</h3>
                             </div>
                         )}
@@ -417,7 +418,7 @@ export default function Admin() {
                         </div>
                         <div className="modal-body">
                             <div className="delete-warning">
-                                <span className="delete-warning-icon">⚠️</span>
+                                <span className="delete-warning-icon"><AlertTriangle size={32} /></span>
                                 <p>Are you sure you want to delete <strong>{userToDelete.first_name} {userToDelete.last_name}</strong>?</p>
                                 <p className="delete-warning-text">
                                     This action cannot be undone. All associated data including wellness logs, goals, achievements, and grocery orders will be permanently deleted.

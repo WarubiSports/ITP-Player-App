@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Loader, Users, UserPlus } from 'lucide-react'
 import { getDemoData } from '../lib/supabase'
 import { getPlayers, getWellnessScore, getTrainingLoads, getWellnessStreak } from '../lib/data-service'
 import ReadinessGauge from '../components/dashboard/ReadinessGauge'
@@ -154,7 +155,7 @@ export default function Dashboard() {
                     </div>
                 </header>
                 <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', marginTop: '2rem' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}><Loader size={32} /></div>
                     <p style={{ color: 'var(--color-text-secondary)' }}>Loading dashboard...</p>
                 </div>
             </div>
@@ -190,7 +191,7 @@ export default function Dashboard() {
             {/* Staff View Message (only for staff - playerData === false) */}
             {playerData === false && (
                 <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
-                    <h2 style={{ margin: '0 0 1rem 0' }}>👥 Staff Dashboard</h2>
+                    <h2 style={{ margin: '0 0 1rem 0' }}><Users size={24} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Staff Dashboard</h2>
                     <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
                         Welcome, Max! As a staff member, you have access to administrative features.
                     </p>
@@ -249,7 +250,7 @@ export default function Dashboard() {
 
                     {/* Share with Parents */}
                     <Link to="/my-report" className="share-with-parents-card glass-panel">
-                        <div className="share-icon">👨‍👩‍👦</div>
+                        <div className="share-icon"><UserPlus size={32} /></div>
                         <div className="share-content">
                             <h3>Share Progress with Parents</h3>
                             <p>Generate a PDF report to share your development, performance tests, and recruitment status</p>

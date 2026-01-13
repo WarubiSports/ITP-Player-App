@@ -1,8 +1,9 @@
 import React from 'react'
+import { Inbox } from 'lucide-react'
 import './EmptyState.css'
 
 export default function EmptyState({
-    icon = '📭',
+    icon = <Inbox size={48} />,
     title = 'Nothing here yet',
     message = '',
     actionLabel,

@@ -13,9 +13,9 @@ export function useNotification() {
 export function NotificationProvider({ children }) {
     const [notifications, setNotifications] = useState([])
 
-    const addNotification = useCallback((message, type = 'info', duration = 3000) => {
+    const addNotification = useCallback((message, type = 'info', duration = 3000, iconType = null) => {
         const id = Date.now() + Math.random()
-        const notification = { id, message, type, duration }
+        const notification = { id, message, type, duration, iconType }
 
         setNotifications(prev => [...prev, notification])
 
@@ -48,22 +48,14 @@ export function NotificationProvider({ children }) {
         return addNotification(message, 'warning', duration)
     }, [addNotification])
 
-    const achievement = useCallback((title, message, icon = '🏆', duration = 5000) => {
-        const fullMessage = `${icon} ${title}: ${message}`
-        return addNotification(fullMessage, 'achievement', duration)
+    const achievement = useCallback((title, message, duration = 5000) => {
+        const fullMessage = `${title}: ${message}`
+        return addNotification(fullMessage, 'achievement', duration, 'achievement')
     }, [addNotification])
 
     // Realtime notifications with source-specific icons
     const realtime = useCallback((message, source = 'info', duration = 5000) => {
-        const icons = {
-            event: '📅',
-            points: '⭐',
-            chore: '✅',
-            wellness: '💪',
-            info: '🔔'
-        }
-        const icon = icons[source] || icons.info
-        return addNotification(`${icon} ${message}`, 'realtime', duration)
+        return addNotification(message, 'realtime', duration, source)
     }, [addNotification])
 
     return (

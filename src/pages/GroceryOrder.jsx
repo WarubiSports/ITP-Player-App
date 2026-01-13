@@ -8,19 +8,36 @@ import {
     getGroceryOrders,
     GROCERY_BUDGET
 } from '../lib/data-service'
+import { ShoppingCart, Home, Salad, Beef, Milk, Wheat, CupSoda, Flame, Snowflake } from 'lucide-react'
 import './GroceryOrder.css'
 
 const CATEGORIES = [
-    { id: 'all', label: 'All Items', icon: '🛒' },
-    { id: 'household', label: 'Household', icon: '🏠' },
-    { id: 'produce', label: 'Produce', icon: '🥬' },
-    { id: 'meat', label: 'Meat & Eggs', icon: '🥩' },
-    { id: 'dairy', label: 'Dairy', icon: '🥛' },
-    { id: 'carbs', label: 'Carbs', icon: '🍞' },
-    { id: 'drinks', label: 'Drinks', icon: '🥤' },
-    { id: 'spices', label: 'Spices', icon: '🧂' },
-    { id: 'frozen', label: 'Frozen', icon: '🧊' }
+    { id: 'all', label: 'All Items', icon: 'cart' },
+    { id: 'household', label: 'Household', icon: 'home' },
+    { id: 'produce', label: 'Produce', icon: 'salad' },
+    { id: 'meat', label: 'Meat & Eggs', icon: 'beef' },
+    { id: 'dairy', label: 'Dairy', icon: 'milk' },
+    { id: 'carbs', label: 'Carbs', icon: 'wheat' },
+    { id: 'drinks', label: 'Drinks', icon: 'cup' },
+    { id: 'spices', label: 'Spices', icon: 'flame' },
+    { id: 'frozen', label: 'Frozen', icon: 'snowflake' }
 ]
+
+const getCategoryIcon = (iconName) => {
+    const iconProps = { size: 16 }
+    switch (iconName) {
+        case 'cart': return <ShoppingCart {...iconProps} />
+        case 'home': return <Home {...iconProps} />
+        case 'salad': return <Salad {...iconProps} />
+        case 'beef': return <Beef {...iconProps} />
+        case 'milk': return <Milk {...iconProps} />
+        case 'wheat': return <Wheat {...iconProps} />
+        case 'cup': return <CupSoda {...iconProps} />
+        case 'flame': return <Flame {...iconProps} />
+        case 'snowflake': return <Snowflake {...iconProps} />
+        default: return <ShoppingCart {...iconProps} />
+    }
+}
 
 export default function GroceryOrder() {
     const { profile } = useAuth()
@@ -296,7 +313,7 @@ export default function GroceryOrder() {
                         className={`category-chip ${selectedCategory === cat.id ? 'category-chip--active' : ''}`}
                         onClick={() => setSelectedCategory(cat.id)}
                     >
-                        <span className="category-chip__icon">{cat.icon}</span>
+                        <span className="category-chip__icon">{getCategoryIcon(cat.icon)}</span>
                         <span className="category-chip__label">{cat.label}</span>
                     </button>
                 ))}

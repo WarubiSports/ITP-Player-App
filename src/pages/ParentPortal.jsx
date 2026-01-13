@@ -12,6 +12,7 @@ import {
     getPerformanceTests
 } from '../lib/data-service'
 import { getLocalDate } from '../lib/date-utils'
+import { BarChart3, Mail, Heart, Dumbbell, BookOpen, Target, AlertTriangle, Eye } from 'lucide-react'
 import './ParentPortal.css'
 
 // Calculate week range based on selected week type
@@ -254,7 +255,7 @@ export default function ParentPortal() {
         return (
             <div className="parent-portal-page">
                 <div className="error-state" style={{ padding: '4rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
+                    <div style={{ marginBottom: '1rem' }}><BarChart3 size={48} /></div>
                     <p>No data available for this period</p>
                 </div>
             </div>
@@ -312,8 +313,8 @@ export default function ParentPortal() {
                         <option value="last">Last Week</option>
                         <option value="2weeks">2 Weeks Ago</option>
                     </select>
-                    <button className="btn btn-primary">
-                        📧 Email Report
+                    <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Mail size={16} /> Email Report
                     </button>
                 </div>
             </div>
@@ -328,7 +329,7 @@ export default function ParentPortal() {
             <div className="metrics-grid">
                 <div className="glass-card-static metric-card">
                     <div className="metric-header">
-                        <span className="metric-icon">💪</span>
+                        <span className="metric-icon"><Heart size={20} /></span>
                         <h4>Wellness</h4>
                     </div>
                     <div className="metric-value">
@@ -354,7 +355,7 @@ export default function ParentPortal() {
 
                 <div className="glass-card-static metric-card">
                     <div className="metric-header">
-                        <span className="metric-icon">🏋️</span>
+                        <span className="metric-icon"><Dumbbell size={20} /></span>
                         <h4>Training Load</h4>
                     </div>
                     <div className="metric-value">
@@ -380,7 +381,7 @@ export default function ParentPortal() {
 
                 <div className="glass-card-static metric-card">
                     <div className="metric-header">
-                        <span className="metric-icon">📚</span>
+                        <span className="metric-icon"><BookOpen size={20} /></span>
                         <h4>Academic</h4>
                     </div>
                     <div className="metric-value">
@@ -404,7 +405,7 @@ export default function ParentPortal() {
 
                 <div className="glass-card-static metric-card">
                     <div className="metric-header">
-                        <span className="metric-icon">🎯</span>
+                        <span className="metric-icon"><Target size={20} /></span>
                         <h4>Recruitment</h4>
                     </div>
                     <div className="metric-value">
@@ -432,7 +433,7 @@ export default function ParentPortal() {
                 {/* Injury Status */}
                 {report.injuries.length > 0 && (
                     <div className="glass-card report-section injury-section">
-                        <h3 className="section-title">⚠️ Injury Status</h3>
+                        <h3 className="section-title"><AlertTriangle size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Injury Status</h3>
                         {report.injuries.map(injury => (
                             <div key={injury.id} className="injury-report-item">
                                 <div className="injury-report-header">
@@ -453,7 +454,7 @@ export default function ParentPortal() {
 
                 {/* Academic Progress */}
                 <div className="glass-card report-section">
-                    <h3 className="section-title">📖 Academic Progress</h3>
+                    <h3 className="section-title"><BookOpen size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Academic Progress</h3>
                     <div className="courses-summary">
                         {report.academic.currentCourses.map(course => (
                             <div key={course.id} className="course-summary-item">
@@ -473,7 +474,7 @@ export default function ParentPortal() {
                 {/* Recent Scout Activity */}
                 {report.recruitment.recentActivity.length > 0 && (
                     <div className="glass-card report-section">
-                        <h3 className="section-title">👀 Recent Scout Activity</h3>
+                        <h3 className="section-title"><Eye size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Recent Scout Activity</h3>
                         <div className="scout-summary">
                             {report.recruitment.recentActivity.map(activity => (
                                 <div key={activity.id} className="scout-summary-item">
@@ -495,7 +496,7 @@ export default function ParentPortal() {
                 {/* Performance Tests */}
                 {report.performance.length > 0 && (
                     <div className="glass-card report-section">
-                        <h3 className="section-title">📊 Latest Performance Tests</h3>
+                        <h3 className="section-title"><BarChart3 size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Latest Performance Tests</h3>
                         <div className="performance-summary">
                             {report.performance.map(test => (
                                 <div key={test.id} className="performance-summary-item">

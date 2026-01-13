@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { demoData } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { ClipboardList, Clock, CheckCircle, Star, Home, User, CalendarDays, Check } from 'lucide-react'
 import './Chores.css'
 
 export default function Chores() {
@@ -93,22 +94,22 @@ export default function Chores() {
             {/* Stats */}
             <div className="chores-stats">
                 <div className="glass-card-static chore-stat-card">
-                    <span className="stat-icon">📋</span>
+                    <span className="stat-icon"><ClipboardList size={20} /></span>
                     <span className="stat-value">{stats.total}</span>
                     <span className="stat-label">Total Chores</span>
                 </div>
                 <div className="glass-card-static chore-stat-card">
-                    <span className="stat-icon">⏳</span>
+                    <span className="stat-icon"><Clock size={20} /></span>
                     <span className="stat-value pending">{stats.pending}</span>
                     <span className="stat-label">Pending</span>
                 </div>
                 <div className="glass-card-static chore-stat-card">
-                    <span className="stat-icon">✅</span>
+                    <span className="stat-icon"><CheckCircle size={20} /></span>
                     <span className="stat-value completed">{stats.completed}</span>
                     <span className="stat-label">Completed</span>
                 </div>
                 <div className="glass-card-static chore-stat-card">
-                    <span className="stat-icon">⭐</span>
+                    <span className="stat-icon"><Star size={20} /></span>
                     <span className="stat-value points">{stats.totalPoints}</span>
                     <span className="stat-label">Points Earned</span>
                 </div>
@@ -154,7 +155,7 @@ export default function Chores() {
                                 </div>
                             </div>
                             <span className={`chore-status-badge ${chore.status}`}>
-                                {chore.status === 'completed' ? '✓ Done' : '⏳ Pending'}
+                                {chore.status === 'completed' ? <><Check size={14} /> Done</> : <><Clock size={14} /> Pending</>}
                             </span>
                         </div>
 
@@ -162,15 +163,15 @@ export default function Chores() {
 
                         <div className="chore-meta">
                             <div className="meta-item">
-                                <span className="meta-icon">🏠</span>
+                                <span className="meta-icon"><Home size={14} /></span>
                                 <span>{getHouseName(chore.house_id)}</span>
                             </div>
                             <div className="meta-item">
-                                <span className="meta-icon">👤</span>
+                                <span className="meta-icon"><User size={14} /></span>
                                 <span>{getPlayerName(chore.assigned_to)}</span>
                             </div>
                             <div className="meta-item">
-                                <span className="meta-icon">📅</span>
+                                <span className="meta-icon"><CalendarDays size={14} /></span>
                                 <span>{new Date(chore.deadline).toLocaleDateString()}</span>
                             </div>
                         </div>
@@ -191,7 +192,7 @@ export default function Chores() {
 
             {filteredChores.length === 0 && (
                 <div className="empty-state">
-                    <div className="empty-state-icon">✅</div>
+                    <div className="empty-state-icon"><CheckCircle size={48} /></div>
                     <h3 className="empty-state-title">No chores found</h3>
                     <p className="empty-state-description">
                         {filter === 'pending' ? 'All chores are completed!' : 'No chores match your filter'}
