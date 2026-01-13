@@ -96,7 +96,7 @@ export const shouldUseDemoData = () => {
 export const isDemoMode = checkIsDemoMode()
 
 // Demo data version - increment this when you change demo data structure
-const DEMO_DATA_VERSION = 8
+const DEMO_DATA_VERSION = 9
 
 // Initialize demo data on first load or when version changes
 const initializeDemoData = () => {
@@ -111,6 +111,9 @@ const initializeDemoData = () => {
         })
         localStorage.setItem('demo_data_version', String(DEMO_DATA_VERSION))
     }
+
+    // Always clear demo events - we don't use demo events anymore
+    localStorage.removeItem('demo_events')
 }
 
 // Helper functions for demo mode (deprecated - use data-service.js instead)
@@ -201,33 +204,7 @@ export const demoData = {
     ],
     // Photo verifications (temporary storage until approved)
     chorePhotos: [],
-    events: [
-        // Monday - Typical ITP day
-        { id: 'e1', title: 'Team Training', type: 'training', date: '2026-01-06', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
-        { id: 'e2', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-06', start_time: '14:00', end_time: '16:00', location: 'Cologne Language Center' },
-        // Tuesday
-        { id: 'e3', title: 'Team Training', type: 'training', date: '2026-01-07', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
-        { id: 'e4', title: 'ASU Prep - Online School', type: 'online_school', date: '2026-01-07', start_time: '14:00', end_time: '17:00', location: 'Housing - Study Room' },
-        // Wednesday
-        { id: 'e5', title: 'Team Training', type: 'training', date: '2026-01-08', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
-        { id: 'e6', title: 'Gym - Explosiveness', type: 'gym', date: '2026-01-08', start_time: '14:00', end_time: '15:30', location: 'German Sports University Gym' },
-        { id: 'e7', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-08', start_time: '16:00', end_time: '18:00', location: 'Cologne Language Center' },
-        // Thursday
-        { id: 'e8', title: 'Team Training', type: 'training', date: '2026-01-09', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
-        { id: 'e9', title: 'ASU Prep - Online School', type: 'online_school', date: '2026-01-09', start_time: '14:00', end_time: '17:00', location: 'Housing - Study Room' },
-        // Friday
-        { id: 'e10', title: 'Team Training', type: 'training', date: '2026-01-10', start_time: '09:30', end_time: '11:30', location: 'FC Köln Training Ground' },
-        { id: 'e11', title: 'Gym - Hypertrophy', type: 'gym', date: '2026-01-10', start_time: '14:00', end_time: '15:30', location: 'German Sports University Gym' },
-        { id: 'e12', title: 'German Class - Level A2', type: 'german_class', date: '2026-01-10', start_time: '16:00', end_time: '18:00', location: 'Cologne Language Center' },
-        // Saturday - Match Day
-        { id: 'e13', title: 'GSA League Match vs Bayern Munich Academy', type: 'match', date: '2026-01-11', start_time: '14:00', end_time: '16:00', location: 'FC Köln Training Ground 1' },
-        // Sunday - Recovery
-        { id: 'e14', title: 'Recovery Session', type: 'recovery', date: '2026-01-12', start_time: '10:00', end_time: '11:30', location: 'German Sports University - Wellness' },
-        // Upcoming assessment
-        { id: 'e15', title: 'Performance Testing', type: 'assessment', date: '2026-01-15', start_time: '09:00', end_time: '12:00', location: 'German Sports University' },
-        // Social event
-        { id: 'e16', title: 'Bundesliga Match Visit - FC Köln vs Leverkusen', type: 'social', date: '2026-01-18', start_time: '15:30', end_time: '18:00', location: 'RheinEnergieStadion' },
-    ],
+    events: [],
     messages: [
         { id: 'm1', from_user: 'admin-1', to_user: 'p1', subject: 'Training Schedule Update', content: 'Please note the morning training has been moved to 9 AM starting next week.', is_read: false, created_at: '2026-01-01T10:00:00Z' },
         { id: 'm2', from_user: 'staff-1', to_user: 'p2', subject: 'Performance Review', content: 'Great progress this month! Keep up the good work.', is_read: true, created_at: '2024-12-28T14:30:00Z' },
