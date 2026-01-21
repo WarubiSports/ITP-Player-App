@@ -102,6 +102,21 @@ export function useRealtimeEvents({ playerId = null, showNotifications = true } 
         enabled: !!playerId
     })
 
+    // Handle medical appointment changes
+    const handleMedicalAppointmentChange = useCallback(() => {
+        // Refresh events when medical appointments change for this player
+        if (playerId) {
+            loadEvents()
+        }
+    }, [playerId, loadEvents])
+
+    // Subscribe to medical_appointments table for player-specific updates
+    useRealtimeSubscription('medical-appointments', 'medical_appointments', {
+        events: ['INSERT', 'UPDATE', 'DELETE'],
+        onChange: handleMedicalAppointmentChange,
+        enabled: !!playerId
+    })
+
     return {
         events,
         loading,

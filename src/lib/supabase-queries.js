@@ -492,8 +492,9 @@ export const eventQueries = {
     // Excludes staff-only events (trial players, admin events, etc.)
     async getPlayerEvents(playerId) {
         // Event types that should be hidden from players (staff-only)
-        // Based on Staff App CalendarEventType: trial, prospect_trial, meeting, medical, visa
-        const staffOnlyEventTypes = ['trial', 'prospect_trial', 'meeting', 'medical', 'visa']
+        // Based on Staff App CalendarEventType: trial, prospect_trial, meeting, visa
+        // Note: 'medical' removed - we show player's own medical appointments
+        const staffOnlyEventTypes = ['trial', 'prospect_trial', 'meeting', 'visa']
 
         const { data, error } = await supabase
             .from('events')
@@ -510,7 +511,7 @@ export const eventQueries = {
         if (error) throw error
 
         // Filter events based on type and player assignment
-        return data.filter(event => {
+        const filteredEvents = data.filter(event => {
             const eventType = event.event_type || event.type || ''
             const isStaffOnly = staffOnlyEventTypes.includes(eventType)
             const hasNoAttendees = event.attendees.length === 0
@@ -522,6 +523,47 @@ export const eventQueries = {
             // Show event if player is attendee OR event has no specific attendees (everyone)
             return playerIsAttendee || hasNoAttendees
         })
+
+        // Also fetch medical appointments for this player
+        const medicalAppointments = await this.getPlayerMedicalAppointments(playerId)
+
+        // Convert medical appointments to event format and merge
+        const medicalEvents = medicalAppointments.map(appointment => ({
+            id: `medical-${appointment.id}`,
+            title: `Medical: ${appointment.doctor_type === 'general' ? 'General' :
+                   appointment.doctor_type === 'orthopedic' ? 'Orthopedic' :
+                   appointment.doctor_type === 'physiotherapy' ? 'Physio' :
+                   appointment.doctor_type === 'dentist' ? 'Dentist' :
+                   appointment.doctor_type === 'specialist' ? 'Specialist' : 'Appointment'}`,
+            description: `${appointment.reason}${appointment.clinic_name ? ` at ${appointment.clinic_name}` : ''}`,
+            date: appointment.appointment_date,
+            start_time: appointment.appointment_time ? `${appointment.appointment_date}T${appointment.appointment_time}` : null,
+            end_time: null,
+            type: 'medical',
+            location: appointment.clinic_address || appointment.clinic_name || null,
+            all_day: !appointment.appointment_time,
+            created_at: appointment.created_at,
+            updated_at: appointment.updated_at,
+            attendees: []
+        }))
+
+        return [...filteredEvents, ...medicalEvents]
+    },
+
+    // Get medical appointments for a specific player
+    async getPlayerMedicalAppointments(playerId) {
+        const { data, error } = await supabase
+            .from('medical_appointments')
+            .select('*')
+            .eq('player_id', playerId)
+            .eq('status', 'scheduled')
+            .order('appointment_date', { ascending: true })
+
+        if (error) {
+            console.error('Error fetching medical appointments:', error)
+            return []
+        }
+        return data || []
     }
 }
 

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useRealtimeEvents } from '../hooks/useRealtimeEvents'
 import { getLocalDate } from '../lib/date-utils'
 import ConnectionStatus from '../components/ui/ConnectionStatus'
-import { Activity, Dumbbell, Trophy, Globe, Laptop, Users, BarChart3, Heart, PartyPopper, Calendar as CalendarIcon } from 'lucide-react'
+import { Activity, Dumbbell, Trophy, Globe, Laptop, Users, BarChart3, Heart, PartyPopper, Calendar as CalendarIcon, Stethoscope } from 'lucide-react'
 import './Calendar.css'
 
 // Get today's date string in CET timezone (YYYY-MM-DD)
@@ -151,6 +151,7 @@ export default function Calendar() {
             case 'assessment': return <BarChart3 {...iconProps} />
             case 'social': return <PartyPopper {...iconProps} />
             case 'recovery': return <Heart {...iconProps} />
+            case 'medical': return <Stethoscope {...iconProps} />
             default: return <CalendarIcon {...iconProps} />
         }
     }
@@ -165,7 +166,8 @@ export default function Calendar() {
             meeting: '#6366F1',
             assessment: '#F97316',
             social: '#DC143C',
-            recovery: '#10B981'
+            recovery: '#10B981',
+            medical: '#EC4899'
         }
         return colors[type] || '#3B82F6'
     }
