@@ -84,10 +84,16 @@ export function AuthProvider({ children }) {
 
             if (playerByEmail) {
                 // Link this auth user to the player record
-                await supabase
+                const { error: linkError } = await supabase
                     .from('players')
                     .update({ user_id: userId })
                     .eq('id', playerByEmail.id)
+
+                if (linkError) {
+                    console.error('Failed to link player account:', linkError.message)
+                    // Still set playerData so UI works, but save operations will fail
+                    // until the migration is applied and user re-links
+                }
 
                 playerData = playerByEmail
             }
