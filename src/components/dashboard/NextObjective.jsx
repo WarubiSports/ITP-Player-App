@@ -160,11 +160,11 @@ export default function NextObjective() {
                     <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextItem.title}</h2>
                     <div style={{ color: 'var(--color-accent)', fontWeight: '500', fontSize: '0.9rem' }}>
                         {isTask ? (
-                            `Due: ${nextItem.datetime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
+                            `Due: ${nextItem.datetime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Europe/Berlin' })}`
                         ) : (
                             <>
-                                {nextItem.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                {nextItem.end_time && ` - ${new Date(nextItem.date + 'T' + nextItem.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                                {nextItem.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Europe/Berlin' })}
+                                {nextItem.end_time && ` - ${new Date(nextItem.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Europe/Berlin' })}`}
                             </>
                         )}
                     </div>

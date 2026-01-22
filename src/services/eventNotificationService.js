@@ -45,7 +45,7 @@ const checkUpcomingEvents = async (playerId, getEvents) => {
                     notificationCallback({
                         id: event.id,
                         title: event.title,
-                        message: `${event.title} starts at ${eventStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`,
+                        message: `${event.title} starts at ${eventStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Europe/Berlin' })}`,
                         type: event.type,
                         location: event.location,
                         eventTime: eventStart
