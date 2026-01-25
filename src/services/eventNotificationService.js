@@ -9,6 +9,23 @@ let notificationCallback = null
 // Store notified events to avoid duplicate notifications
 const notifiedEvents = new Set()
 
+// Format time from ISO string - converts to Berlin timezone and 12-hour format
+const formatTimeFromISO = (timeStr) => {
+    if (!timeStr) return ''
+    try {
+        const date = new Date(timeStr)
+        if (isNaN(date.getTime())) return ''
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Europe/Berlin'
+        })
+    } catch {
+        return ''
+    }
+}
+
 /**
  * Check if an event should trigger a notification (2 hours before start)
  */
@@ -45,7 +62,7 @@ const checkUpcomingEvents = async (playerId, getEvents) => {
                     notificationCallback({
                         id: event.id,
                         title: event.title,
-                        message: `${event.title} starts at ${eventStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Europe/Berlin' })}`,
+                        message: `${event.title} starts at ${formatTimeFromISO(event.start_time)}`,
                         type: event.type,
                         location: event.location,
                         eventTime: eventStart

@@ -38,6 +38,23 @@ const PriorityIcon = ({ priority }) => {
     return <Circle size={24} fill={colors[priority] || '#888'} color={colors[priority] || '#888'} />;
 };
 
+// Format time from ISO string - converts to Berlin timezone and 12-hour format
+const formatTimeFromISO = (timeStr) => {
+    if (!timeStr) return '';
+    try {
+        const date = new Date(timeStr);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Europe/Berlin'
+        });
+    } catch {
+        return '';
+    }
+};
+
 export default function NextObjective() {
     const [nextItem, setNextItem] = useState(null);
     const [timeRemaining, setTimeRemaining] = useState('');
@@ -56,14 +73,13 @@ export default function NextObjective() {
             const upcomingEvents = events
                 .map(event => {
                     let eventDate;
-                    if (event.date && event.start_time) {
-                        eventDate = new Date(event.date + 'T' + event.start_time);
-                    } else if (event.start_time) {
+                    // start_time is stored as full ISO string with timezone (e.g., "2026-01-27T07:30:00+01:00")
+                    if (event.start_time) {
                         eventDate = new Date(event.start_time);
                     }
                     return { ...event, datetime: eventDate, itemType: 'event' };
                 })
-                .filter(event => event.datetime && event.datetime > now);
+                .filter(event => event.datetime && !isNaN(event.datetime.getTime()) && event.datetime > now);
 
             // Process tasks (pending chores assigned to current user)
             const pendingTasks = chores
@@ -157,14 +173,14 @@ export default function NextObjective() {
                     {isTask ? <PriorityIcon priority={nextItem.priority} /> : <EventIcon type={nextItem.type} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextItem.title}</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nextItem.title}</h2>
                     <div style={{ color: 'var(--color-accent)', fontWeight: '500', fontSize: '0.9rem' }}>
                         {isTask ? (
                             `Due: ${nextItem.datetime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Europe/Berlin' })}`
                         ) : (
                             <>
-                                {nextItem.datetime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Europe/Berlin' })}
-                                {nextItem.end_time && ` - ${new Date(nextItem.end_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Europe/Berlin' })}`}
+                                {formatTimeFromISO(nextItem.start_time)}
+                                {nextItem.end_time && ` - ${formatTimeFromISO(nextItem.end_time)}`}
                             </>
                         )}
                     </div>

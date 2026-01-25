@@ -25,14 +25,15 @@ const formatDateStr = (date) => {
 }
 
 // Format time for display - handles both ISO strings and simple time strings
-// Always displays in Europe/Berlin timezone for consistency
+// Always converts to Berlin timezone for display
 const formatEventTime = (timeStr) => {
     if (!timeStr) return '--:--'
     // If it's a simple time string like "09:00", return as-is
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr
-    // If it's an ISO string, extract and format the time in Europe/Berlin timezone
+    // Parse ISO string and format in Berlin timezone
     try {
         const date = new Date(timeStr)
+        if (isNaN(date.getTime())) return '--:--'
         return date.toLocaleTimeString('en-GB', {
             hour: '2-digit',
             minute: '2-digit',
