@@ -30,15 +30,14 @@ const formatEventTime = (timeStr) => {
     if (!timeStr) return '--:--'
     // If it's a simple time string like "09:00", return as-is
     if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr
-    // Parse ISO string and format in Berlin timezone
+    // Extract time directly from ISO string (matches Staff App behavior)
+    // This avoids timezone conversion issues
     try {
-        const date = new Date(timeStr)
-        if (isNaN(date.getTime())) return '--:--'
-        return date.toLocaleTimeString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Europe/Berlin'
-        })
+        if (timeStr.includes('T')) {
+            const timePart = timeStr.split('T')[1]?.slice(0, 5)
+            return timePart || '--:--'
+        }
+        return timeStr
     } catch {
         return timeStr
     }
