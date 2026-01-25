@@ -1,7 +1,7 @@
 .smart-guidance {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -14,7 +14,7 @@
 .smart-guidance-header h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
-    color: white;
+    color: var(--color-text-primary);
     font-weight: 600;
 }
 
@@ -31,8 +31,8 @@
 }
 
 .next-step-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
     padding: 1rem;
     cursor: pointer;
@@ -53,8 +53,8 @@
 }
 
 .next-step-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--color-accent);
+    background: var(--glass-hover);
+    border-color: var(--color-primary);
     transform: translateX(8px);
 }
 
@@ -91,7 +91,7 @@
 
 .step-content h4 {
     margin: 0 0 0.25rem 0;
-    color: white;
+    color: var(--color-text-primary);
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -107,7 +107,7 @@
     align-items: center;
     justify-content: space-between;
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--glass-border);
 }
 
 .step-category {
@@ -157,7 +157,7 @@
 
 .all-clear h4 {
     margin: 0 0 0.5rem 0;
-    color: white;
+    color: var(--color-text-primary);
     font-size: 1.5rem;
 }
 
@@ -170,7 +170,7 @@
 .guidance-footer {
     margin-top: 1.5rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--glass-border);
 }
 
 .guidance-footer p {

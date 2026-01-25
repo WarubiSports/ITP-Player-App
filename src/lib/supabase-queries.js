@@ -352,6 +352,110 @@ export const choreQueries = {
             .eq('id', id)
 
         if (error) throw error
+    },
+
+    // Submit photo for chore verification
+    async submitChorePhoto(choreId, photoData) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
+        // Get the player record for this user
+        const { data: player } = await supabase
+            .from('players')
+            .select('id')
+            .eq('user_id', user.id)
+            .single()
+
+        if (!player) throw new Error('Player not found')
+
+        // Insert the photo
+        const { data: photo, error: photoError } = await supabase
+            .from('chore_photos')
+            .insert([{
+                chore_id: choreId,
+                photo_data: photoData,
+                uploaded_by: player.id
+            }])
+            .select()
+            .single()
+
+        if (photoError) throw photoError
+
+        // Update chore status to pending_approval
+        const { error: choreError } = await supabase
+            .from('chores')
+            .update({
+                status: 'pending_approval',
+                completed_at: new Date().toISOString()
+            })
+            .eq('id', choreId)
+
+        if (choreError) throw choreError
+
+        return photo
+    },
+
+    // Get photo for a chore
+    async getChorePhoto(choreId) {
+        const { data, error } = await supabase
+            .from('chore_photos')
+            .select('*')
+            .eq('chore_id', choreId)
+            .single()
+
+        if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows found
+        return data
+    },
+
+    // Get all chores pending approval
+    async getPendingApprovalChores() {
+        const { data, error } = await supabase
+            .from('chores')
+            .select(`
+                *,
+                house:houses(id, name),
+                assigned_player:players(id, first_name, last_name)
+            `)
+            .eq('status', 'pending_approval')
+            .order('completed_at', { ascending: true })
+
+        if (error) throw error
+        return data
+    },
+
+    // Approve a chore
+    async approveChore(choreId) {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        const { data, error } = await supabase
+            .from('chores')
+            .update({
+                status: 'approved',
+                approved_at: new Date().toISOString(),
+                approved_by: user?.id
+            })
+            .eq('id', choreId)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+
+    // Reject a chore
+    async rejectChore(choreId, reason) {
+        const { data, error } = await supabase
+            .from('chores')
+            .update({
+                status: 'rejected',
+                rejection_reason: reason
+            })
+            .eq('id', choreId)
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
     }
 }
 

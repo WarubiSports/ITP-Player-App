@@ -37,3 +37,4 @@ yarn-error.log*
 # External repos and temp files
 n8n/
 supabase/.temp/
+.env*.local

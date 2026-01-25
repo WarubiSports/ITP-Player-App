@@ -18,7 +18,7 @@ export default function ReadinessGauge({ score = 85 }) {
                         cx="60"
                         cy="60"
                         r="40"
-                        stroke="rgba(255,255,255,0.1)"
+                        stroke="var(--glass-border)"
                         strokeWidth="8"
                         fill="transparent"
                     />
@@ -42,7 +42,7 @@ export default function ReadinessGauge({ score = 85 }) {
                     transform: 'translate(-50%, -50%)',
                     textAlign: 'center'
                 }}>
-                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white' }}>{score}</span>
+                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>{score}</span>
                     <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)' }}>READY</div>
                 </div>
             </div>
