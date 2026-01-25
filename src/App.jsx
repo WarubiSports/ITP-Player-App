@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import NotificationContainer from './components/ui/NotificationContainer'
+import InstallPrompt from './components/ui/InstallPrompt'
 import EventNotifications from './components/events/EventNotifications'
 import PasswordSetupModal from './components/auth/PasswordSetupModal'
 import { lazyWithRetry } from './utils/lazyWithRetry'
@@ -61,6 +62,7 @@ export default function App() {
     return (
         <>
             <NotificationContainer />
+            <InstallPrompt />
             {user && <EventNotifications />}
             {user && needsPasswordSetup && <PasswordSetupModal />}
             <Routes>
