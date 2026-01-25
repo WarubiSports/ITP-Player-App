@@ -9,22 +9,18 @@ let notificationCallback = null
 // Store notified events to avoid duplicate notifications
 const notifiedEvents = new Set()
 
-// Format time from ISO string - extracts time directly (matches Staff App)
+// Format time from ISO string - converts to Berlin timezone (same as Staff App)
 const formatTimeFromISO = (timeStr) => {
     if (!timeStr) return ''
     try {
-        // Extract time part from ISO string without timezone conversion
-        if (timeStr.includes('T')) {
-            const timePart = timeStr.split('T')[1]?.slice(0, 5)
-            if (!timePart) return ''
-            // Convert to 12-hour format
-            const [hours, minutes] = timePart.split(':')
-            const hour = parseInt(hours, 10)
-            const ampm = hour >= 12 ? 'PM' : 'AM'
-            const displayHour = hour % 12 || 12
-            return `${displayHour}:${minutes} ${ampm}`
-        }
-        return timeStr
+        const date = new Date(timeStr)
+        if (isNaN(date.getTime())) return ''
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Europe/Berlin'
+        })
     } catch {
         return ''
     }
