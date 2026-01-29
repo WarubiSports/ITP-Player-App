@@ -100,6 +100,7 @@ export function AuthProvider({ children }) {
         }
 
         // Merge player info into profile
+        // Priority: player record data > profile data (staff manages players table)
         const mergedProfile = {
             ...profileData,
             player_id: playerData?.id || null,
@@ -108,6 +109,8 @@ export function AuthProvider({ children }) {
             // Use player name if profile name is missing
             first_name: profileData?.first_name || playerData?.first_name,
             last_name: profileData?.last_name || playerData?.last_name,
+            // Use player email if available (staff updates players.email, not profiles.email)
+            email: playerData?.email || profileData?.email,
         }
 
         setProfile(mergedProfile)

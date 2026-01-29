@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { demoData } from '../lib/supabase'
 import {
     deletePlayer,
-    deleteUser
+    deleteUser,
+    updatePlayer,
+    getPlayers
 } from '../lib/data-service'
 import { Users, Crown, Briefcase, CircleDot, ClipboardList, Settings, AlertTriangle, Check, X } from 'lucide-react'
 import './Admin.css'
@@ -18,19 +20,45 @@ export default function Admin() {
     const [deleteLoading, setDeleteLoading] = useState(false)
 
     useEffect(() => {
-        // Combine users and players for user management
-        const allUsers = [
-            ...demoData.users.map(u => ({ ...u, type: 'user' })),
-            ...demoData.players.map(p => ({
-                id: p.id,
-                first_name: p.first_name,
-                last_name: p.last_name,
-                role: 'player',
-                status: p.status,
-                type: 'player'
-            }))
-        ]
-        setUsers(allUsers)
+        // Fetch players from database and combine with staff users
+        const loadUsers = async () => {
+            try {
+                // Fetch players from database (includes email field)
+                const players = await getPlayers()
+
+                const allUsers = [
+                    ...demoData.users.map(u => ({ ...u, type: 'user' })),
+                    ...players.map(p => ({
+                        id: p.id,
+                        first_name: p.first_name,
+                        last_name: p.last_name,
+                        email: p.email, // Include email from database
+                        role: 'player',
+                        status: p.status,
+                        type: 'player'
+                    }))
+                ]
+                setUsers(allUsers)
+            } catch (error) {
+                console.error('Failed to load users:', error)
+                // Fallback to demo data if database fails
+                const allUsers = [
+                    ...demoData.users.map(u => ({ ...u, type: 'user' })),
+                    ...demoData.players.map(p => ({
+                        id: p.id,
+                        first_name: p.first_name,
+                        last_name: p.last_name,
+                        email: p.email,
+                        role: 'player',
+                        status: p.status,
+                        type: 'player'
+                    }))
+                ]
+                setUsers(allUsers)
+            }
+        }
+
+        loadUsers()
 
         // Demo applications
         setApplications([
@@ -112,7 +140,9 @@ export default function Admin() {
         }
     }
 
-    const handleSaveUser = (e) => {
+    const [saveLoading, setSaveLoading] = useState(false)
+
+    const handleSaveUser = async (e) => {
         e.preventDefault()
         const form = e.target
 
@@ -125,8 +155,26 @@ export default function Admin() {
             status: form.status.value
         }
 
-        setUsers(prev => prev.map(u => u.id === selectedUser.id ? updatedUser : u))
-        closeEditModal()
+        setSaveLoading(true)
+        try {
+            // Persist to database for players
+            if (selectedUser.type === 'player') {
+                await updatePlayer(selectedUser.id, {
+                    first_name: form.firstName.value,
+                    last_name: form.lastName.value,
+                    email: form.email.value.toLowerCase(),
+                    status: form.status.value
+                })
+            }
+            // Update local state
+            setUsers(prev => prev.map(u => u.id === selectedUser.id ? updatedUser : u))
+            closeEditModal()
+        } catch (error) {
+            console.error('Failed to save user:', error)
+            alert('Failed to save changes. Please try again.')
+        } finally {
+            setSaveLoading(false)
+        }
     }
 
     const stats = {
@@ -388,19 +436,20 @@ export default function Admin() {
                                         <label className="input-label">Status</label>
                                         <select name="status" className="input" defaultValue={selectedUser.status || 'active'}>
                                             <option value="active">Active</option>
+                                            <option value="pending">Pending</option>
                                             <option value="inactive">Inactive</option>
-                                            <option value="injured">Injured</option>
-                                            <option value="training">Training</option>
+                                            <option value="alumni">Alumni</option>
+                                            <option value="cancelled">Cancelled</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={closeEditModal}>
+                                <button type="button" className="btn btn-secondary" onClick={closeEditModal} disabled={saveLoading}>
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn btn-primary">
-                                    Save Changes
+                                <button type="submit" className="btn btn-primary" disabled={saveLoading}>
+                                    {saveLoading ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>
