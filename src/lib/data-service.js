@@ -1532,11 +1532,59 @@ const defaultGroceryItems = [
     { id: 'gi-155', name: 'Frosta Butter Chicken', category: 'frozen', price: 4.79 },
     { id: 'gi-156', name: 'Frosta Hähnchen-Geschnetzeltes', category: 'frozen', price: 4.79 },
     { id: 'gi-157', name: 'Frosta Penne Gorgonzola', category: 'frozen', price: 4.79 },
-    { id: 'gi-158', name: 'Iglo Tagliatelle Pilz-Pfanne', category: 'frozen', price: 3.99 }
+    { id: 'gi-158', name: 'Iglo Tagliatelle Pilz-Pfanne', category: 'frozen', price: 3.99 },
+    // New items - Household
+    { id: 'gi-159', name: 'Aluminium Foil', category: 'household', price: 0.00 },
+    { id: 'gi-160', name: 'Plastic Wrap', category: 'household', price: 0.00 },
+    { id: 'gi-161', name: 'Clear Small Garbage Bags', category: 'household', price: 0.00 },
+    { id: 'gi-162', name: 'Softener (Weichspüler)', category: 'household', price: 0.00 },
+    { id: 'gi-163', name: 'Spee Colorwaschmittel', category: 'household', price: 0.00 },
+    // New items - Produce
+    { id: 'gi-164', name: 'Beetroot', category: 'produce', price: 1.49 },
+    { id: 'gi-165', name: 'Ginger', category: 'produce', price: 0.99 },
+    { id: 'gi-166', name: 'Red Onions', category: 'produce', price: 1.49 },
+    { id: 'gi-167', name: 'Tomatoes', category: 'produce', price: 1.99 },
+    { id: 'gi-168', name: 'Corn', category: 'produce', price: 1.29 },
+    { id: 'gi-169', name: 'Chili Mix Tricolor', category: 'produce', price: 2.49 },
+    { id: 'gi-170', name: 'Cabbage', category: 'produce', price: 1.29 },
+    { id: 'gi-171', name: 'Strawberries', category: 'produce', price: 2.99 },
+    { id: 'gi-172', name: 'Chives', category: 'produce', price: 0.99 },
+    { id: 'gi-173', name: 'Dried Tomatoes', category: 'produce', price: 2.49 },
+    // New items - Meat
+    { id: 'gi-174', name: 'Hähnchenbrust Paprika', category: 'meat', price: 2.99 },
+    { id: 'gi-175', name: 'Halal Chicken', category: 'meat', price: 7.99 },
+    { id: 'gi-176', name: 'Halal Beef', category: 'meat', price: 8.99 },
+    // New items - Dairy
+    { id: 'gi-177', name: 'Skyr Vanilla', category: 'dairy', price: 1.69 },
+    { id: 'gi-178', name: 'Vanilla Yogurt with Schoko Balls', category: 'dairy', price: 0.89 },
+    { id: 'gi-179', name: 'High Protein Ice Cream', category: 'dairy', price: 4.99 },
+    { id: 'gi-180', name: 'Dr. Oetker High Protein Pudding', category: 'dairy', price: 1.99 },
+    // New items - Carbs
+    { id: 'gi-181', name: 'Käse Tortellini', category: 'carbs', price: 2.49 },
+    { id: 'gi-182', name: 'Dark Chocolate', category: 'carbs', price: 1.99 },
+    { id: 'gi-183', name: 'Power System High Protein Bar', category: 'carbs', price: 2.49 },
+    { id: 'gi-184', name: 'Puffed Rice Cakes', category: 'carbs', price: 1.29 },
+    { id: 'gi-185', name: 'Uncle Ben\'s Chili Con Carne', category: 'carbs', price: 2.99 },
+    { id: 'gi-186', name: 'Uncle Ben\'s Mexikanisch Scharf', category: 'carbs', price: 2.99 },
+    { id: 'gi-187', name: 'Uncle Ben\'s Curry', category: 'carbs', price: 2.99 },
+    { id: 'gi-188', name: 'Corny Bars', category: 'carbs', price: 1.99 },
+    { id: 'gi-189', name: 'Croutons', category: 'carbs', price: 1.49 },
+    { id: 'gi-190', name: 'Whole Grain Tortilla', category: 'carbs', price: 1.99 },
+    // New items - Drinks
+    { id: 'gi-191', name: 'Still Water', category: 'drinks', price: 0.89 },
+    // New items - Spices
+    { id: 'gi-192', name: 'Rosemary', category: 'spices', price: 1.99 },
+    { id: 'gi-193', name: 'Sesame Oil', category: 'spices', price: 3.49 },
+    { id: 'gi-194', name: 'Turmeric', category: 'spices', price: 2.29 },
+    { id: 'gi-195', name: 'Garam Masala', category: 'spices', price: 2.99 },
+    { id: 'gi-196', name: 'Gartenkräuter', category: 'spices', price: 1.99 },
+    { id: 'gi-197', name: 'Vinegar Salad Dressing', category: 'spices', price: 2.49 },
+    // New items - Frozen
+    { id: 'gi-198', name: 'Frozen Vegetable Soup Mix', category: 'frozen', price: 2.49 }
 ]
 
 // Version for grocery items - increment when items change to force refresh
-const GROCERY_VERSION = 2
+const GROCERY_VERSION = 3
 
 export const getGroceryItems = async (category = null) => {
     if (shouldUseDemoData()) {
